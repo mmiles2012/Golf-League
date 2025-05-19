@@ -10,6 +10,7 @@ import { Upload, FileUp, HelpCircle, FileDown } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { TOURNAMENT_TYPES } from "@/lib/constants";
 import { useQueryClient } from "@tanstack/react-query";
+import TeamPlayerSelector from "./TeamPlayerSelector";
 
 export default function TournamentUploader() {
   const { toast } = useToast();
@@ -24,6 +25,22 @@ export default function TournamentUploader() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState("");
   const [previewData, setPreviewData] = useState<any[] | null>(null);
+  const [teamPlayers, setTeamPlayers] = useState<Array<{ original: string; options: string[] }>>([]);
+  const [isTeamSelectorOpen, setIsTeamSelectorOpen] = useState(false);
+  const [processedResultsCache, setProcessedResultsCache] = useState<any[] | null>(null);
+  
+  // Reset the form
+  const resetForm = () => {
+    setTournamentName("");
+    setTournamentDate("");
+    setTournamentType("");
+    setSelectedFile(null);
+    setFileName("");
+    setPreviewData(null);
+    setTeamPlayers([]);
+    setProcessedResultsCache(null);
+    setIsTeamSelectorOpen(false);
+  };
   
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
@@ -66,6 +83,84 @@ export default function TournamentUploader() {
       
       setSelectedFile(file);
       setFileName(file.name);
+    }
+  };
+  
+  // Process the tournament data with the API
+  const processTournamentData = async (results: any[]) => {
+    try {
+      const tournamentData = {
+        name: tournamentName,
+        date: tournamentDate,
+        type: tournamentType,
+        results: results
+      };
+      
+      console.log("Sending tournament data:", tournamentData);
+      
+      // Process the tournament
+      const processResponse = await apiRequest("POST", "/api/tournaments/process", tournamentData);
+      
+      if (!processResponse.ok) {
+        throw new Error(`Processing failed: ${processResponse.status} ${processResponse.statusText}`);
+      }
+      
+      // Show success message
+      toast({
+        title: "Tournament processed",
+        description: "The tournament data has been successfully processed and added to the leaderboard",
+        variant: "default"
+      });
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/leaderboard/net"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leaderboard/gross"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tournaments"] });
+      
+      return true;
+    } catch (error) {
+      console.error("Processing error:", error);
+      toast({
+        title: "Processing failed",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+  
+  // Handle team player selections
+  const handleTeamPlayerSelections = async (selections: Record<string, string>) => {
+    if (!processedResultsCache) return;
+    
+    // Create a modified version of the results
+    const modifiedResults = processedResultsCache.map(result => {
+      // If this is a team entry that's been selected
+      if (selections[result.player]) {
+        // Check if "both" was selected
+        if (selections[result.player] === "both") {
+          // Keep the original team name
+          return result;
+        } else {
+          // Replace the team name with the selected individual
+          return {
+            ...result,
+            player: selections[result.player]
+          };
+        }
+      }
+      return result;
+    });
+    
+    setUploadProgress(90);
+    setUploadStatus("Processing selected players...");
+    
+    const success = await processTournamentData(modifiedResults);
+    
+    if (success) {
+      setUploadProgress(100);
+      setUploadStatus("Tournament processed successfully!");
+      resetForm();
     }
   };
   
@@ -153,45 +248,35 @@ export default function TournamentUploader() {
         };
       });
       
-      const tournamentData = {
-        name: tournamentName,
-        date: tournamentDate,
-        type: tournamentType,
-        results: processedResults
-      };
+      // Check for team players (names with slashes)
+      const teamsFound = processedResults.filter(result => result.player.includes('/'));
       
-      console.log("Sending tournament data:", tournamentData);
-      
-      // Process the tournament
-      const processResponse = await apiRequest("POST", "/api/tournaments/process", tournamentData);
-      
-      if (!processResponse.ok) {
-        throw new Error(`Processing failed: ${processResponse.status} ${processResponse.statusText}`);
+      if (teamsFound.length > 0) {
+        // Format the teams for the selector
+        const formattedTeams = teamsFound.map(team => {
+          const playerNames = team.player.split('/').map(name => name.trim());
+          return {
+            original: team.player,
+            options: playerNames
+          };
+        });
+        
+        setTeamPlayers(formattedTeams);
+        setProcessedResultsCache(processedResults);
+        setIsTeamSelectorOpen(true);
+        setUploadProgress(75);
+        setUploadStatus("Please select which player(s) should receive the points...");
+        return; // Exit early to show the team player selector
       }
       
-      setUploadProgress(100);
-      setUploadStatus("Tournament processed successfully!");
+      // If no teams found, continue with tournament processing
+      const success = await processTournamentData(processedResults);
       
-      // Show success message
-      toast({
-        title: "Tournament processed",
-        description: "The tournament data has been successfully processed and added to the leaderboard",
-        variant: "default"
-      });
-      
-      // Reset form
-      setTournamentName("");
-      setTournamentDate("");
-      setTournamentType("");
-      setSelectedFile(null);
-      setFileName("");
-      setPreviewData(null);
-      
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["/api/leaderboard/net"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/leaderboard/gross"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/tournaments"] });
-      
+      if (success) {
+        setUploadProgress(100);
+        setUploadStatus("Tournament processed successfully!");
+        resetForm();
+      }
     } catch (error) {
       console.error("Upload error:", error);
       
@@ -394,6 +479,14 @@ export default function TournamentUploader() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Team Player Selector Dialog */}
+      <TeamPlayerSelector
+        isOpen={isTeamSelectorOpen}
+        onClose={() => setIsTeamSelectorOpen(false)}
+        teamPlayers={teamPlayers}
+        onSelectionComplete={handleTeamPlayerSelections}
+      />
     </>
   );
 }
