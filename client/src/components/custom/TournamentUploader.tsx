@@ -106,19 +106,51 @@ export default function TournamentUploader() {
       setUploadStatus("Processing data...");
       setPreviewData(data.preview);
       
-      // Process the tournament data
+      // Process the tournament data with more detailed logging
+      console.log("Preview data:", data.preview);
+      
+      const processedResults = data.preview.map((row: any, index: number) => {
+        // Extract player name with fallback options
+        const playerName = row.Player || row.player || row.Name || row.name || "";
+        
+        // Extract position with fallback options
+        const position = parseInt(row.Position || row.position || row.Pos || (index + 1));
+        
+        // Extract scores with fallback options
+        const grossScore = 
+          row.Total !== undefined ? parseInt(row.Total) : 
+          row["Gross Score"] !== undefined ? parseInt(row["Gross Score"]) : 
+          row.grossScore !== undefined ? parseInt(row.grossScore) : null;
+        
+        const netScore = 
+          row["Net Score"] !== undefined ? parseInt(row["Net Score"]) : 
+          row.netScore !== undefined ? parseInt(row.netScore) : 
+          row.Net !== undefined ? parseInt(row.Net) : null;
+        
+        const handicap = 
+          row["Course Handicap"] !== undefined ? parseFloat(row["Course Handicap"]) :
+          row.handicap !== undefined ? parseFloat(row.handicap) : 
+          row.Handicap !== undefined ? parseFloat(row.Handicap) : null;
+        
+        console.log(`Processing row for player: ${playerName}, position: ${position}, gross: ${grossScore}, net: ${netScore}, handicap: ${handicap}`);
+        
+        return {
+          player: playerName,
+          position: position,
+          grossScore: grossScore,
+          netScore: netScore,
+          handicap: handicap
+        };
+      });
+      
       const tournamentData = {
         name: tournamentName,
         date: tournamentDate,
         type: tournamentType,
-        results: data.preview.map((row: any, index: number) => ({
-          player: row.Player || row.player || "",
-          position: row.Position || row.position || index + 1,
-          grossScore: row.Total || row["Gross Score"] || row.grossScore || null,
-          netScore: row["Net Score"] || row.netScore || null,
-          handicap: row["Course Handicap"] || row.handicap || null
-        }))
+        results: processedResults
       };
+      
+      console.log("Sending tournament data:", tournamentData);
       
       // Process the tournament
       const processResponse = await apiRequest("POST", "/api/tournaments/process", tournamentData);

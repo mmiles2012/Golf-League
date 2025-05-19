@@ -73,10 +73,10 @@ export const tournamentUploadSchema = z.object({
   type: z.enum(tournamentTypes),
   results: z.array(z.object({
     player: z.string().min(1, "Player name is required"),
-    position: z.number().int().positive("Position must be a positive integer"),
-    grossScore: z.number().int().optional(),
-    netScore: z.number().int().optional(),
-    handicap: z.number().optional(),
+    position: z.coerce.number().int().positive("Position must be a positive integer"),
+    grossScore: z.coerce.number().int().nullable().optional(),
+    netScore: z.coerce.number().int().nullable().optional(),
+    handicap: z.coerce.number().nullable().optional(),
   })).min(1, "At least one player result is required"),
 });
 
