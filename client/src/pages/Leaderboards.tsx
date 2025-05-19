@@ -338,35 +338,13 @@ export default function Leaderboards() {
         </Tabs>
       </div>
       
-      {/* Leaderboard Trophy Image */}
-      <Card className="shadow-lg overflow-hidden">
-        <div className="md:flex">
-          <div className="md:flex-shrink-0">
-            <img 
-              src="https://images.unsplash.com/photo-1617396900799-f4ec2b43c7ae?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80" 
-              alt="Golf tournament trophy" 
-              className="h-48 w-full object-cover md:h-full md:w-60"
-            />
-          </div>
-          <CardContent className="p-6">
-            <h2 className="font-heading font-bold text-xl text-neutral-800">2023 Season Standings</h2>
-            <p className="mt-2 text-neutral-600">
-              {activeTab === "net" ? 
-                "The Net Leaderboard shows season-long performance with handicap adjustments applied. Players earn points based on their finishing positions across different tournament types." : 
-                "The Gross Leaderboard tracks performance without handicap adjustments. This represents the raw scoring ability of players across all tournaments."
-              }
-            </p>
-            <div className="mt-4">
-              <div className="flex items-center text-sm text-neutral-700">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-primary" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-                <span>Click on any player to view their tournament history</span>
-              </div>
-            </div>
-          </CardContent>
-        </div>
-      </Card>
+      {/* Leaderboard info section */}
+      <div className="flex items-center text-sm text-neutral-700 mb-4 bg-neutral-50 p-3 rounded-md">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-primary" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+        </svg>
+        <span>Click on any player to view their tournament history</span>
+      </div>
       
       {/* Leaderboard Table */}
       <Card>
