@@ -116,16 +116,26 @@ export default function TournamentUploader() {
         // Extract position with fallback options
         const position = parseInt(String(row.Position || row.position || row.Pos || (index + 1)));
         
-        // Extract scores with fallback options
-        const grossScore = 
-          row.Total !== undefined ? parseInt(String(row.Total)) : 
-          row["Gross Score"] !== undefined ? parseInt(String(row["Gross Score"])) : 
-          row.grossScore !== undefined ? parseInt(String(row.grossScore)) : null;
+        // Handle scores based on scoring type
+        let grossScore, netScore;
         
-        const netScore = 
-          row["Net Score"] !== undefined ? parseInt(String(row["Net Score"])) : 
-          row.netScore !== undefined ? parseInt(String(row.netScore)) : 
-          row.Net !== undefined ? parseInt(String(row.Net)) : null;
+        if (row.Scoring === "StrokeNet" && row.Total !== undefined && row["Course Handicap"] !== undefined) {
+          // For StrokeNet scoring, Total is the net score, and we calculate gross by adding handicap
+          netScore = parseInt(String(row.Total));
+          grossScore = parseInt(String(row.Total)) + parseInt(String(row["Course Handicap"]));
+          console.log(`StrokeNet scoring: Total=${row.Total}, Handicap=${row["Course Handicap"]}, calculated Gross=${grossScore}, Net=${netScore}`);
+        } else {
+          // For regular scoring, use Total as gross score
+          grossScore = 
+            row.Total !== undefined ? parseInt(String(row.Total)) : 
+            row["Gross Score"] !== undefined ? parseInt(String(row["Gross Score"])) : 
+            row.grossScore !== undefined ? parseInt(String(row.grossScore)) : null;
+          
+          netScore = 
+            row["Net Score"] !== undefined ? parseInt(String(row["Net Score"])) : 
+            row.netScore !== undefined ? parseInt(String(row.netScore)) : 
+            row.Net !== undefined ? parseInt(String(row.Net)) : null;
+        }
         
         const handicap = 
           row["Course Handicap"] !== undefined ? parseFloat(String(row["Course Handicap"])) :

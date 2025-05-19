@@ -289,19 +289,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
                         row.Position !== undefined ? Number(row.Position) : 
                         row.position !== undefined ? Number(row.position) : (index + 1);
         
-        // Extract gross score from Total field
-        const grossScore = row.Total !== undefined ? Number(row.Total) : 
-                          row["Gross Score"] !== undefined ? Number(row["Gross Score"]) : 
-                          row.grossScore !== undefined ? Number(row.grossScore) : null;
+        // Handle StrokeNet scoring specifically
+        let grossScore, netScore;
         
-        // Calculate net score if StrokeNet scoring is used
-        let netScore = row["Net Score"] !== undefined ? Number(row["Net Score"]) : 
-                     row.netScore !== undefined ? Number(row.netScore) : 
-                     row.Net !== undefined ? Number(row.Net) : null;
-                     
-        // For StrokeNet scoring, calculate net score from gross and handicap
-        if (row.Scoring === "StrokeNet" && grossScore !== null && row["Course Handicap"] !== undefined) {
-          netScore = grossScore + Number(row["Course Handicap"]);
+        if (row.Scoring === "StrokeNet" && row.Total !== undefined && row["Course Handicap"] !== undefined) {
+          // For StrokeNet scoring, the Total is actually the net score
+          netScore = Number(row.Total);
+          // Calculate gross score by adding handicap to the Total (net score)
+          grossScore = Number(row.Total) + Number(row["Course Handicap"]);
+          console.log(`StrokeNet scoring: Total=${row.Total}, Handicap=${row["Course Handicap"]}, calculated Gross=${grossScore}, Net=${netScore}`);
+        } else {
+          // For regular scoring, use the Total as the gross score
+          grossScore = row.Total !== undefined ? Number(row.Total) : 
+                      row["Gross Score"] !== undefined ? Number(row["Gross Score"]) : 
+                      row.grossScore !== undefined ? Number(row.grossScore) : null;
+          
+          // Extract net score from available fields
+          netScore = row["Net Score"] !== undefined ? Number(row["Net Score"]) : 
+                   row.netScore !== undefined ? Number(row.netScore) : 
+                   row.Net !== undefined ? Number(row.Net) : null;
         }
         
         // Extract handicap
