@@ -112,24 +112,11 @@ export class MemStorage implements IStorage {
   
   async createTournament(tournament: InsertTournament): Promise<Tournament> {
     const id = this.tournamentCurrentId++;
-    
-    // Ensure date is stored as a string for consistency
-    let tournamentDate = tournament.date;
-    if (tournamentDate instanceof Date) {
-      tournamentDate = tournamentDate.toISOString().split('T')[0];
-    } else if (typeof tournamentDate !== 'string') {
-      tournamentDate = String(tournamentDate);
-    }
-    
     const newTournament: Tournament = {
       id,
       createdAt: new Date(),
-      name: tournament.name,
-      date: tournamentDate, // Use the string date
-      type: tournament.type,
-      status: tournament.status || 'upcoming'
+      ...tournament
     };
-    
     this.tournaments.set(id, newTournament);
     return newTournament;
   }
@@ -141,23 +128,9 @@ export class MemStorage implements IStorage {
       return undefined;
     }
     
-    // Create a copy of the tournament data to modify
-    const tournamentData = {...tournament};
-    
-    // Handle date conversion explicitly if present
-    if (tournamentData.date) {
-      let tournamentDate = tournamentData.date;
-      if (tournamentDate instanceof Date) {
-        tournamentDate = tournamentDate.toISOString().split('T')[0];
-      } else if (typeof tournamentDate !== 'string') {
-        tournamentDate = String(tournamentDate);
-      }
-      tournamentData.date = tournamentDate;
-    }
-    
     const updatedTournament = {
       ...existingTournament,
-      ...tournamentData
+      ...tournament
     };
     
     this.tournaments.set(id, updatedTournament);
@@ -263,113 +236,25 @@ export class MemStorage implements IStorage {
   }
   
   async getGrossLeaderboard(): Promise<PlayerWithHistory[]> {
-    // Tour points table for gross leaderboard positions (from Founders Series Tour Points List)
-    const tourPointsTable = [
-      500, 300, 190, 135, 110, 100, 90, 85, 80, 75,    // 1-10
-      70, 65, 60, 55, 53, 51, 49, 47, 45, 43,          // 11-20
-      41, 39, 37, 35.5, 34, 32.5, 31, 29.5, 28, 26.5,  // 21-30
-      25, 23.5, 22, 21, 20, 19, 18, 17, 16, 15,        // 31-40
-      14, 13, 12, 11, 10.5, 10, 9.5, 9, 8.5, 8         // 41-50
-    ];
-    
-    // Get all completed tournaments
-    const allTournaments = [...this.tournaments.values()].filter(t => t.status === 'completed');
-    const tourTournaments = allTournaments.filter(t => t.type === 'tour');
-    
-    // Calculate gross points per tournament
-    const playerGrossTourPoints: Record<number, number> = {};
-    
-    // Process each tour tournament to calculate gross points based on gross score
-    for (const tournament of tourTournaments) {
-      // Get results for this tournament
-      const tournamentResults = [...this.playerResults.values()]
-        .filter(r => r.tournamentId === tournament.id && r.grossScore !== null && r.grossScore !== undefined);
-      
-      // Sort by gross score (lower is better)
-      const sortedResults = [...tournamentResults].sort((a, b) => {
-        const aScore = a.grossScore || 999;
-        const bScore = b.grossScore || 999;
-        return aScore - bScore;
-      });
-      
-      // Assign points based on position in this tournament
-      sortedResults.forEach((result, position) => {
-        if (position < tourPointsTable.length) {
-          const points = tourPointsTable[position];
-          
-          // Add these points to the player's total gross tour points
-          if (!playerGrossTourPoints[result.playerId]) {
-            playerGrossTourPoints[result.playerId] = 0;
-          }
-          
-          playerGrossTourPoints[result.playerId] += points;
-        }
-      });
-    }
-    
-    // Now get player histories
     const players = await this.getPlayers();
     const leaderboard: PlayerWithHistory[] = [];
     
     for (const player of players) {
       const playerHistory = await this.calculatePlayerHistory(player.id, 'gross');
       if (playerHistory) {
-        // Assign gross tour points from our calculations
-        const grossTourPoints = playerGrossTourPoints[player.id] || 0;
-        playerHistory.grossTourPoints = grossTourPoints;
-        
-        // Calculate gross total points (combining all point categories)
-        playerHistory.grossTotalPoints = playerHistory.majorPoints + 
-                                          grossTourPoints + 
-                                          playerHistory.leaguePoints + 
-                                          playerHistory.suprPoints;
-                                          
         leaderboard.push(playerHistory);
-        
-        // Log for selected players (for debugging)
-        if (player.id < 10) {
-          console.log(`Player #${player.id} ${player.name}: majorPoints=${playerHistory.majorPoints}, netTour=${playerHistory.tourPoints}, grossTour=${grossTourPoints}, league=${playerHistory.leaguePoints}, supr=${playerHistory.suprPoints}, grossTotal=${playerHistory.grossTotalPoints}`);
-        }
       }
     }
     
-    // Group players: with valid scores vs without valid scores
-    const playersWithValidScores: PlayerWithHistory[] = [];
-    const playersWithoutValidScores: PlayerWithHistory[] = [];
-    
-    leaderboard.forEach(player => {
-      // Check if player has a valid gross score
-      const hasValidScore = player.averageGrossScore !== undefined && 
-                           player.averageGrossScore !== null && 
-                           !isNaN(player.averageGrossScore) &&
-                           player.tournaments.some(t => t.grossScore !== null && t.grossScore !== undefined);
-      
-      if (hasValidScore) {
-        playersWithValidScores.push(player);
-      } else {
-        playersWithoutValidScores.push(player);
-      }
-    });
-    
-    // Sort players with valid scores by gross total points (high to low)
-    playersWithValidScores.sort((a, b) => {
-      return (b.grossTotalPoints || 0) - (a.grossTotalPoints || 0); // Primary sort by gross points (higher is better)
-    });
-    
-    // Sort players without valid scores alphabetically
-    playersWithoutValidScores.sort((a, b) => {
-      return a.player.name.localeCompare(b.player.name);
-    });
-    
-    // Combine the sorted lists
-    const sortedLeaderboard = [...playersWithValidScores, ...playersWithoutValidScores];
+    // Sort by total points descending
+    leaderboard.sort((a, b) => b.totalPoints - a.totalPoints);
     
     // Assign ranks
-    sortedLeaderboard.forEach((player, index) => {
+    leaderboard.forEach((player, index) => {
       player.rank = index + 1;
     });
     
-    return sortedLeaderboard;
+    return leaderboard;
   }
   
   async getPlayerWithHistory(playerId: number): Promise<PlayerWithHistory | undefined> {
@@ -448,14 +333,11 @@ export class MemStorage implements IStorage {
         continue;
       }
       
-      // Handle the date safely by formatting it to a string
-      const tournamentDate = String(tournament.date);
-      
       tournamentDetails.push({
         id: result.id,
         tournamentId: tournament.id,
         tournamentName: tournament.name,
-        tournamentDate: tournamentDate,
+        tournamentDate: tournament.date.toISOString().split('T')[0],
         tournamentType: tournament.type,
         position: result.position,
         grossScore: result.grossScore,
@@ -546,4 +428,4 @@ export class MemStorage implements IStorage {
 
 // Use DatabaseStorage for database persistence
 import { DatabaseStorage } from "./storage-db";
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
