@@ -212,6 +212,12 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
                       <Skeleton className="h-5 w-8 mx-auto" />
                     </td>
                     <td className="px-2 py-3 whitespace-nowrap text-center">
+                      <Skeleton className="h-5 w-8 mx-auto" />
+                    </td>
+                    <td className="px-2 py-3 whitespace-nowrap text-center">
+                      <Skeleton className="h-5 w-12 mx-auto" />
+                    </td>
+                    <td className="px-2 py-3 whitespace-nowrap text-center">
                       <Skeleton className="h-5 w-12 mx-auto" />
                     </td>
                     <td className="px-2 py-3 whitespace-nowrap text-right">
@@ -240,7 +246,13 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
                         {tournament.position}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
+                        {tournament.grossPosition || "N/A"}
+                      </td>
+                      <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
                         {tournament.grossScore || "N/A"}
+                      </td>
+                      <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
+                        {tournament.netScore || "N/A"}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-right font-medium">
                         {tournament.points.toLocaleString()}
@@ -249,7 +261,7 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
                   ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-6 text-center text-neutral-500">
+                  <td colSpan={8} className="py-6 text-center text-neutral-500">
                     No tournament history available
                   </td>
                 </tr>

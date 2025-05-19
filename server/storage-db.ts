@@ -388,6 +388,37 @@ export class DatabaseStorage implements IStorage {
     let totalNetScore = 0;
     let countNetScores = 0;
     
+    // First, calculate gross positions for each tournament
+    const tournamentResultsMap = new Map<number, PlayerResult[]>();
+    const grossPositionsMap = new Map<string, number>(); // Map of "tournamentId-playerId" -> grossPosition
+    
+    // For each tournament this player participated in
+    for (const result of results) {
+      const tournament = tournamentMap.get(result.tournamentId);
+      if (!tournament) continue;
+      
+      // Get all results for this tournament if not already fetched
+      if (!tournamentResultsMap.has(tournament.id)) {
+        const tournamentResults = await this.getPlayerResultsByTournament(tournament.id);
+        tournamentResultsMap.set(tournament.id, tournamentResults);
+        
+        // Filter to only results with valid gross scores and sort by gross score
+        const validGrossResults = tournamentResults
+          .filter(r => r.grossScore !== null && r.grossScore !== undefined)
+          .sort((a, b) => {
+            if (!a.grossScore || !b.grossScore) return 0;
+            return a.grossScore - b.grossScore; // Lower score is better
+          });
+        
+        // Assign gross positions for this tournament
+        validGrossResults.forEach((result, index) => {
+          const key = `${tournament.id}-${result.playerId}`;
+          grossPositionsMap.set(key, index + 1);
+        });
+      }
+    }
+    
+    // Now process each result with the calculated gross positions
     for (const result of results) {
       const tournament = tournamentMap.get(result.tournamentId);
       
@@ -406,6 +437,10 @@ export class DatabaseStorage implements IStorage {
         countNetScores++;
       }
       
+      // Get this player's gross position in this tournament
+      const grossPositionKey = `${tournament.id}-${result.playerId}`;
+      const grossPosition = grossPositionsMap.get(grossPositionKey);
+      
       // Create tournament detail with the appropriate score type
       const tournamentDetail: any = {
         id: result.id,
@@ -413,7 +448,8 @@ export class DatabaseStorage implements IStorage {
         tournamentName: tournament.name,
         tournamentDate: tournament.date,
         tournamentType: tournament.type,
-        position: result.position,
+        position: result.position, // Net position
+        grossPosition: grossPosition || null, // Gross position
         grossScore: result.grossScore,
         netScore: result.netScore,
         handicap: result.handicap,
