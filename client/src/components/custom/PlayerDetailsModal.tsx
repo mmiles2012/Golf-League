@@ -40,6 +40,9 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
           <DialogTitle>
             {isLoading ? "Loading player details..." : `${playerHistory?.player.name}`}
           </DialogTitle>
+          <p className="text-sm text-neutral-500">
+            View tournament history and detailed statistics
+          </p>
         </DialogHeader>
         
         {isLoading ? (
