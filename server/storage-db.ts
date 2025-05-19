@@ -306,8 +306,8 @@ export class DatabaseStorage implements IStorage {
       }
     });
     
-    // Now sort by grossTotalPoints (highest to lowest)
-    leaderboard.sort((a, b) => (b.grossTotalPoints || 0) - (a.grossTotalPoints || 0));
+    // Now sort by grossTourPoints (highest to lowest)
+    leaderboard.sort((a, b) => (b.grossTourPoints || 0) - (a.grossTourPoints || 0));
     
     // Re-assign ranks after sorting
     leaderboard.forEach((player, index) => {
