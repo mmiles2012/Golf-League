@@ -210,16 +210,25 @@ export class DatabaseStorage implements IStorage {
       27, 26, 25, 24, 23, 22, 21, 20, 19, 18        // 41-50
     ];
     
-    // Assign ranks and Tour points based on position
+    // Assign ranks and calculate separate tour points for gross leaderboard
     leaderboard.forEach((player, index) => {
+      // Assign rank based on gross score position
       player.rank = index + 1;
       
-      // Assign Tour points based on position (first place gets 500 points)
+      // Store original points for reference
+      const originalTotalPoints = player.totalPoints;
+      const originalTourPoints = player.tourPoints;
+      
+      // Assign Tour points based on gross position (first place gets 500 points)
       if (index < tourPointsTable.length) {
-        // Add Tour points to player record
-        player.tourPoints = tourPointsTable[index];
-        // Update total points to include Tour points
-        player.totalPoints += tourPointsTable[index];
+        // Calculate the new gross-based tour points
+        const grossPositionPoints = tourPointsTable[index];
+        
+        // Create a separate record of gross tour points that doesn't affect the net leaderboard
+        player.grossTourPoints = grossPositionPoints;
+        
+        // For display on the gross leaderboard, we show the total with gross tour points
+        player.grossTotalPoints = originalTotalPoints + grossPositionPoints;
       }
     });
     

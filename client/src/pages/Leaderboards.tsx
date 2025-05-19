@@ -73,48 +73,94 @@ export default function Leaderboards() {
   };
   
   // Define columns for DataTable
-  const columns: ColumnDef<PlayerWithHistory>[] = [
-    {
-      accessorKey: "rank",
-      header: "Pos",
-      cell: ({ row }) => <div className="font-medium">{row.original.rank}</div>,
-    },
-    {
-      accessorKey: "player.name",
-      header: "Player",
-      cell: ({ row }) => <div className="font-medium">{row.original.player.name}</div>,
-    },
-    {
-      accessorKey: "majorPoints",
-      header: "Major",
-      cell: ({ row }) => <div className="text-center">{row.original.majorPoints.toLocaleString()}</div>,
-    },
-    {
-      accessorKey: "tourPoints",
-      header: "Tour",
-      cell: ({ row }) => <div className="text-center">{row.original.tourPoints.toLocaleString()}</div>,
-    },
-    {
-      accessorKey: "leaguePoints",
-      header: "League",
-      cell: ({ row }) => <div className="text-center">{row.original.leaguePoints.toLocaleString()}</div>,
-    },
-    {
-      accessorKey: "suprPoints",
-      header: "SUPR",
-      cell: ({ row }) => <div className="text-center">{row.original.suprPoints.toLocaleString()}</div>,
-    },
-    {
-      accessorKey: "totalEvents",
-      header: "Events",
-      cell: ({ row }) => <div className="text-center">{row.original.totalEvents}</div>,
-    },
-    {
-      accessorKey: "totalPoints",
-      header: "Total Points",
-      cell: ({ row }) => <div className="font-bold text-right">{row.original.totalPoints.toLocaleString()}</div>,
-    },
-  ];
+  const getColumns = (): ColumnDef<PlayerWithHistory>[] => {
+    // Base columns that are the same for both leaderboards
+    const baseColumns: ColumnDef<PlayerWithHistory>[] = [
+      {
+        accessorKey: "rank",
+        header: "Pos",
+        cell: ({ row }) => <div className="font-medium">{row.original.rank}</div>,
+      },
+      {
+        accessorKey: "player.name",
+        header: "Player",
+        cell: ({ row }) => <div className="font-medium">{row.original.player.name}</div>,
+      },
+      {
+        accessorKey: "majorPoints",
+        header: "Major",
+        cell: ({ row }) => <div className="text-center">{row.original.majorPoints.toLocaleString()}</div>,
+      },
+      {
+        accessorKey: "totalEvents",
+        header: "Events",
+        cell: ({ row }) => <div className="text-center">{row.original.totalEvents}</div>,
+      },
+    ];
+    
+    // Columns specific to net leaderboard
+    if (activeTab === "net") {
+      return [
+        ...baseColumns,
+        {
+          accessorKey: "tourPoints",
+          header: "Tour",
+          cell: ({ row }) => <div className="text-center">{row.original.tourPoints.toLocaleString()}</div>,
+        },
+        {
+          accessorKey: "leaguePoints",
+          header: "League",
+          cell: ({ row }) => <div className="text-center">{row.original.leaguePoints.toLocaleString()}</div>,
+        },
+        {
+          accessorKey: "suprPoints",
+          header: "SUPR",
+          cell: ({ row }) => <div className="text-center">{row.original.suprPoints.toLocaleString()}</div>,
+        },
+        {
+          accessorKey: "totalPoints",
+          header: "Total Points",
+          cell: ({ row }) => <div className="font-bold text-right">{row.original.totalPoints.toLocaleString()}</div>,
+        },
+      ];
+    } 
+    // Columns specific to gross leaderboard
+    else {
+      return [
+        ...baseColumns,
+        {
+          accessorKey: "grossTourPoints",
+          header: "Gross Tour",
+          cell: ({ row }) => <div className="text-center">{(row.original.grossTourPoints || 0).toLocaleString()}</div>,
+        },
+        {
+          accessorKey: "averageScore",
+          header: "Avg. Gross",
+          cell: ({ row }) => (
+            <div className="text-center">
+              {row.original.averageGrossScore 
+                ? row.original.averageGrossScore < 999 
+                  ? row.original.averageGrossScore.toFixed(1) 
+                  : "N/A" 
+                : "N/A"}
+            </div>
+          ),
+        },
+        {
+          accessorKey: "leaguePoints",
+          header: "League",
+          cell: ({ row }) => <div className="text-center">{row.original.leaguePoints.toLocaleString()}</div>,
+        },
+        {
+          accessorKey: "grossTotalPoints",
+          header: "Total Points",
+          cell: ({ row }) => <div className="font-bold text-right">{(row.original.grossTotalPoints || row.original.totalPoints).toLocaleString()}</div>,
+        },
+      ];
+    }
+  }
+  
+  const columns = getColumns();
   
   return (
     <section className="space-y-6">
