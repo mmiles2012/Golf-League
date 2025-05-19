@@ -231,7 +231,8 @@ export default function EditTournamentDialog({
                       <TableHead className="text-center">Gross Score</TableHead>
                       <TableHead className="text-center">Handicap</TableHead>
                       <TableHead className="text-center">Net Score</TableHead>
-                      <TableHead className="text-center">Points</TableHead>
+                      <TableHead className="text-center whitespace-nowrap">Net Points</TableHead>
+                      <TableHead className="text-center whitespace-nowrap">Gross Points</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody className="divide-y divide-neutral-200">
@@ -278,6 +279,32 @@ export default function EditTournamentDialog({
                         </TableCell>
                         <TableCell className="text-center font-medium">
                           {result.points}
+                        </TableCell>
+                        <TableCell className="text-center font-medium">
+                          {(() => {
+                            // Calculate gross points based on position
+                            const grossPointsTable = [
+                              500, 300, 190, 135, 110, 100, 90, 85, 80, 75, // 1-10
+                              70, 65, 60, 57, 55, 53, 51, 50, 49, 48,       // 11-20
+                              47, 46, 45, 44, 43, 42, 41, 40, 39, 38,       // 21-30
+                              37, 36, 35, 34, 33, 32, 31, 30, 29, 28,       // 31-40
+                              27, 26, 25, 24, 23, 22, 21, 20, 19, 18        // 41-50
+                            ];
+                            
+                            // Sort results by gross score to determine gross position
+                            const sortedByGrossScore = [...results]
+                              .sort((a, b) => (a.grossScore || 999) - (b.grossScore || 999));
+                            
+                            // Find position of current player in the sorted array
+                            const grossPosition = sortedByGrossScore.findIndex(
+                              item => item.id === result.id
+                            );
+                            
+                            // Return the appropriate points based on position
+                            return grossPosition >= 0 && grossPosition < grossPointsTable.length 
+                              ? grossPointsTable[grossPosition] 
+                              : 0;
+                          })()}
                         </TableCell>
                       </TableRow>
                     ))}
