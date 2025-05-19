@@ -182,18 +182,24 @@ export class DatabaseStorage implements IStorage {
     const leaderboard: PlayerWithHistory[] = [];
     
     for (const player of allPlayers) {
+      // Always use 'gross' for score type to ensure proper sorting
       const playerHistory = await this.calculatePlayerHistory(player.id, 'gross');
       if (playerHistory) {
+        // Make sure we have a clean slate for the gross points
+        playerHistory.grossTourPoints = 0;
+        playerHistory.grossTotalPoints = 0;
         leaderboard.push(playerHistory);
       }
     }
     
+    console.log("Gross leaderboard players count:", leaderboard.length);
+    
     // For gross leaderboard, sort by average gross score (ascending, lower is better)
     // If scores are equal, use points as a tiebreaker (descending)
     leaderboard.sort((a, b) => {
-      // Use the averageScore which will have the correct score type (gross score)
-      const aScore = a.averageScore !== undefined ? a.averageScore : 999;
-      const bScore = b.averageScore !== undefined ? b.averageScore : 999;
+      // Use the averageGrossScore which ensures we're using gross scores
+      const aScore = a.averageGrossScore !== undefined ? a.averageGrossScore : 999;
+      const bScore = b.averageGrossScore !== undefined ? b.averageGrossScore : 999;
       
       if (aScore === bScore) {
         return b.totalPoints - a.totalPoints; // Secondary sort by points (higher is better)
@@ -217,18 +223,26 @@ export class DatabaseStorage implements IStorage {
       
       // Store original points for reference
       const originalTotalPoints = player.totalPoints;
-      const originalTourPoints = player.tourPoints;
       
       // Assign Tour points based on gross position (first place gets 500 points)
       if (index < tourPointsTable.length) {
         // Calculate the new gross-based tour points
         const grossPositionPoints = tourPointsTable[index];
         
-        // Create a separate record of gross tour points that doesn't affect the net leaderboard
+        // Create a separate record of gross tour points
         player.grossTourPoints = grossPositionPoints;
         
-        // For display on the gross leaderboard, we show the total with gross tour points
-        player.grossTotalPoints = originalTotalPoints + grossPositionPoints;
+        // For display on the gross leaderboard, calculate the total with gross tour points
+        // (major + gross tour + league + supr)
+        player.grossTotalPoints = originalTotalPoints - player.tourPoints + grossPositionPoints;
+      } else {
+        // For players without tour points, just use their original total
+        player.grossTotalPoints = originalTotalPoints;
+      }
+      
+      // Log player data if it's one of the top players
+      if (index < 3) {
+        console.log(`Player #${index+1} ${player.player.name}: originalTotal=${originalTotalPoints}, tourPoints=${player.tourPoints}, grossTourPoints=${player.grossTourPoints}, grossTotal=${player.grossTotalPoints}`);
       }
     });
     
