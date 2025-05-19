@@ -136,7 +136,8 @@ export const playerWithHistorySchema = z.object({
     tournamentName: z.string(),
     tournamentDate: z.string(),
     tournamentType: z.enum(tournamentTypes),
-    position: z.number(),
+    position: z.number(), // Net position (default position)
+    grossPosition: z.number().optional(), // Gross position (based on gross score) 
     grossScore: z.number().optional().nullable(),
     netScore: z.number().optional().nullable(),
     handicap: z.number().optional().nullable(),

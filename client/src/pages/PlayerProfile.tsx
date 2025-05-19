@@ -188,8 +188,10 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
                 <th className="py-2 pl-5 pr-2 text-left text-sm font-medium text-neutral-700">Tournament</th>
                 <th className="px-2 py-2 text-left text-sm font-medium text-neutral-700">Date</th>
                 <th className="px-2 py-2 text-left text-sm font-medium text-neutral-700">Type</th>
-                <th className="px-2 py-2 text-center text-sm font-medium text-neutral-700">Position</th>
-                <th className="px-2 py-2 text-center text-sm font-medium text-neutral-700">Score</th>
+                <th className="px-2 py-2 text-center text-sm font-medium text-neutral-700">Net Pos</th>
+                <th className="px-2 py-2 text-center text-sm font-medium text-neutral-700">Gross Pos</th>
+                <th className="px-2 py-2 text-center text-sm font-medium text-neutral-700">Gross</th>
+                <th className="px-2 py-2 text-center text-sm font-medium text-neutral-700">Net</th>
                 <th className="px-2 py-2 text-right text-sm font-medium text-neutral-700">Points</th>
               </tr>
             </thead>

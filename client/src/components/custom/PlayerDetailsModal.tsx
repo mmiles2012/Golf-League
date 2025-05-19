@@ -79,7 +79,8 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
                     <TableHead className="w-1/4">Tournament</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Type</TableHead>
-                    <TableHead className="text-center">Position</TableHead>
+                    <TableHead className="text-center">Net Pos</TableHead>
+                    <TableHead className="text-center">Gross Pos</TableHead>
                     <TableHead className="text-center">Gross</TableHead>
                     <TableHead className="text-center">Net</TableHead>
                     <TableHead className="text-right">Points</TableHead>
@@ -96,6 +97,9 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
                         <Badge variant={tournament.tournamentType}>{tournamentTypeLabel(tournament.tournamentType)}</Badge>
                       </TableCell>
                       <TableCell className="text-center">{tournament.position}</TableCell>
+                      <TableCell className="text-center">
+                        {tournament.grossPosition || "N/A"}
+                      </TableCell>
                       <TableCell className="text-center">
                         {tournament.grossScore ? tournament.grossScore : "N/A"}
                       </TableCell>
