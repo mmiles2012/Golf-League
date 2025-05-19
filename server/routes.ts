@@ -281,13 +281,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Log all property names in this row for debugging
         console.log(`Row ${index} keys:`, Object.keys(row));
         
+        // Extract player name from Player Name field based on the format we saw in logs
+        const playerName = row["Player Name"] || row.Player || row.player || row.Name || row.name || "";
+        
+        // Extract position from Pos field based on the format we saw in logs
+        const position = row.Pos !== undefined ? Number(row.Pos) : 
+                        row.Position !== undefined ? Number(row.Position) : 
+                        row.position !== undefined ? Number(row.position) : (index + 1);
+        
+        // Extract gross score from Total field
+        const grossScore = row.Total !== undefined ? Number(row.Total) : 
+                          row["Gross Score"] !== undefined ? Number(row["Gross Score"]) : 
+                          row.grossScore !== undefined ? Number(row.grossScore) : null;
+        
+        // Calculate net score if StrokeNet scoring is used
+        let netScore = row["Net Score"] !== undefined ? Number(row["Net Score"]) : 
+                     row.netScore !== undefined ? Number(row.netScore) : 
+                     row.Net !== undefined ? Number(row.Net) : null;
+                     
+        // For StrokeNet scoring, calculate net score from gross and handicap
+        if (row.Scoring === "StrokeNet" && grossScore !== null && row["Course Handicap"] !== undefined) {
+          netScore = grossScore + Number(row["Course Handicap"]);
+        }
+        
+        // Extract handicap
+        const handicap = row["Course Handicap"] !== undefined ? Number(row["Course Handicap"]) :
+                       row.handicap !== undefined ? Number(row.handicap) : 
+                       row.Handicap !== undefined ? Number(row.Handicap) : null;
+        
+        console.log(`Processed row: Player: ${playerName}, Position: ${position}, Gross: ${grossScore}, Net: ${netScore}, Handicap: ${handicap}`);
+        
         return {
           // Standard column names we expect to use later
-          Player: row.Player || row.player || row.Name || row.name || "",
-          Position: row.Position || row.position || row.Pos || index + 1,
-          "Gross Score": row.Total || row["Gross Score"] || row.grossScore || null,
-          "Net Score": row["Net Score"] || row.netScore || row.Net || null,
-          "Course Handicap": row["Course Handicap"] || row.handicap || row.Handicap || null
+          Player: playerName,
+          Position: position,
+          "Gross Score": grossScore,
+          "Net Score": netScore,
+          "Course Handicap": handicap
         };
       });
       

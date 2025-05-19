@@ -110,27 +110,27 @@ export default function TournamentUploader() {
       console.log("Preview data:", data.preview);
       
       const processedResults = data.preview.map((row: any, index: number) => {
-        // Extract player name with fallback options
-        const playerName = row.Player || row.player || row.Name || row.name || "";
+        // Extract player name with fallback options, prioritizing Player Name as in Excel file
+        const playerName = row.Player || row["Player Name"] || row.player || row.Name || row.name || "";
         
         // Extract position with fallback options
-        const position = parseInt(row.Position || row.position || row.Pos || (index + 1));
+        const position = parseInt(String(row.Position || row.position || row.Pos || (index + 1)));
         
         // Extract scores with fallback options
         const grossScore = 
-          row.Total !== undefined ? parseInt(row.Total) : 
-          row["Gross Score"] !== undefined ? parseInt(row["Gross Score"]) : 
-          row.grossScore !== undefined ? parseInt(row.grossScore) : null;
+          row.Total !== undefined ? parseInt(String(row.Total)) : 
+          row["Gross Score"] !== undefined ? parseInt(String(row["Gross Score"])) : 
+          row.grossScore !== undefined ? parseInt(String(row.grossScore)) : null;
         
         const netScore = 
-          row["Net Score"] !== undefined ? parseInt(row["Net Score"]) : 
-          row.netScore !== undefined ? parseInt(row.netScore) : 
-          row.Net !== undefined ? parseInt(row.Net) : null;
+          row["Net Score"] !== undefined ? parseInt(String(row["Net Score"])) : 
+          row.netScore !== undefined ? parseInt(String(row.netScore)) : 
+          row.Net !== undefined ? parseInt(String(row.Net)) : null;
         
         const handicap = 
-          row["Course Handicap"] !== undefined ? parseFloat(row["Course Handicap"]) :
-          row.handicap !== undefined ? parseFloat(row.handicap) : 
-          row.Handicap !== undefined ? parseFloat(row.Handicap) : null;
+          row["Course Handicap"] !== undefined ? parseFloat(String(row["Course Handicap"])) :
+          row.handicap !== undefined ? parseFloat(String(row.handicap)) : 
+          row.Handicap !== undefined ? parseFloat(String(row.Handicap)) : null;
         
         console.log(`Processing row for player: ${playerName}, position: ${position}, gross: ${grossScore}, net: ${netScore}, handicap: ${handicap}`);
         
