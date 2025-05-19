@@ -263,16 +263,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
       
+      console.log("File uploaded:", req.file.originalname);
+      
       // Parse Excel file
       const workbook = XLSX.read(req.file.buffer);
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(worksheet);
       
+      console.log("Parsed Excel data:", data.length, "rows");
+      
+      // Log the first few rows to inspect the structure
+      console.log("First row sample:", JSON.stringify(data[0], null, 2));
+      
+      // Process the data to ensure consistent column names
+      const processedData = data.map((row: any, index: number) => {
+        // Log all property names in this row for debugging
+        console.log(`Row ${index} keys:`, Object.keys(row));
+        
+        return {
+          // Standard column names we expect to use later
+          Player: row.Player || row.player || row.Name || row.name || "",
+          Position: row.Position || row.position || row.Pos || index + 1,
+          "Gross Score": row.Total || row["Gross Score"] || row.grossScore || null,
+          "Net Score": row["Net Score"] || row.netScore || row.Net || null,
+          "Course Handicap": row["Course Handicap"] || row.handicap || row.Handicap || null
+        };
+      });
+      
       res.json({
         message: "File uploaded successfully",
-        rows: data.length,
-        preview: data.slice(0, 5)
+        rows: processedData.length,
+        preview: processedData
       });
     } catch (error) {
       console.error("Error uploading file:", error);
@@ -285,7 +307,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Received tournament data:", JSON.stringify(req.body, null, 2));
       
-      const validationResult = tournamentUploadSchema.safeParse(req.body);
+      // Clean and format the data before validation
+      const { name, date, type, results } = req.body;
+      
+      // Format the input data with proper types for validation
+      const formattedData = {
+        name,
+        date,
+        type,
+        results: results.map((result: any) => ({
+          player: String(result.player || ""),
+          position: Number(result.position),
+          grossScore: result.grossScore !== null && result.grossScore !== undefined ? Number(result.grossScore) : null,
+          netScore: result.netScore !== null && result.netScore !== undefined ? Number(result.netScore) : null,
+          handicap: result.handicap !== null && result.handicap !== undefined ? Number(result.handicap) : null
+        }))
+      };
+      
+      console.log("Formatted data for validation:", JSON.stringify(formattedData, null, 2));
+      
+      const validationResult = tournamentUploadSchema.safeParse(formattedData);
       
       if (!validationResult.success) {
         console.error("Validation errors:", validationResult.error.errors);
@@ -295,14 +336,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const { name, date, type, results } = validationResult.data;
-      console.log(`Processing tournament: ${name}, date: ${date}, type: ${type}, with ${results.length} player results`);
+      const validData = validationResult.data;
+      console.log(`Processing tournament: ${validData.name}, date: ${validData.date}, type: ${validData.type}, with ${validData.results.length} player results`);
       
       // Create tournament
       const tournament = await storage.createTournament({
-        name,
-        date,
-        type,
+        name: validData.name,
+        date: validData.date,
+        type: validData.type,
         status: "completed"
       });
       
@@ -311,7 +352,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Process player results
       const processedResults = [];
       
-      for (const result of results) {
+      for (const result of validData.results) {
         console.log(`Processing result for player: ${result.player}, position: ${result.position}`);
         
         // Find or create player
@@ -329,21 +370,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Calculate points based on position and tournament type
-        const points = calculatePoints(result.position, type);
-        console.log(`Calculated ${points} points for position ${result.position} in ${type} tournament`);
+        const points = calculatePoints(result.position, validData.type);
+        console.log(`Calculated ${points} points for position ${result.position} in ${validData.type} tournament`);
         
-        // Create player result
+        // Create player result with proper null handling for optional fields
         const playerResultData = {
           playerId: player.id,
           tournamentId: tournament.id,
           position: result.position,
-          grossScore: result.grossScore || null,
-          netScore: result.netScore || null,
-          handicap: result.handicap || null,
+          // Explicitly handle nulls to avoid type issues
+          grossScore: result.grossScore !== undefined ? result.grossScore : null,
+          netScore: result.netScore !== undefined ? result.netScore : null, 
+          handicap: result.handicap !== undefined ? result.handicap : null,
           points
         };
         
-        console.log("Creating player result:", playerResultData);
+        console.log("Creating player result:", JSON.stringify(playerResultData, null, 2));
         
         try {
           const playerResult = await storage.createPlayerResult(playerResultData);
@@ -351,6 +393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           processedResults.push(playerResult);
         } catch (error) {
           console.error("Error creating player result:", error);
+          console.error("Error details:", JSON.stringify(error, null, 2));
           throw error;
         }
       }
