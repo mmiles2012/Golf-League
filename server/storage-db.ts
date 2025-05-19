@@ -183,12 +183,27 @@ export class DatabaseStorage implements IStorage {
     for (const player of allPlayers) {
       const playerHistory = await this.calculatePlayerHistory(player.id, 'gross');
       if (playerHistory) {
+        // Calculate average gross score for sorting
+        if (playerHistory.tournaments.length > 0) {
+          const totalGrossScore = playerHistory.tournaments.reduce((sum, tournament) => 
+            sum + (tournament.grossScore !== null ? tournament.grossScore : 0), 0);
+          playerHistory.averageGrossScore = playerHistory.tournaments.length > 0 ? 
+            totalGrossScore / playerHistory.tournaments.length : 0;
+        } else {
+          playerHistory.averageGrossScore = 0;
+        }
         leaderboard.push(playerHistory);
       }
     }
     
-    // Sort by total points descending
-    leaderboard.sort((a, b) => b.totalPoints - a.totalPoints);
+    // For gross leaderboard, sort by average gross score (ascending, lower is better)
+    // If scores are equal, use points as a tiebreaker (descending)
+    leaderboard.sort((a, b) => {
+      if (a.averageGrossScore === b.averageGrossScore) {
+        return b.totalPoints - a.totalPoints;
+      }
+      return a.averageGrossScore - b.averageGrossScore;
+    });
     
     // Assign ranks
     leaderboard.forEach((player, index) => {
