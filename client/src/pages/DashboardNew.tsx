@@ -351,86 +351,86 @@ export default function Dashboard() {
         <Card>
           <CardContent className="p-0">
             <ul className="divide-y divide-neutral-100">
-            {isLoadingTournaments ? (
-              Array(3).fill(0).map((_, index) => (
-                <li key={index} className="px-5 py-4 flex items-start space-x-3">
-                  <Skeleton className="h-8 w-8 rounded-full flex-shrink-0" />
-                  <div className="flex-1">
-                    <Skeleton className="h-5 w-48 mb-1" />
-                    <Skeleton className="h-4 w-64" />
-                    <Skeleton className="h-3 w-20 mt-1" />
-                  </div>
-                </li>
-              ))
-            ) : (
-              recentActivity.map((tournament) => {
-                let icon, iconClass;
-                
-                switch (tournament.type) {
-                  case 'major':
-                    icon = <Trophy className="h-4 w-4" />;
-                    iconClass = "bg-accent/20 text-accent-dark";
-                    break;
-                  case 'tour':
-                    icon = <Flag className="h-4 w-4" />;
-                    iconClass = "bg-primary/10 text-primary";
-                    break;
-                  case 'league':
-                    icon = <Users className="h-4 w-4" />;
-                    iconClass = "bg-secondary/20 text-secondary-dark";
-                    break;
-                  case 'supr':
-                    icon = <CalendarCheck className="h-4 w-4" />;
-                    iconClass = "bg-purple-100 text-purple-800";
-                    break;
-                  default:
-                    icon = <Calendar className="h-4 w-4" />;
-                    iconClass = "bg-neutral-200 text-neutral-700";
-                }
-                
-                const tournamentDate = new Date(tournament.date);
-                const today = new Date();
-                const diffTime = Math.abs(today.getTime() - tournamentDate.getTime());
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                
-                let timeAgo;
-                if (diffDays === 0) {
-                  timeAgo = "Today";
-                } else if (diffDays === 1) {
-                  timeAgo = "Yesterday";
-                } else if (diffDays < 7) {
-                  timeAgo = `${diffDays} days ago`;
-                } else if (diffDays < 30) {
-                  const weeks = Math.floor(diffDays / 7);
-                  timeAgo = `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
-                } else {
-                  const months = Math.floor(diffDays / 30);
-                  timeAgo = `${months} ${months === 1 ? 'month' : 'months'} ago`;
-                }
-                
-                return (
-                  <li key={tournament.id} className="px-5 py-4 flex items-start space-x-3">
-                    <div className={`h-8 w-8 rounded-full flex-shrink-0 flex items-center justify-center ${iconClass}`}>
-                      {icon}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{tournament.name}</p>
-                      <p className="text-sm text-neutral-600">
-                        {tournament.type.charAt(0).toUpperCase() + tournament.type.slice(1)} event processed
-                      </p>
-                      <p className="text-xs text-neutral-500 mt-1">{timeAgo}</p>
+              {isLoadingTournaments ? (
+                Array(3).fill(0).map((_, index) => (
+                  <li key={index} className="px-5 py-4 flex items-start space-x-3">
+                    <Skeleton className="h-10 w-10 rounded-full flex-shrink-0" />
+                    <div className="flex-1">
+                      <Skeleton className="h-5 w-48 mb-1" />
+                      <Skeleton className="h-4 w-64" />
+                      <Skeleton className="h-3 w-20 mt-1" />
                     </div>
                   </li>
-                );
-              })
-            )}
-            
-            {!isLoadingTournaments && recentActivity.length === 0 && (
-              <li className="px-5 py-4 text-center">
-                <p className="text-sm text-neutral-500">No recent activity</p>
-              </li>
-            )}
-          </ul>
+                ))
+              ) : recentActivity.length > 0 ? (
+                recentActivity.map((tournament) => {
+                  let icon, iconClass;
+                  
+                  switch (tournament.type) {
+                    case 'major':
+                      icon = <Trophy className="h-5 w-5" />;
+                      iconClass = "bg-amber-100 text-amber-800";
+                      break;
+                    case 'tour':
+                      icon = <Flag className="h-5 w-5" />;
+                      iconClass = "bg-blue-100 text-blue-800";
+                      break;
+                    case 'league':
+                      icon = <Users className="h-5 w-5" />;
+                      iconClass = "bg-green-100 text-green-800";
+                      break;
+                    case 'supr':
+                      icon = <CalendarCheck className="h-5 w-5" />;
+                      iconClass = "bg-purple-100 text-purple-800";
+                      break;
+                    default:
+                      icon = <Calendar className="h-5 w-5" />;
+                      iconClass = "bg-neutral-100 text-neutral-800";
+                  }
+                  
+                  const tournamentDate = new Date(tournament.date);
+                  const today = new Date();
+                  const diffTime = Math.abs(today.getTime() - tournamentDate.getTime());
+                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                  
+                  let timeAgo;
+                  if (diffDays === 0) {
+                    timeAgo = "Today";
+                  } else if (diffDays === 1) {
+                    timeAgo = "Yesterday";
+                  } else if (diffDays < 7) {
+                    timeAgo = `${diffDays} days ago`;
+                  } else if (diffDays < 30) {
+                    const weeks = Math.floor(diffDays / 7);
+                    timeAgo = `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
+                  } else {
+                    const months = Math.floor(diffDays / 30);
+                    timeAgo = `${months} ${months === 1 ? 'month' : 'months'} ago`;
+                  }
+                  
+                  return (
+                    <li key={tournament.id} className="px-5 py-4 flex items-center gap-4 hover:bg-neutral-50">
+                      <div className={`h-10 w-10 rounded-full flex-shrink-0 flex items-center justify-center ${iconClass}`}>
+                        {icon}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium">{tournament.name}</p>
+                          <p className="text-xs text-neutral-500">{timeAgo}</p>
+                        </div>
+                        <p className="text-sm text-neutral-600 mt-1">
+                          {tournament.type.charAt(0).toUpperCase() + tournament.type.slice(1)} event completed
+                        </p>
+                      </div>
+                    </li>
+                  );
+                })
+              ) : (
+                <li className="px-5 py-8 text-center text-neutral-500">
+                  <p>No recent tournament activity</p>
+                </li>
+              )}
+            </ul>
           </CardContent>
         </Card>
       </div>

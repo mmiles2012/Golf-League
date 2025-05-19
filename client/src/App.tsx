@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import AppShell from "@/components/layout/AppShell";
-import Dashboard from "@/pages/Dashboard";
+import Dashboard from "@/pages/DashboardNew";
 import Leaderboards from "@/pages/Leaderboards";
 import UploadScores from "@/pages/UploadScores";
 import ManualEntry from "@/pages/ManualEntry";
