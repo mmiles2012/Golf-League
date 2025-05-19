@@ -200,9 +200,26 @@ export class DatabaseStorage implements IStorage {
       return aScore - bScore; // Primary sort by gross score (lower is better)
     });
     
-    // Assign ranks
+    // Tour points table for gross leaderboard positions
+    const tourPointsTable = [
+      500, 300, 190, 135, 110, 100, 90, 85, 80, 75, // 1-10
+      70, 65, 60, 57, 55, 53, 51, 50, 49, 48,       // 11-20
+      47, 46, 45, 44, 43, 42, 41, 40, 39, 38,       // 21-30
+      37, 36, 35, 34, 33, 32, 31, 30, 29, 28,       // 31-40
+      27, 26, 25, 24, 23, 22, 21, 20, 19, 18        // 41-50
+    ];
+    
+    // Assign ranks and Tour points based on position
     leaderboard.forEach((player, index) => {
       player.rank = index + 1;
+      
+      // Assign Tour points based on position (first place gets 500 points)
+      if (index < tourPointsTable.length) {
+        // Add Tour points to player record
+        player.tourPoints = tourPointsTable[index];
+        // Update total points to include Tour points
+        player.totalPoints += tourPointsTable[index];
+      }
     });
     
     return leaderboard;
