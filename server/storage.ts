@@ -112,11 +112,24 @@ export class MemStorage implements IStorage {
   
   async createTournament(tournament: InsertTournament): Promise<Tournament> {
     const id = this.tournamentCurrentId++;
+    
+    // Ensure date is stored as a string for consistency
+    let tournamentDate = tournament.date;
+    if (tournamentDate instanceof Date) {
+      tournamentDate = tournamentDate.toISOString().split('T')[0];
+    } else if (typeof tournamentDate !== 'string') {
+      tournamentDate = String(tournamentDate);
+    }
+    
     const newTournament: Tournament = {
       id,
       createdAt: new Date(),
-      ...tournament
+      name: tournament.name,
+      date: tournamentDate, // Use the string date
+      type: tournament.type,
+      status: tournament.status || 'upcoming'
     };
+    
     this.tournaments.set(id, newTournament);
     return newTournament;
   }
@@ -128,9 +141,23 @@ export class MemStorage implements IStorage {
       return undefined;
     }
     
+    // Create a copy of the tournament data to modify
+    const tournamentData = {...tournament};
+    
+    // Handle date conversion explicitly if present
+    if (tournamentData.date) {
+      let tournamentDate = tournamentData.date;
+      if (tournamentDate instanceof Date) {
+        tournamentDate = tournamentDate.toISOString().split('T')[0];
+      } else if (typeof tournamentDate !== 'string') {
+        tournamentDate = String(tournamentDate);
+      }
+      tournamentData.date = tournamentDate;
+    }
+    
     const updatedTournament = {
       ...existingTournament,
-      ...tournament
+      ...tournamentData
     };
     
     this.tournaments.set(id, updatedTournament);
