@@ -43,9 +43,26 @@ export default function EditTournamentDialog({
   const [results, setResults] = useState<Array<any>>([]);
   const [isSaving, setIsSaving] = useState(false);
   
-  // Fetch tournament data
+  // Fetch tournament data with results
   const { data: tournament, isLoading } = useQuery<TournamentWithResults>({
     queryKey: [`/api/tournaments/${tournamentId}`],
+    queryFn: async () => {
+      // First fetch the tournament
+      const tournamentResponse = await fetch(`/api/tournaments/${tournamentId}`);
+      if (!tournamentResponse.ok) throw new Error('Failed to fetch tournament');
+      const tournamentData = await tournamentResponse.json();
+      
+      // Then fetch the tournament results
+      const resultsResponse = await fetch(`/api/tournaments/${tournamentId}/results`);
+      if (!resultsResponse.ok) throw new Error('Failed to fetch tournament results');
+      const resultsData = await resultsResponse.json();
+      
+      // Combine them
+      return {
+        ...tournamentData,
+        results: resultsData
+      };
+    },
     enabled: isOpen && tournamentId !== null,
   });
   

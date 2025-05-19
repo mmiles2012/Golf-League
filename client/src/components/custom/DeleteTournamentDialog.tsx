@@ -41,10 +41,19 @@ export default function DeleteTournamentDialog({
     setIsDeleting(true);
     
     try {
-      const response = await apiRequest("DELETE", `/api/tournaments/${tournament.id}`);
+      console.log(`Deleting tournament with ID: ${tournament.id}`);
+      
+      // Use fetch directly for better control over the request
+      const response = await fetch(`/api/tournaments/${tournament.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       
       if (!response.ok) {
-        throw new Error("Failed to delete tournament");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to delete tournament");
       }
       
       toast({
