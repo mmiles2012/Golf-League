@@ -134,27 +134,9 @@ export default function Leaderboards() {
           cell: ({ row }) => <div className="text-center">{(row.original.grossTourPoints || 0).toLocaleString()}</div>,
         },
         {
-          accessorKey: "averageScore",
-          header: "Avg. Gross",
-          cell: ({ row }) => (
-            <div className="text-center">
-              {row.original.averageGrossScore 
-                ? row.original.averageGrossScore < 999 
-                  ? row.original.averageGrossScore.toFixed(1) 
-                  : "N/A" 
-                : "N/A"}
-            </div>
-          ),
-        },
-        {
           accessorKey: "leaguePoints",
           header: "League",
           cell: ({ row }) => <div className="text-center">{row.original.leaguePoints.toLocaleString()}</div>,
-        },
-        {
-          accessorKey: "grossTotalPoints",
-          header: "Total Points",
-          cell: ({ row }) => <div className="font-bold text-right">{(row.original.grossTotalPoints || row.original.totalPoints).toLocaleString()}</div>,
         },
       ];
     }
