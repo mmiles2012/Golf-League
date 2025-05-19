@@ -216,13 +216,13 @@ export class DatabaseStorage implements IStorage {
       27, 26, 25, 24, 23, 22, 21, 20, 19, 18        // 41-50
     ];
     
-    // Assign ranks and calculate separate tour points for gross leaderboard
+    // First, assign gross tour points based on position
     leaderboard.forEach((player, index) => {
       // Assign rank based on gross score position
       player.rank = index + 1;
       
-      // Store original points for reference
-      const originalTotalPoints = player.totalPoints;
+      // Store the original tour points for calculations
+      const originalTourPoints = player.tourPoints;
       
       // Assign Tour points based on gross position (first place gets 500 points)
       if (index < tourPointsTable.length) {
@@ -232,17 +232,18 @@ export class DatabaseStorage implements IStorage {
         // Create a separate record of gross tour points
         player.grossTourPoints = grossPositionPoints;
         
-        // For display on the gross leaderboard, calculate the total with gross tour points
-        // (major + gross tour + league + supr)
-        player.grossTotalPoints = originalTotalPoints - player.tourPoints + grossPositionPoints;
+        // Replace regular tour points with gross tour points for total calculation
+        // This properly reflects the gross-based total points
+        player.grossTotalPoints = player.majorPoints + grossPositionPoints + player.leaguePoints + player.suprPoints;
       } else {
-        // For players without tour points, just use their original total
-        player.grossTotalPoints = originalTotalPoints;
+        // For players without gross tour points, set to 0
+        player.grossTourPoints = 0;
+        player.grossTotalPoints = player.majorPoints + player.leaguePoints + player.suprPoints;
       }
       
       // Log player data if it's one of the top players
       if (index < 3) {
-        console.log(`Player #${index+1} ${player.player.name}: originalTotal=${originalTotalPoints}, tourPoints=${player.tourPoints}, grossTourPoints=${player.grossTourPoints}, grossTotal=${player.grossTotalPoints}`);
+        console.log(`Player #${index+1} ${player.player.name}: majorPoints=${player.majorPoints}, originalTour=${originalTourPoints}, grossTour=${player.grossTourPoints}, league=${player.leaguePoints}, supr=${player.suprPoints}, grossTotal=${player.grossTotalPoints}`);
       }
     });
     
