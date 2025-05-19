@@ -183,15 +183,6 @@ export class DatabaseStorage implements IStorage {
     for (const player of allPlayers) {
       const playerHistory = await this.calculatePlayerHistory(player.id, 'gross');
       if (playerHistory) {
-        // Calculate average gross score for sorting
-        if (playerHistory.tournaments.length > 0) {
-          const totalGrossScore = playerHistory.tournaments.reduce((sum, tournament) => 
-            sum + (tournament.grossScore !== null ? tournament.grossScore : 0), 0);
-          playerHistory.averageGrossScore = playerHistory.tournaments.length > 0 ? 
-            totalGrossScore / playerHistory.tournaments.length : 0;
-        } else {
-          playerHistory.averageGrossScore = 0;
-        }
         leaderboard.push(playerHistory);
       }
     }
@@ -199,10 +190,14 @@ export class DatabaseStorage implements IStorage {
     // For gross leaderboard, sort by average gross score (ascending, lower is better)
     // If scores are equal, use points as a tiebreaker (descending)
     leaderboard.sort((a, b) => {
-      if (a.averageGrossScore === b.averageGrossScore) {
-        return b.totalPoints - a.totalPoints;
+      // Ensure we have valid average gross scores
+      const aScore = a.averageGrossScore !== undefined ? a.averageGrossScore : 999;
+      const bScore = b.averageGrossScore !== undefined ? b.averageGrossScore : 999;
+      
+      if (aScore === bScore) {
+        return b.totalPoints - a.totalPoints; // Secondary sort by points (higher is better)
       }
-      return a.averageGrossScore - b.averageGrossScore;
+      return aScore - bScore; // Primary sort by gross score (lower is better)
     });
     
     // Assign ranks
@@ -286,11 +281,21 @@ export class DatabaseStorage implements IStorage {
     let leaguePoints = 0;
     let suprPoints = 0;
     
+    // Track total gross score for averaging
+    let totalGrossScore = 0;
+    let countGrossScores = 0;
+    
     for (const result of results) {
       const tournament = tournamentMap.get(result.tournamentId);
       
       if (!tournament) {
         continue;
+      }
+      
+      // Track gross scores for average calculation
+      if (result.grossScore !== null) {
+        totalGrossScore += result.grossScore;
+        countGrossScores++; 
       }
       
       tournamentDetails.push({
@@ -325,6 +330,9 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
+    // Calculate average gross score
+    const averageGrossScore = countGrossScores > 0 ? totalGrossScore / countGrossScores : 999; // Use high number for those without scores
+    
     return {
       player: {
         id: player.id,
@@ -339,7 +347,8 @@ export class DatabaseStorage implements IStorage {
       leaguePoints,
       suprPoints,
       totalEvents: tournamentDetails.length,
-      rank: 0 // Will be set after sorting
+      rank: 0, // Will be set after sorting
+      averageGrossScore
     };
   }
 }
