@@ -134,23 +134,36 @@ export default function TournamentUploader() {
     if (!processedResultsCache) return;
     
     // Create a modified version of the results
-    const modifiedResults = processedResultsCache.map(result => {
+    let modifiedResults: any[] = [];
+    
+    processedResultsCache.forEach(result => {
       // If this is a team entry that's been selected
       if (selections[result.player]) {
         // Check if "both" was selected
         if (selections[result.player] === "both") {
-          // For "both" option, we'll create separate entries for each player
-          // But for now, just keep the original format to avoid database errors
-          return result;
+          // For "both" option, create separate entries for each player in the team
+          const playerNames = result.player.split('/').map(name => name.trim());
+          
+          // Create an entry for each player with the same details
+          playerNames.forEach(playerName => {
+            modifiedResults.push({
+              ...result,
+              player: playerName
+            });
+          });
+          
+          console.log(`Team ${result.player} split into individual entries for: ${playerNames.join(', ')}`);
         } else {
-          // Replace the team name with the selected individual - make sure it's just one player
-          return {
+          // Replace the team name with the selected individual
+          modifiedResults.push({
             ...result,
             player: selections[result.player].trim() // Ensure no whitespace that could cause issues
-          };
+          });
         }
+      } else {
+        // Keep non-team entries as they are
+        modifiedResults.push(result);
       }
-      return result;
     });
     
     setUploadProgress(90);
