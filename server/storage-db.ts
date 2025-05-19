@@ -229,9 +229,6 @@ export class DatabaseStorage implements IStorage {
       return a.player.name.localeCompare(b.player.name);
     });
     
-    // Combine the sorted lists, with valid scores first, then players without scores
-    leaderboard = [...playersWithValidScores, ...playersWithoutValidScores];
-    
     // Tour points table for gross leaderboard positions (from Founders Series Tour Points List)
     const tourPointsTable = [
       500, 300, 190, 135, 110, 100, 90, 85, 80, 75,    // 1-10

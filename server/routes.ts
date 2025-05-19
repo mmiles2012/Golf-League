@@ -38,22 +38,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/players/:id", async (req: Request, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      const player = await storage.getPlayer(id);
-      
-      if (!player) {
-        return res.status(404).json({ message: "Player not found" });
-      }
-      
-      res.json(player);
-    } catch (error) {
-      console.error("Error fetching player:", error);
-      res.status(500).json({ message: "Failed to fetch player" });
-    }
-  });
-  
+  // Important: The search endpoint must come BEFORE the :id endpoint
+  // to avoid route conflicts
   app.get("/api/players/search", async (req: Request, res: Response) => {
     try {
       const query = req.query.q as string;
@@ -67,6 +53,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error searching players:", error);
       res.status(500).json({ message: "Failed to search players" });
+    }
+  });
+  
+  app.get("/api/players/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const player = await storage.getPlayer(id);
+      
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+      
+      res.json(player);
+    } catch (error) {
+      console.error("Error fetching player:", error);
+      res.status(500).json({ message: "Failed to fetch player" });
     }
   });
   
