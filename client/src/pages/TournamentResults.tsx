@@ -212,6 +212,7 @@ export default function TournamentResults() {
                         <TableHead className="text-center">Gross Score</TableHead>
                         <TableHead className="text-center">Net Score</TableHead>
                         <TableHead className="text-center">Handicap</TableHead>
+                        <TableHead className="text-right">Points</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -240,6 +241,9 @@ export default function TournamentResults() {
                           </TableCell>
                           <TableCell className="text-center">
                             {result.handicap !== null ? result.handicap : "N/A"}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {result.points}
                           </TableCell>
                         </TableRow>
                       ))}
