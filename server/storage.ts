@@ -421,11 +421,14 @@ export class MemStorage implements IStorage {
         continue;
       }
       
+      // Handle the date safely by formatting it to a string
+      const tournamentDate = String(tournament.date);
+      
       tournamentDetails.push({
         id: result.id,
         tournamentId: tournament.id,
         tournamentName: tournament.name,
-        tournamentDate: tournament.date.toISOString().split('T')[0],
+        tournamentDate: tournamentDate,
         tournamentType: tournament.type,
         position: result.position,
         grossScore: result.grossScore,
