@@ -80,7 +80,8 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
                     <TableHead>Date</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead className="text-center">Position</TableHead>
-                    <TableHead className="text-center">Score</TableHead>
+                    <TableHead className="text-center">Gross</TableHead>
+                    <TableHead className="text-center">Net</TableHead>
                     <TableHead className="text-right">Points</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -97,6 +98,9 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
                       <TableCell className="text-center">{tournament.position}</TableCell>
                       <TableCell className="text-center">
                         {tournament.grossScore ? tournament.grossScore : "N/A"}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {tournament.netScore ? tournament.netScore : "N/A"}
                       </TableCell>
                       <TableCell className="text-right font-medium">{tournament.points}</TableCell>
                     </TableRow>
