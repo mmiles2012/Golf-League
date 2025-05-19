@@ -283,9 +283,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Process tournament data endpoint
   app.post("/api/tournaments/process", async (req: Request, res: Response) => {
     try {
+      console.log("Received tournament data:", JSON.stringify(req.body, null, 2));
+      
       const validationResult = tournamentUploadSchema.safeParse(req.body);
       
       if (!validationResult.success) {
+        console.error("Validation errors:", validationResult.error.errors);
         return res.status(400).json({ 
           message: "Invalid tournament data",
           errors: validationResult.error.errors
@@ -293,44 +296,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const { name, date, type, results } = validationResult.data;
+      console.log(`Processing tournament: ${name}, date: ${date}, type: ${type}, with ${results.length} player results`);
       
       // Create tournament
       const tournament = await storage.createTournament({
         name,
-        date: new Date(date),
+        date,
         type,
         status: "completed"
       });
+      
+      console.log(`Created tournament with ID: ${tournament.id}`);
       
       // Process player results
       const processedResults = [];
       
       for (const result of results) {
+        console.log(`Processing result for player: ${result.player}, position: ${result.position}`);
+        
         // Find or create player
         let player = await storage.findPlayerByName(result.player);
         
         if (!player) {
+          console.log(`Player ${result.player} not found, creating new player`);
           player = await storage.createPlayer({
             name: result.player,
             defaultHandicap: result.handicap
           });
+          console.log(`Created new player with ID: ${player.id}`);
+        } else {
+          console.log(`Found existing player: ${player.name} (ID: ${player.id})`);
         }
         
         // Calculate points based on position and tournament type
         const points = calculatePoints(result.position, type);
+        console.log(`Calculated ${points} points for position ${result.position} in ${type} tournament`);
         
         // Create player result
-        const playerResult = await storage.createPlayerResult({
+        const playerResultData = {
           playerId: player.id,
           tournamentId: tournament.id,
           position: result.position,
-          grossScore: result.grossScore,
-          netScore: result.netScore,
-          handicap: result.handicap,
+          grossScore: result.grossScore || null,
+          netScore: result.netScore || null,
+          handicap: result.handicap || null,
           points
-        });
+        };
         
-        processedResults.push(playerResult);
+        console.log("Creating player result:", playerResultData);
+        
+        try {
+          const playerResult = await storage.createPlayerResult(playerResultData);
+          console.log(`Created player result with ID: ${playerResult.id}`);
+          processedResults.push(playerResult);
+        } catch (error) {
+          console.error("Error creating player result:", error);
+          throw error;
+        }
       }
       
       res.status(201).json({

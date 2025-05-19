@@ -51,10 +51,17 @@ export const insertTournamentSchema = createInsertSchema(tournaments).omit({
   type: z.enum(tournamentTypes),
 });
 
-export const insertPlayerResultSchema = createInsertSchema(playerResults).omit({
-  id: true,
-  createdAt: true,
-});
+export const insertPlayerResultSchema = createInsertSchema(playerResults)
+  .omit({
+    id: true,
+    createdAt: true,
+  })
+  .extend({
+    // Ensure these fields can be properly null
+    grossScore: z.number().int().nullable(),
+    netScore: z.number().int().nullable(),
+    handicap: z.number().nullable()
+  });
 
 // Define types using schema inference
 export type InsertPlayer = z.infer<typeof insertPlayerSchema>;
