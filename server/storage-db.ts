@@ -194,30 +194,28 @@ export class DatabaseStorage implements IStorage {
     
     console.log("Gross leaderboard players count:", leaderboard.length);
     
-    // For gross leaderboard, sort by average gross score (ascending, lower is better)
-    // Players with no scores or null scores should be at the bottom
-    leaderboard.sort((a, b) => {
-      // First, handle the case where either score is null, undefined, or NaN
-      const aHasValidScore = a.averageGrossScore !== undefined && 
-                            a.averageGrossScore !== null && 
-                            !isNaN(a.averageGrossScore);
+    // Group players: with valid scores vs without valid scores
+    const playersWithValidScores: PlayerWithHistory[] = [];
+    const playersWithoutValidScores: PlayerWithHistory[] = [];
+    
+    leaderboard.forEach(player => {
+      // Check if player has a valid gross score
+      const hasValidScore = player.averageGrossScore !== undefined && 
+                           player.averageGrossScore !== null && 
+                           !isNaN(player.averageGrossScore) &&
+                           player.tournaments.some(t => t.grossScore !== null && t.grossScore !== undefined);
       
-      const bHasValidScore = b.averageGrossScore !== undefined && 
-                            b.averageGrossScore !== null && 
-                            !isNaN(b.averageGrossScore);
-      
-      // If one has valid score and other doesn't, valid scores come first
-      if (aHasValidScore && !bHasValidScore) return -1;
-      if (!aHasValidScore && bHasValidScore) return 1;
-      
-      // If both have invalid scores, sort by name alphabetically
-      if (!aHasValidScore && !bHasValidScore) {
-        return a.player.name.localeCompare(b.player.name);
+      if (hasValidScore) {
+        playersWithValidScores.push(player);
+      } else {
+        playersWithoutValidScores.push(player);
       }
-      
-      // At this point, both have valid scores
-      const aScore = a.averageGrossScore as number;
-      const bScore = b.averageGrossScore as number;
+    });
+    
+    // Sort players with valid scores by average gross score (low to high)
+    playersWithValidScores.sort((a, b) => {
+      const aScore = a.averageGrossScore || 999;
+      const bScore = b.averageGrossScore || 999;
       
       if (aScore === bScore) {
         return b.totalPoints - a.totalPoints; // Secondary sort by points (higher is better)
@@ -225,6 +223,14 @@ export class DatabaseStorage implements IStorage {
       
       return aScore - bScore; // Primary sort by gross score (lower is better)
     });
+    
+    // Sort players without valid scores alphabetically
+    playersWithoutValidScores.sort((a, b) => {
+      return a.player.name.localeCompare(b.player.name);
+    });
+    
+    // Combine the sorted lists, with valid scores first, then players without scores
+    leaderboard = [...playersWithValidScores, ...playersWithoutValidScores];
     
     // Tour points table for gross leaderboard positions (from Founders Series Tour Points List)
     const tourPointsTable = [
