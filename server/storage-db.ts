@@ -207,43 +207,58 @@ export class DatabaseStorage implements IStorage {
       return aScore - bScore; // Primary sort by gross score (lower is better)
     });
     
-    // Tour points table for gross leaderboard positions
+    // Tour points table for gross leaderboard positions (from Founders Series Tour Points List)
     const tourPointsTable = [
-      500, 300, 190, 135, 110, 100, 90, 85, 80, 75, // 1-10
-      70, 65, 60, 57, 55, 53, 51, 50, 49, 48,       // 11-20
-      47, 46, 45, 44, 43, 42, 41, 40, 39, 38,       // 21-30
-      37, 36, 35, 34, 33, 32, 31, 30, 29, 28,       // 31-40
-      27, 26, 25, 24, 23, 22, 21, 20, 19, 18        // 41-50
+      500, 300, 190, 135, 110, 100, 90, 85, 80, 75,    // 1-10
+      70, 65, 60, 55, 53, 51, 49, 47, 45, 43,          // 11-20
+      41, 39, 37, 35.5, 34, 32.5, 31, 29.5, 28, 26.5,  // 21-30
+      25, 23.5, 22, 21, 20, 19, 18, 17, 16, 15,        // 31-40
+      14, 13, 12, 11, 10.5, 10, 9.5, 9, 8.5, 8         // 41-50
     ];
     
-    // First, assign gross tour points based on position
+    // Get all tournaments to get results for calculating the gross points
+    const tournaments = await this.getTournaments();
+    const allResults: PlayerResult[] = [];
+    
+    // Get all player results for all tournaments
+    for (const tournament of tournaments) {
+      if (tournament.status === 'completed') {
+        const results = await this.getPlayerResultsByTournament(tournament.id);
+        allResults.push(...results);
+      }
+    }
+    
+    // Assign ranks and calculate gross points
     leaderboard.forEach((player, index) => {
       // Assign rank based on gross score position
       player.rank = index + 1;
       
-      // Store the original tour points for calculations
-      const originalTourPoints = player.tourPoints;
+      // Get all of this player's tournament results
+      const playerResults = allResults.filter(
+        result => result.playerId === player.player.id
+      );
       
-      // Assign Tour points based on gross position (first place gets 500 points)
-      if (index < tourPointsTable.length) {
-        // Calculate the new gross-based tour points
-        const grossPositionPoints = tourPointsTable[index];
+      // Calculate gross tour points based on this player's position in each tournament
+      let grossTourPoints = 0;
+      
+      if (playerResults.length > 0) {
+        // Assign points based on position in the gross leaderboard
+        const position = index;
         
-        // Create a separate record of gross tour points
-        player.grossTourPoints = grossPositionPoints;
-        
-        // Replace regular tour points with gross tour points for total calculation
-        // This properly reflects the gross-based total points
-        player.grossTotalPoints = player.majorPoints + grossPositionPoints + player.leaguePoints + player.suprPoints;
-      } else {
-        // For players without gross tour points, set to 0
-        player.grossTourPoints = 0;
-        player.grossTotalPoints = player.majorPoints + player.leaguePoints + player.suprPoints;
+        if (position < tourPointsTable.length) {
+          grossTourPoints = tourPointsTable[position];
+        }
       }
       
-      // Log player data if it's one of the top players
+      // Set the gross tour points
+      player.grossTourPoints = grossTourPoints;
+      
+      // Calculate the gross total points
+      player.grossTotalPoints = player.majorPoints + grossTourPoints + player.leaguePoints + player.suprPoints;
+      
+      // Log player data for debugging (only top players)
       if (index < 3) {
-        console.log(`Player #${index+1} ${player.player.name}: majorPoints=${player.majorPoints}, originalTour=${originalTourPoints}, grossTour=${player.grossTourPoints}, league=${player.leaguePoints}, supr=${player.suprPoints}, grossTotal=${player.grossTotalPoints}`);
+        console.log(`Player #${index+1} ${player.player.name}: majorPoints=${player.majorPoints}, netTour=${player.tourPoints}, grossTour=${player.grossTourPoints}, league=${player.leaguePoints}, supr=${player.suprPoints}, grossTotal=${player.grossTotalPoints}`);
       }
     });
     

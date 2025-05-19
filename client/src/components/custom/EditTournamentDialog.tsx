@@ -282,13 +282,13 @@ export default function EditTournamentDialog({
                         </TableCell>
                         <TableCell className="text-center font-medium">
                           {(() => {
-                            // Calculate gross points based on position
+                            // Calculate gross points based on position (from Founders Series Tour Points List)
                             const grossPointsTable = [
-                              500, 300, 190, 135, 110, 100, 90, 85, 80, 75, // 1-10
-                              70, 65, 60, 57, 55, 53, 51, 50, 49, 48,       // 11-20
-                              47, 46, 45, 44, 43, 42, 41, 40, 39, 38,       // 21-30
-                              37, 36, 35, 34, 33, 32, 31, 30, 29, 28,       // 31-40
-                              27, 26, 25, 24, 23, 22, 21, 20, 19, 18        // 41-50
+                              500, 300, 190, 135, 110, 100, 90, 85, 80, 75,    // 1-10
+                              70, 65, 60, 55, 53, 51, 49, 47, 45, 43,          // 11-20
+                              41, 39, 37, 35.5, 34, 32.5, 31, 29.5, 28, 26.5,  // 21-30
+                              25, 23.5, 22, 21, 20, 19, 18, 17, 16, 15,        // 31-40
+                              14, 13, 12, 11, 10.5, 10, 9.5, 9, 8.5, 8         // 41-50
                             ];
                             
                             // Sort results by gross score to determine gross position
