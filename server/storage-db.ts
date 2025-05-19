@@ -195,15 +195,34 @@ export class DatabaseStorage implements IStorage {
     console.log("Gross leaderboard players count:", leaderboard.length);
     
     // For gross leaderboard, sort by average gross score (ascending, lower is better)
-    // If scores are equal, use points as a tiebreaker (descending)
+    // Players with no scores or null scores should be at the bottom
     leaderboard.sort((a, b) => {
-      // Use the averageGrossScore which ensures we're using gross scores
-      const aScore = a.averageGrossScore !== undefined ? a.averageGrossScore : 999;
-      const bScore = b.averageGrossScore !== undefined ? b.averageGrossScore : 999;
+      // First, handle the case where either score is null, undefined, or NaN
+      const aHasValidScore = a.averageGrossScore !== undefined && 
+                            a.averageGrossScore !== null && 
+                            !isNaN(a.averageGrossScore);
+      
+      const bHasValidScore = b.averageGrossScore !== undefined && 
+                            b.averageGrossScore !== null && 
+                            !isNaN(b.averageGrossScore);
+      
+      // If one has valid score and other doesn't, valid scores come first
+      if (aHasValidScore && !bHasValidScore) return -1;
+      if (!aHasValidScore && bHasValidScore) return 1;
+      
+      // If both have invalid scores, sort by name alphabetically
+      if (!aHasValidScore && !bHasValidScore) {
+        return a.player.name.localeCompare(b.player.name);
+      }
+      
+      // At this point, both have valid scores
+      const aScore = a.averageGrossScore as number;
+      const bScore = b.averageGrossScore as number;
       
       if (aScore === bScore) {
         return b.totalPoints - a.totalPoints; // Secondary sort by points (higher is better)
       }
+      
       return aScore - bScore; // Primary sort by gross score (lower is better)
     });
     
