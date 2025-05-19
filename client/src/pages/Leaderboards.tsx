@@ -411,6 +411,8 @@ export default function Leaderboards() {
               columns={columns}
               data={leaderboardData || []}
               rowClickHandler={(row) => handlePlayerClick(row.player.id)}
+              pagination={false}
+              pageSize={100}
             />
           </div>
         )}
