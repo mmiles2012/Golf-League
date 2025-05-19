@@ -130,8 +130,25 @@ export default function Leaderboards() {
         ...baseColumns,
         {
           accessorKey: "grossTourPoints",
-          header: "Gross Tour",
+          header: ({ column }) => {
+            return (
+              <div 
+                className="flex items-center justify-center cursor-pointer select-none"
+                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              >
+                Gross Tour
+                {column.getIsSorted() === "asc" ? (
+                  <span className="ml-1">▲</span>
+                ) : column.getIsSorted() === "desc" ? (
+                  <span className="ml-1">▼</span>
+                ) : (
+                  <span className="ml-1 opacity-0 group-hover:opacity-100">▼</span>
+                )}
+              </div>
+            )
+          },
           cell: ({ row }) => <div className="text-center">{(row.original.grossTourPoints || 0).toLocaleString()}</div>,
+          enableSorting: true,
         },
         {
           accessorKey: "leaguePoints",
