@@ -68,17 +68,68 @@ export default function TournamentResults() {
     ? [...results].sort((a, b) => a.position - b.position)
     : [];
     
+  // For gross results, sort by gross score and calculate points based on position in gross scoring
   const sortedGrossResults = results
-    ? [...results].sort((a, b) => {
-        // Sort by gross score, with null values at the end
-        if (a.grossScore === null && b.grossScore === null) {
-          return a.player.name.localeCompare(b.player.name);
-        }
-        if (a.grossScore === null) return 1;
-        if (b.grossScore === null) return -1;
-        return a.grossScore - b.grossScore;
-      })
+    ? [...results]
+        .filter(result => result.grossScore !== null)
+        .sort((a, b) => {
+          // Sort by gross score, with null values at the end
+          if (a.grossScore === null && b.grossScore === null) {
+            return a.player.name.localeCompare(b.player.name);
+          }
+          if (a.grossScore === null) return 1;
+          if (b.grossScore === null) return -1;
+          return a.grossScore - b.grossScore;
+        })
+        .map((result, index) => {
+          // Clone the result object to avoid mutating the original
+          const grossResult = { ...result };
+          
+          // Calculate gross points based on position in this sorted list
+          // Points values follow tour points system
+          const grossPosition = index + 1;
+          
+          // Calculate points based on finishing position in gross scoring
+          switch (grossPosition) {
+            case 1: grossResult.grossPoints = 500; break;
+            case 2: grossResult.grossPoints = 300; break;
+            case 3: grossResult.grossPoints = 190; break;
+            case 4: grossResult.grossPoints = 135; break;
+            case 5: grossResult.grossPoints = 110; break;
+            case 6: grossResult.grossPoints = 100; break;
+            case 7: grossResult.grossPoints = 90; break;
+            case 8: grossResult.grossPoints = 85; break;
+            case 9: grossResult.grossPoints = 80; break;
+            case 10: grossResult.grossPoints = 75; break;
+            default:
+              // For 11th place and beyond
+              if (grossPosition <= 15) {
+                grossResult.grossPoints = 70 - ((grossPosition - 11) * 2);
+              } else if (grossPosition <= 20) {
+                grossResult.grossPoints = 60 - ((grossPosition - 16) * 2);
+              } else if (grossPosition <= 30) {
+                grossResult.grossPoints = 50 - ((grossPosition - 21) * 2.5);
+              } else if (grossPosition <= 40) {
+                grossResult.grossPoints = 25 - ((grossPosition - 31) * 1);
+              } else {
+                grossResult.grossPoints = 15;
+              }
+          }
+          
+          return grossResult;
+        })
     : [];
+    
+  // Add null gross score players at the end, sorted alphabetically
+  const nullGrossScorePlayers = results
+    ? [...results]
+        .filter(result => result.grossScore === null)
+        .sort((a, b) => a.player.name.localeCompare(b.player.name))
+        .map(result => ({ ...result, grossPoints: 0 }))
+    : [];
+    
+  // Combine sorted players with nulls at the end
+  const combinedGrossResults = [...sortedGrossResults, ...nullGrossScorePlayers];
   
   // Add ordinal suffix to position
   const getOrdinalSuffix = (num: number): string => {
@@ -216,7 +267,7 @@ export default function TournamentResults() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {sortedGrossResults.map((result, index) => (
+                      {combinedGrossResults.map((result, index) => (
                         <TableRow key={result.id}>
                           <TableCell className="font-semibold">
                             {index + 1}<sup>{getOrdinalSuffix(index + 1)}</sup>
@@ -243,7 +294,7 @@ export default function TournamentResults() {
                             {result.handicap !== null ? result.handicap : "N/A"}
                           </TableCell>
                           <TableCell className="text-right font-semibold">
-                            {result.points}
+                            {result.grossPoints || 0}
                           </TableCell>
                         </TableRow>
                       ))}
