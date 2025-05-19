@@ -10,6 +10,7 @@ import Leaderboards from "@/pages/Leaderboards";
 import UploadScores from "@/pages/UploadScores";
 import ManualEntry from "@/pages/ManualEntry";
 import TournamentManagement from "@/pages/TournamentManagement";
+import TournamentResults from "@/pages/TournamentResults";
 import Embed from "@/pages/Embed";
 import Players from "@/pages/Players";
 import PlayerProfile from "@/pages/PlayerProfile";
@@ -30,6 +31,11 @@ function Router() {
       {/* Player Profile */}
       <Route path="/player/:id">
         {params => <PlayerProfile id={parseInt(params.id)} />}
+      </Route>
+      
+      {/* Tournament Results */}
+      <Route path="/tournament/:id">
+        {params => <TournamentResults />}
       </Route>
       
       {/* Public Routes */}

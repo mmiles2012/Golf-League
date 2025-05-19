@@ -192,7 +192,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const results = await storage.getPlayerResultsByTournament(id);
-      res.json(results);
+      
+      // Enhance the results with player information
+      const enhancedResults = await Promise.all(results.map(async (result) => {
+        const player = await storage.getPlayer(result.playerId);
+        return {
+          ...result,
+          player: player || { id: result.playerId, name: "Unknown Player" }
+        };
+      }));
+      
+      res.json(enhancedResults);
     } catch (error) {
       console.error("Error fetching tournament results:", error);
       res.status(500).json({ message: "Failed to fetch tournament results" });

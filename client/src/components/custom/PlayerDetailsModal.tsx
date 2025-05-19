@@ -94,7 +94,20 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
                     .sort((a, b) => new Date(b.tournamentDate).getTime() - new Date(a.tournamentDate).getTime())
                     .map((tournament) => (
                     <TableRow key={tournament.id}>
-                      <TableCell className="font-medium">{tournament.tournamentName}</TableCell>
+                      <TableCell className="font-medium">
+                        <a 
+                          href={`/tournament/${tournament.tournamentId}`} 
+                          className="text-primary hover:text-primary-dark hover:underline"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            // Close this modal and navigate
+                            onClose();
+                            window.location.href = `/tournament/${tournament.tournamentId}`;
+                          }}
+                        >
+                          {tournament.tournamentName}
+                        </a>
+                      </TableCell>
                       <TableCell>{formatDate(tournament.tournamentDate)}</TableCell>
                       <TableCell>
                         <Badge variant={tournament.tournamentType}>{tournamentTypeLabel(tournament.tournamentType)}</Badge>
