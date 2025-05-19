@@ -150,6 +150,8 @@ export const playerWithHistorySchema = z.object({
   totalEvents: z.number(),
   rank: z.number(),
   averageGrossScore: z.number().optional(),
+  averageNetScore: z.number().optional(),
+  averageScore: z.number().optional(),
 });
 
 export type PlayerWithHistory = z.infer<typeof playerWithHistorySchema>;

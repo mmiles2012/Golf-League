@@ -165,7 +165,8 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    // Sort by total points descending
+    // For the net leaderboard, we sort primarily by points
+    // This retains the original behavior - highest points at the top
     leaderboard.sort((a, b) => b.totalPoints - a.totalPoints);
     
     // Assign ranks
@@ -190,9 +191,9 @@ export class DatabaseStorage implements IStorage {
     // For gross leaderboard, sort by average gross score (ascending, lower is better)
     // If scores are equal, use points as a tiebreaker (descending)
     leaderboard.sort((a, b) => {
-      // Ensure we have valid average gross scores
-      const aScore = a.averageGrossScore !== undefined ? a.averageGrossScore : 999;
-      const bScore = b.averageGrossScore !== undefined ? b.averageGrossScore : 999;
+      // Use the averageScore which will have the correct score type (gross score)
+      const aScore = a.averageScore !== undefined ? a.averageScore : 999;
+      const bScore = b.averageScore !== undefined ? b.averageScore : 999;
       
       if (aScore === bScore) {
         return b.totalPoints - a.totalPoints; // Secondary sort by points (higher is better)
@@ -298,9 +299,11 @@ export class DatabaseStorage implements IStorage {
     let leaguePoints = 0;
     let suprPoints = 0;
     
-    // Track total gross score for averaging
+    // Track scores for averaging
     let totalGrossScore = 0;
     let countGrossScores = 0;
+    let totalNetScore = 0;
+    let countNetScores = 0;
     
     for (const result of results) {
       const tournament = tournamentMap.get(result.tournamentId);
@@ -309,10 +312,15 @@ export class DatabaseStorage implements IStorage {
         continue;
       }
       
-      // Track gross scores for average calculation
+      // Track scores for average calculation based on scoreType
       if (result.grossScore !== null) {
         totalGrossScore += result.grossScore;
-        countGrossScores++; 
+        countGrossScores++;
+      }
+      
+      if (result.netScore !== null) {
+        totalNetScore += result.netScore;
+        countNetScores++;
       }
       
       tournamentDetails.push({
@@ -347,8 +355,9 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    // Calculate average gross score
+    // Calculate average scores based on type
     const averageGrossScore = countGrossScores > 0 ? totalGrossScore / countGrossScores : 999; // Use high number for those without scores
+    const averageNetScore = countNetScores > 0 ? totalNetScore / countNetScores : 999;
     
     return {
       player: {
@@ -365,7 +374,10 @@ export class DatabaseStorage implements IStorage {
       suprPoints,
       totalEvents: tournamentDetails.length,
       rank: 0, // Will be set after sorting
-      averageGrossScore
+      averageGrossScore,
+      averageNetScore,
+      // Display either gross or net score based on the leaderboard type
+      averageScore: scoreType === 'gross' ? averageGrossScore : averageNetScore
     };
   }
 }
