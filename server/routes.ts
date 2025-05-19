@@ -1,0 +1,489 @@
+import type { Express, Request, Response } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import multer from "multer";
+import * as XLSX from "xlsx";
+import { tournamentUploadSchema, manualEntrySchema, editTournamentSchema } from "@shared/schema";
+
+// Set up multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB max file size
+  },
+  fileFilter: (_req, file, cb) => {
+    // Accept only Excel files
+    if (
+      file.mimetype === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+      file.mimetype === "application/vnd.ms-excel"
+    ) {
+      cb(null, true);
+    } else {
+      cb(new Error("Invalid file type. Only Excel files are allowed."));
+    }
+  },
+});
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // API Routes - All prefixed with /api
+  
+  // Players endpoints
+  app.get("/api/players", async (_req: Request, res: Response) => {
+    try {
+      const players = await storage.getPlayers();
+      res.json(players);
+    } catch (error) {
+      console.error("Error fetching players:", error);
+      res.status(500).json({ message: "Failed to fetch players" });
+    }
+  });
+  
+  app.get("/api/players/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const player = await storage.getPlayer(id);
+      
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+      
+      res.json(player);
+    } catch (error) {
+      console.error("Error fetching player:", error);
+      res.status(500).json({ message: "Failed to fetch player" });
+    }
+  });
+  
+  app.get("/api/players/search", async (req: Request, res: Response) => {
+    try {
+      const query = req.query.q as string;
+      
+      if (!query) {
+        return res.status(400).json({ message: "Search query is required" });
+      }
+      
+      const players = await storage.searchPlayersByName(query);
+      res.json(players);
+    } catch (error) {
+      console.error("Error searching players:", error);
+      res.status(500).json({ message: "Failed to search players" });
+    }
+  });
+  
+  app.post("/api/players", async (req: Request, res: Response) => {
+    try {
+      const player = req.body;
+      const newPlayer = await storage.createPlayer(player);
+      res.status(201).json(newPlayer);
+    } catch (error) {
+      console.error("Error creating player:", error);
+      res.status(500).json({ message: "Failed to create player" });
+    }
+  });
+  
+  // Tournaments endpoints
+  app.get("/api/tournaments", async (_req: Request, res: Response) => {
+    try {
+      const tournaments = await storage.getTournaments();
+      res.json(tournaments);
+    } catch (error) {
+      console.error("Error fetching tournaments:", error);
+      res.status(500).json({ message: "Failed to fetch tournaments" });
+    }
+  });
+  
+  app.get("/api/tournaments/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const tournament = await storage.getTournament(id);
+      
+      if (!tournament) {
+        return res.status(404).json({ message: "Tournament not found" });
+      }
+      
+      // Get player results for this tournament
+      const results = await storage.getPlayerResultsByTournament(id);
+      
+      res.json({
+        ...tournament,
+        results
+      });
+    } catch (error) {
+      console.error("Error fetching tournament:", error);
+      res.status(500).json({ message: "Failed to fetch tournament" });
+    }
+  });
+  
+  app.post("/api/tournaments", async (req: Request, res: Response) => {
+    try {
+      const tournament = req.body;
+      const newTournament = await storage.createTournament(tournament);
+      res.status(201).json(newTournament);
+    } catch (error) {
+      console.error("Error creating tournament:", error);
+      res.status(500).json({ message: "Failed to create tournament" });
+    }
+  });
+  
+  app.put("/api/tournaments/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const tournament = req.body;
+      
+      const updatedTournament = await storage.updateTournament(id, tournament);
+      
+      if (!updatedTournament) {
+        return res.status(404).json({ message: "Tournament not found" });
+      }
+      
+      res.json(updatedTournament);
+    } catch (error) {
+      console.error("Error updating tournament:", error);
+      res.status(500).json({ message: "Failed to update tournament" });
+    }
+  });
+  
+  app.delete("/api/tournaments/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteTournament(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Tournament not found" });
+      }
+      
+      res.json({ message: "Tournament deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting tournament:", error);
+      res.status(500).json({ message: "Failed to delete tournament" });
+    }
+  });
+  
+  // Player results endpoints
+  app.get("/api/player-results", async (_req: Request, res: Response) => {
+    try {
+      const results = await storage.getPlayerResults();
+      res.json(results);
+    } catch (error) {
+      console.error("Error fetching player results:", error);
+      res.status(500).json({ message: "Failed to fetch player results" });
+    }
+  });
+  
+  app.get("/api/player-results/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const result = await storage.getPlayerResult(id);
+      
+      if (!result) {
+        return res.status(404).json({ message: "Player result not found" });
+      }
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching player result:", error);
+      res.status(500).json({ message: "Failed to fetch player result" });
+    }
+  });
+  
+  app.get("/api/tournaments/:id/results", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const results = await storage.getPlayerResultsByTournament(id);
+      res.json(results);
+    } catch (error) {
+      console.error("Error fetching tournament results:", error);
+      res.status(500).json({ message: "Failed to fetch tournament results" });
+    }
+  });
+  
+  app.get("/api/players/:id/results", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const results = await storage.getPlayerResultsByPlayer(id);
+      res.json(results);
+    } catch (error) {
+      console.error("Error fetching player results:", error);
+      res.status(500).json({ message: "Failed to fetch player results" });
+    }
+  });
+  
+  app.post("/api/player-results", async (req: Request, res: Response) => {
+    try {
+      const result = req.body;
+      const newResult = await storage.createPlayerResult(result);
+      res.status(201).json(newResult);
+    } catch (error) {
+      console.error("Error creating player result:", error);
+      res.status(500).json({ message: "Failed to create player result" });
+    }
+  });
+  
+  // Leaderboard endpoints
+  app.get("/api/leaderboard/net", async (_req: Request, res: Response) => {
+    try {
+      const leaderboard = await storage.getNetLeaderboard();
+      res.json(leaderboard);
+    } catch (error) {
+      console.error("Error fetching net leaderboard:", error);
+      res.status(500).json({ message: "Failed to fetch net leaderboard" });
+    }
+  });
+  
+  app.get("/api/leaderboard/gross", async (_req: Request, res: Response) => {
+    try {
+      const leaderboard = await storage.getGrossLeaderboard();
+      res.json(leaderboard);
+    } catch (error) {
+      console.error("Error fetching gross leaderboard:", error);
+      res.status(500).json({ message: "Failed to fetch gross leaderboard" });
+    }
+  });
+  
+  app.get("/api/players/:id/history", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const playerHistory = await storage.getPlayerWithHistory(id);
+      
+      if (!playerHistory) {
+        return res.status(404).json({ message: "Player not found or has no history" });
+      }
+      
+      res.json(playerHistory);
+    } catch (error) {
+      console.error("Error fetching player history:", error);
+      res.status(500).json({ message: "Failed to fetch player history" });
+    }
+  });
+  
+  // File upload endpoint
+  app.post("/api/upload", upload.single("file"), async (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      // Parse Excel file
+      const workbook = XLSX.read(req.file.buffer);
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const data = XLSX.utils.sheet_to_json(worksheet);
+      
+      res.json({
+        message: "File uploaded successfully",
+        rows: data.length,
+        preview: data.slice(0, 5)
+      });
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      res.status(500).json({ message: "Failed to upload file" });
+    }
+  });
+  
+  // Process tournament data endpoint
+  app.post("/api/tournaments/process", async (req: Request, res: Response) => {
+    try {
+      const validationResult = tournamentUploadSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid tournament data",
+          errors: validationResult.error.errors
+        });
+      }
+      
+      const { name, date, type, results } = validationResult.data;
+      
+      // Create tournament
+      const tournament = await storage.createTournament({
+        name,
+        date: new Date(date),
+        type,
+        status: "completed"
+      });
+      
+      // Process player results
+      const processedResults = [];
+      
+      for (const result of results) {
+        // Find or create player
+        let player = await storage.findPlayerByName(result.player);
+        
+        if (!player) {
+          player = await storage.createPlayer({
+            name: result.player,
+            defaultHandicap: result.handicap
+          });
+        }
+        
+        // Calculate points based on position and tournament type
+        const points = calculatePoints(result.position, type);
+        
+        // Create player result
+        const playerResult = await storage.createPlayerResult({
+          playerId: player.id,
+          tournamentId: tournament.id,
+          position: result.position,
+          grossScore: result.grossScore,
+          netScore: result.netScore,
+          handicap: result.handicap,
+          points
+        });
+        
+        processedResults.push(playerResult);
+      }
+      
+      res.status(201).json({
+        tournament,
+        results: processedResults,
+        message: "Tournament processed successfully"
+      });
+    } catch (error) {
+      console.error("Error processing tournament:", error);
+      res.status(500).json({ message: "Failed to process tournament" });
+    }
+  });
+  
+  // Manual entry endpoint
+  app.post("/api/tournaments/manual-entry", async (req: Request, res: Response) => {
+    try {
+      const validationResult = manualEntrySchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid manual entry data",
+          errors: validationResult.error.errors
+        });
+      }
+      
+      const { name, date, type, results } = validationResult.data;
+      
+      // Create tournament
+      const tournament = await storage.createTournament({
+        name,
+        date: new Date(date),
+        type,
+        status: "completed"
+      });
+      
+      // Process player results
+      const processedResults = [];
+      
+      for (const result of results) {
+        // Find or create player
+        let playerId = result.playerId;
+        
+        if (!playerId) {
+          let player = await storage.findPlayerByName(result.playerName);
+          
+          if (!player) {
+            player = await storage.createPlayer({
+              name: result.playerName,
+              defaultHandicap: result.handicap
+            });
+          }
+          
+          playerId = player.id;
+        }
+        
+        // Calculate points based on position and tournament type
+        const points = calculatePoints(result.position, type);
+        
+        // Create player result
+        const playerResult = await storage.createPlayerResult({
+          playerId,
+          tournamentId: tournament.id,
+          position: result.position,
+          grossScore: result.grossScore,
+          netScore: result.netScore,
+          handicap: result.handicap,
+          points
+        });
+        
+        processedResults.push(playerResult);
+      }
+      
+      res.status(201).json({
+        tournament,
+        results: processedResults,
+        message: "Tournament created successfully"
+      });
+    } catch (error) {
+      console.error("Error creating manual tournament:", error);
+      res.status(500).json({ message: "Failed to create tournament" });
+    }
+  });
+  
+  // Edit tournament endpoint
+  app.put("/api/tournaments/:id/edit", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validationResult = editTournamentSchema.safeParse({
+        ...req.body,
+        id
+      });
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid tournament edit data",
+          errors: validationResult.error.errors
+        });
+      }
+      
+      const updatedTournament = await storage.processEditTournament(validationResult.data);
+      
+      if (!updatedTournament) {
+        return res.status(404).json({ message: "Tournament not found" });
+      }
+      
+      res.json({
+        tournament: updatedTournament,
+        message: "Tournament updated successfully"
+      });
+    } catch (error) {
+      console.error("Error updating tournament:", error);
+      res.status(500).json({ message: "Failed to update tournament" });
+    }
+  });
+  
+  const httpServer = createServer(app);
+  return httpServer;
+}
+
+// Helper function to calculate points based on position and tournament type
+function calculatePoints(position: number, tournamentType: string): number {
+  // Points system based on the provided PDFs
+  if (tournamentType === 'major') {
+    const majorPoints = [
+      750, 400, 350, 325, 300, 275, 225, 200, 175, 150,  // 1-10
+      130, 120, 110, 90, 80, 70, 65, 60, 55, 50,         // 11-20
+      48, 46, 44, 42, 40, 38, 36, 34, 32.5, 31,          // 21-30
+      29.5, 28, 26.5, 25, 24, 23, 22, 21, 20.25, 19.5,   // 31-40
+      18.75, 18, 17.25, 16.5, 15.75, 15, 14.25, 13.5, 13, 12.5, // 41-50
+      12, 11.5, 11, 10.5, 10, 9.5, 9, 8.5, 8, 7.75,      // 51-60
+      7.5, 7.25, 7                                       // 61-63
+    ];
+    return position <= majorPoints.length ? majorPoints[position - 1] : 0;
+  } 
+  else if (tournamentType === 'tour') {
+    const tourPoints = [
+      500, 300, 190, 135, 110, 100, 90, 85, 80, 75,      // 1-10
+      70, 65, 60, 55, 53, 51, 49, 47, 45, 43,            // 11-20
+      41, 39, 37, 35.5, 34, 32.5, 31, 29.5, 28, 26.5,    // 21-30
+      25, 23.5, 22, 21, 20, 19, 18, 17, 16, 15,          // 31-40
+      14, 13, 12, 11, 10.5, 10, 9.5, 9, 8.5, 8,          // 41-50
+      7.5, 7, 6.5, 6, 5.8, 5.6, 5.4, 5.2, 5, 4.8,        // 51-60
+      4.6, 4.4, 4.2, 4, 3.8                              // 61-65
+    ];
+    return position <= tourPoints.length ? tourPoints[position - 1] : 0;
+  } 
+  else if (tournamentType === 'league' || tournamentType === 'supr') {
+    const leagueAndSuprPoints = [
+      93.75, 50, 43.75, 40.625, 37.5, 34.375, 28.125, 25, 21.875, 18.75,  // 1-10
+      16.25, 15, 13.75, 11.25, 10, 8.75, 8.125, 7.5, 6.875, 6             // 11-20
+    ];
+    return position <= leagueAndSuprPoints.length ? leagueAndSuprPoints[position - 1] : 0;
+  }
+  
+  return 0; // Default if no valid tournament type
+}
