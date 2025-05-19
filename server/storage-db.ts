@@ -250,27 +250,49 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    // Assign ranks and calculate gross points
+    // First, calculate tour points for each individual tour tournament
+    const tourTournaments = tournaments.filter(t => t.type === 'tour' && t.status === 'completed');
+    
+    // Store gross tour points per player
+    const playerGrossTourPoints: Record<number, number> = {};
+    
+    // Process each tour tournament separately to calculate gross points
+    for (const tournament of tourTournaments) {
+      // Get results for this tournament
+      const tournamentResults = allResults.filter(r => r.tournamentId === tournament.id);
+      
+      // Create a list of player results for this tournament that have valid gross scores
+      const validGrossResults = tournamentResults
+        .filter(r => r.grossScore !== null && r.grossScore !== undefined)
+        .sort((a, b) => {
+          // Sort by gross score (lower is better)
+          const aScore = a.grossScore || 999;
+          const bScore = b.grossScore || 999;
+          return aScore - bScore;
+        });
+      
+      // Assign points based on position in this tournament
+      validGrossResults.forEach((result, position) => {
+        if (position < tourPointsTable.length) {
+          const points = tourPointsTable[position];
+          
+          // Add these points to the player's total gross tour points
+          if (!playerGrossTourPoints[result.playerId]) {
+            playerGrossTourPoints[result.playerId] = 0;
+          }
+          
+          playerGrossTourPoints[result.playerId] += points;
+        }
+      });
+    }
+    
+    // Now assign ranks and calculate total gross points
     leaderboard.forEach((player, index) => {
-      // Assign rank based on gross score position
+      // Assign rank based on position in the sorted list
       player.rank = index + 1;
       
-      // Get all of this player's tournament results
-      const playerResults = allResults.filter(
-        result => result.playerId === player.player.id
-      );
-      
-      // Calculate gross tour points based on this player's position in each tournament
-      let grossTourPoints = 0;
-      
-      if (playerResults.length > 0) {
-        // Assign points based on position in the gross leaderboard
-        const position = index;
-        
-        if (position < tourPointsTable.length) {
-          grossTourPoints = tourPointsTable[position];
-        }
-      }
+      // Get this player's calculated gross tour points
+      const grossTourPoints = playerGrossTourPoints[player.player.id] || 0;
       
       // Set the gross tour points
       player.grossTourPoints = grossTourPoints;
