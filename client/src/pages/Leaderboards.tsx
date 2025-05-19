@@ -146,7 +146,7 @@ export default function Leaderboards() {
         {
           accessorKey: "grossTotalPoints",
           header: "Gross Points",
-          cell: ({ row }) => <div className="font-bold text-right">{row.original.grossTotalPoints.toLocaleString()}</div>,
+          cell: ({ row }) => <div className="font-bold text-right">{(row.original.grossTotalPoints || 0).toLocaleString()}</div>,
         },
       ];
     }
