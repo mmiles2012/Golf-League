@@ -83,18 +83,63 @@ export default function Leaderboards() {
       },
       {
         accessorKey: "player.name",
-        header: "Player",
+        header: ({ column }) => {
+          return (
+            <div 
+              className="flex items-center cursor-pointer select-none"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              Player
+              {column.getIsSorted() === "asc" ? (
+                <span className="ml-1">▲</span>
+              ) : column.getIsSorted() === "desc" ? (
+                <span className="ml-1">▼</span>
+              ) : null}
+            </div>
+          )
+        },
         cell: ({ row }) => <div className="font-medium">{row.original.player.name}</div>,
+        enableSorting: true,
       },
       {
         accessorKey: "majorPoints",
-        header: "Major",
+        header: ({ column }) => {
+          return (
+            <div 
+              className="flex items-center justify-center cursor-pointer select-none"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              Major
+              {column.getIsSorted() === "asc" ? (
+                <span className="ml-1">▲</span>
+              ) : column.getIsSorted() === "desc" ? (
+                <span className="ml-1">▼</span>
+              ) : null}
+            </div>
+          )
+        },
         cell: ({ row }) => <div className="text-center">{row.original.majorPoints.toLocaleString()}</div>,
+        enableSorting: true,
       },
       {
         accessorKey: "totalEvents",
-        header: "Events",
+        header: ({ column }) => {
+          return (
+            <div 
+              className="flex items-center justify-center cursor-pointer select-none"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              Events
+              {column.getIsSorted() === "asc" ? (
+                <span className="ml-1">▲</span>
+              ) : column.getIsSorted() === "desc" ? (
+                <span className="ml-1">▼</span>
+              ) : null}
+            </div>
+          )
+        },
         cell: ({ row }) => <div className="text-center">{row.original.totalEvents}</div>,
+        enableSorting: true,
       },
     ];
     
@@ -104,23 +149,83 @@ export default function Leaderboards() {
         ...baseColumns,
         {
           accessorKey: "tourPoints",
-          header: "Tour",
+          header: ({ column }) => {
+            return (
+              <div 
+                className="flex items-center justify-center cursor-pointer select-none"
+                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              >
+                Tour
+                {column.getIsSorted() === "asc" ? (
+                  <span className="ml-1">▲</span>
+                ) : column.getIsSorted() === "desc" ? (
+                  <span className="ml-1">▼</span>
+                ) : null}
+              </div>
+            )
+          },
           cell: ({ row }) => <div className="text-center">{row.original.tourPoints.toLocaleString()}</div>,
+          enableSorting: true,
         },
         {
           accessorKey: "leaguePoints",
-          header: "League",
+          header: ({ column }) => {
+            return (
+              <div 
+                className="flex items-center justify-center cursor-pointer select-none"
+                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              >
+                League
+                {column.getIsSorted() === "asc" ? (
+                  <span className="ml-1">▲</span>
+                ) : column.getIsSorted() === "desc" ? (
+                  <span className="ml-1">▼</span>
+                ) : null}
+              </div>
+            )
+          },
           cell: ({ row }) => <div className="text-center">{row.original.leaguePoints.toLocaleString()}</div>,
+          enableSorting: true,
         },
         {
           accessorKey: "suprPoints",
-          header: "SUPR",
+          header: ({ column }) => {
+            return (
+              <div 
+                className="flex items-center justify-center cursor-pointer select-none"
+                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              >
+                SUPR
+                {column.getIsSorted() === "asc" ? (
+                  <span className="ml-1">▲</span>
+                ) : column.getIsSorted() === "desc" ? (
+                  <span className="ml-1">▼</span>
+                ) : null}
+              </div>
+            )
+          },
           cell: ({ row }) => <div className="text-center">{row.original.suprPoints.toLocaleString()}</div>,
+          enableSorting: true,
         },
         {
           accessorKey: "totalPoints",
-          header: "Total Points",
+          header: ({ column }) => {
+            return (
+              <div 
+                className="flex items-center justify-end cursor-pointer select-none"
+                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              >
+                Total Points
+                {column.getIsSorted() === "asc" ? (
+                  <span className="ml-1">▲</span>
+                ) : column.getIsSorted() === "desc" ? (
+                  <span className="ml-1">▼</span>
+                ) : null}
+              </div>
+            )
+          },
           cell: ({ row }) => <div className="font-bold text-right">{row.original.totalPoints.toLocaleString()}</div>,
+          enableSorting: true,
         },
       ];
     } 
@@ -152,18 +257,63 @@ export default function Leaderboards() {
         },
         {
           accessorKey: "leaguePoints",
-          header: "League",
+          header: ({ column }) => {
+            return (
+              <div 
+                className="flex items-center justify-center cursor-pointer select-none"
+                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              >
+                League
+                {column.getIsSorted() === "asc" ? (
+                  <span className="ml-1">▲</span>
+                ) : column.getIsSorted() === "desc" ? (
+                  <span className="ml-1">▼</span>
+                ) : null}
+              </div>
+            )
+          },
           cell: ({ row }) => <div className="text-center">{row.original.leaguePoints.toLocaleString()}</div>,
+          enableSorting: true,
         },
         {
           accessorKey: "suprPoints",
-          header: "SUPR",
+          header: ({ column }) => {
+            return (
+              <div 
+                className="flex items-center justify-center cursor-pointer select-none"
+                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              >
+                SUPR
+                {column.getIsSorted() === "asc" ? (
+                  <span className="ml-1">▲</span>
+                ) : column.getIsSorted() === "desc" ? (
+                  <span className="ml-1">▼</span>
+                ) : null}
+              </div>
+            )
+          },
           cell: ({ row }) => <div className="text-center">{row.original.suprPoints.toLocaleString()}</div>,
+          enableSorting: true,
         },
         {
           accessorKey: "grossTotalPoints",
-          header: "Gross Points",
+          header: ({ column }) => {
+            return (
+              <div 
+                className="flex items-center justify-end cursor-pointer select-none"
+                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              >
+                Gross Points
+                {column.getIsSorted() === "asc" ? (
+                  <span className="ml-1">▲</span>
+                ) : column.getIsSorted() === "desc" ? (
+                  <span className="ml-1">▼</span>
+                ) : null}
+              </div>
+            )
+          },
           cell: ({ row }) => <div className="font-bold text-right">{(row.original.grossTotalPoints || 0).toLocaleString()}</div>,
+          enableSorting: true,
         },
       ];
     }
