@@ -141,6 +141,7 @@ export const playerWithHistorySchema = z.object({
     netScore: z.number().optional().nullable(),
     handicap: z.number().optional().nullable(),
     points: z.number(),
+    displayScore: z.number().optional().nullable(),
   })),
   totalPoints: z.number(),
   majorPoints: z.number(),

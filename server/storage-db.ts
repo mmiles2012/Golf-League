@@ -323,7 +323,8 @@ export class DatabaseStorage implements IStorage {
         countNetScores++;
       }
       
-      tournamentDetails.push({
+      // Create tournament detail with the appropriate score type
+      const tournamentDetail: any = {
         id: result.id,
         tournamentId: tournament.id,
         tournamentName: tournament.name,
@@ -334,7 +335,16 @@ export class DatabaseStorage implements IStorage {
         netScore: result.netScore,
         handicap: result.handicap,
         points: result.points
-      });
+      };
+      
+      // Display appropriate score based on the scoreType for consistency in the UI
+      if (scoreType === 'net') {
+        tournamentDetail.displayScore = result.netScore;
+      } else {
+        tournamentDetail.displayScore = result.grossScore;
+      }
+      
+      tournamentDetails.push(tournamentDetail);
       
       totalPoints += result.points;
       
