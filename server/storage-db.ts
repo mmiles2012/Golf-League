@@ -306,6 +306,14 @@ export class DatabaseStorage implements IStorage {
       }
     });
     
+    // Now sort by grossTotalPoints (highest to lowest)
+    leaderboard.sort((a, b) => (b.grossTotalPoints || 0) - (a.grossTotalPoints || 0));
+    
+    // Re-assign ranks after sorting
+    leaderboard.forEach((player, index) => {
+      player.rank = index + 1;
+    });
+    
     return leaderboard;
   }
 
