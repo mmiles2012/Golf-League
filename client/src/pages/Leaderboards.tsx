@@ -138,6 +138,16 @@ export default function Leaderboards() {
           header: "League",
           cell: ({ row }) => <div className="text-center">{row.original.leaguePoints.toLocaleString()}</div>,
         },
+        {
+          accessorKey: "suprPoints",
+          header: "SUPR",
+          cell: ({ row }) => <div className="text-center">{row.original.suprPoints.toLocaleString()}</div>,
+        },
+        {
+          accessorKey: "grossTotalPoints",
+          header: "Gross Points",
+          cell: ({ row }) => <div className="font-bold text-right">{row.original.grossTotalPoints.toLocaleString()}</div>,
+        },
       ];
     }
   }
