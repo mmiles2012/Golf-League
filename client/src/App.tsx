@@ -11,6 +11,7 @@ import UploadScores from "@/pages/UploadScores";
 import ManualEntry from "@/pages/ManualEntry";
 import TournamentManagement from "@/pages/TournamentManagement";
 import Embed from "@/pages/Embed";
+import Players from "@/pages/Players";
 import PlayerProfile from "@/pages/PlayerProfile";
 import PublicLeaderboard from "@/pages/PublicLeaderboard";
 
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/upload" component={UploadScores} />
       <Route path="/manual-entry" component={ManualEntry} />
       <Route path="/tournaments" component={TournamentManagement} />
+      <Route path="/players" component={Players} />
       <Route path="/embed" component={Embed} />
       
       {/* Player Profile */}
