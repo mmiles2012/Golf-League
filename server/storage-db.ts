@@ -1,4 +1,4 @@
-import { and, eq, desc, sql } from "drizzle-orm";
+import { and, eq, desc, sql, inArray } from "drizzle-orm";
 import { 
   type Player, 
   type Tournament, 
@@ -375,10 +375,20 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
     
+    // Get tournament IDs from player results
     const tournamentIds = results.map(r => r.tournamentId);
-    const tournamentsList = await db.select()
-      .from(tournaments)
-      .where(sql`${tournaments.id} IN (${tournamentIds.join(',')})`);
+    
+    // Handle the query properly for tournament IDs
+    let tournamentsList = [];
+    
+    // Get tournaments one by one to avoid SQL injection issues with IN clause
+    for (const id of tournamentIds) {
+      const tournamentsForId = await db.select()
+        .from(tournaments)
+        .where(eq(tournaments.id, id));
+      
+      tournamentsList = [...tournamentsList, ...tournamentsForId];
+    }
     
     const tournamentMap = new Map<number, Tournament>();
     tournamentsList.forEach(t => tournamentMap.set(t.id, t));

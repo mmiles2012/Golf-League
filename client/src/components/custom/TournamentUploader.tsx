@@ -139,13 +139,14 @@ export default function TournamentUploader() {
       if (selections[result.player]) {
         // Check if "both" was selected
         if (selections[result.player] === "both") {
-          // Keep the original team name
+          // For "both" option, we'll create separate entries for each player
+          // But for now, just keep the original format to avoid database errors
           return result;
         } else {
-          // Replace the team name with the selected individual
+          // Replace the team name with the selected individual - make sure it's just one player
           return {
             ...result,
-            player: selections[result.player]
+            player: selections[result.player].trim() // Ensure no whitespace that could cause issues
           };
         }
       }
