@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "wouter";
+import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { 
   Card, 
@@ -25,7 +25,7 @@ import {
   TabsTrigger 
 } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
-import { Tournament, Player } from "@shared/schema";
+import { Tournament } from "@shared/schema";
 import { formatDate } from "@/lib/utils";
 
 // Function to get tournament type label
@@ -44,19 +44,6 @@ function getTournamentTypeLabel(type: string): string {
   }
 }
 
-// Interface for tournament results with player info
-interface TournamentResultWithPlayer {
-  id: number;
-  playerId: number;
-  tournamentId: number;
-  position: number;
-  grossScore: number | null;
-  netScore: number | null;
-  handicap: number | null;
-  points: number;
-  player: Player;
-}
-
 export default function TournamentResults() {
   const { id } = useParams();
   const tournamentId = id ? parseInt(id) : 0;
@@ -69,7 +56,7 @@ export default function TournamentResults() {
   });
   
   // Fetch tournament results
-  const { data: results, isLoading: resultsLoading } = useQuery<TournamentResultWithPlayer[]>({
+  const { data: results, isLoading: resultsLoading } = useQuery<any[]>({
     queryKey: [`/api/tournaments/${tournamentId}/results`],
     enabled: !isNaN(tournamentId) && tournamentId > 0,
   });
@@ -117,9 +104,7 @@ export default function TournamentResults() {
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold mb-2">Tournament Not Found</h2>
         <p className="text-neutral-600 mb-6">The tournament you're looking for does not exist or has been removed.</p>
-        <Link href="/tournaments">
-          <Button>View All Tournaments</Button>
-        </Link>
+        <Button onClick={() => window.history.back()}>Go Back</Button>
       </div>
     );
   }
@@ -134,9 +119,7 @@ export default function TournamentResults() {
             <Badge variant={tournament.type as any}>{getTournamentTypeLabel(tournament.type)}</Badge>
           </div>
         </div>
-        <Link href="/tournaments">
-          <Button variant="outline">Back to Tournaments</Button>
-        </Link>
+        <Button variant="outline" onClick={() => window.history.back()}>Back</Button>
       </div>
       
       <div className="flex justify-start">
@@ -179,11 +162,16 @@ export default function TournamentResults() {
                             {result.position}<sup>{getOrdinalSuffix(result.position)}</sup>
                           </TableCell>
                           <TableCell>
-                            <Link href={`/player/${result.player.id}`}>
-                              <span className="text-primary hover:text-primary-dark hover:underline cursor-pointer">
-                                {result.player.name}
-                              </span>
-                            </Link>
+                            <a 
+                              href={`/player/${result.player.id}`}
+                              className="text-primary hover:text-primary-dark hover:underline cursor-pointer"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                window.location.href = `/player/${result.player.id}`;
+                              }}
+                            >
+                              {result.player.name}
+                            </a>
                           </TableCell>
                           <TableCell className="text-center">
                             {result.grossScore ?? "N/A"}
@@ -233,11 +221,16 @@ export default function TournamentResults() {
                             {index + 1}<sup>{getOrdinalSuffix(index + 1)}</sup>
                           </TableCell>
                           <TableCell>
-                            <Link href={`/player/${result.player.id}`}>
-                              <span className="text-primary hover:text-primary-dark hover:underline cursor-pointer">
-                                {result.player.name}
-                              </span>
-                            </Link>
+                            <a 
+                              href={`/player/${result.player.id}`}
+                              className="text-primary hover:text-primary-dark hover:underline cursor-pointer"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                window.location.href = `/player/${result.player.id}`;
+                              }}
+                            >
+                              {result.player.name}
+                            </a>
                           </TableCell>
                           <TableCell className="text-center">
                             {result.grossScore ?? "N/A"}

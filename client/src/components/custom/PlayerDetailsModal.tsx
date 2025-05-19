@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { Link } from "wouter";
 import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogFooter 
+  DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -95,12 +97,11 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
                     .map((tournament) => (
                     <TableRow key={tournament.id}>
                       <TableCell className="font-medium">
-                        <a 
-                          href={`/tournament/${tournament.tournamentId}`} 
-                          className="text-primary hover:text-primary-dark hover:underline"
+                        <a
+                          href={`/tournament/${tournament.tournamentId}`}
+                          className="text-primary hover:text-primary-dark hover:underline cursor-pointer"
                           onClick={(e) => {
                             e.preventDefault();
-                            // Close this modal and navigate
                             onClose();
                             window.location.href = `/tournament/${tournament.tournamentId}`;
                           }}
