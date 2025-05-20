@@ -189,10 +189,12 @@ export default function TournamentResults() {
           onValueChange={(value) => setActiveTab(value as "net" | "gross")}
           className="w-full"
         >
-          <TabsList className="mb-4">
-            <TabsTrigger value="net">Net Leaderboard</TabsTrigger>
-            <TabsTrigger value="gross">Gross Leaderboard</TabsTrigger>
-          </TabsList>
+          <div className="sticky top-0 z-10 bg-white pb-4 pt-2 shadow-sm">
+            <TabsList className="mb-4">
+              <TabsTrigger value="net">Net Leaderboard</TabsTrigger>
+              <TabsTrigger value="gross">Gross Leaderboard</TabsTrigger>
+            </TabsList>
+          </div>
           
           <TabsContent value="net">
             <Card>
