@@ -289,8 +289,8 @@ export default function TournamentResults() {
                             {formatHandicap(result)}
                           </TableCell>
                           <TableCell className="text-right font-semibold">
-                            {/* Display stored points from DB for historical consistency */}
-                            {result.points}
+                            {/* Use calculated net points based on current net leaderboard position */}
+                            {netPoints}
                           </TableCell>
                         </TableRow>
                       );
