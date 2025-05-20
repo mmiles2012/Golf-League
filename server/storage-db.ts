@@ -315,6 +315,13 @@ export class DatabaseStorage implements IStorage {
 
   // Combined operations
   async getNetLeaderboard(): Promise<PlayerWithHistory[]> {
+    // First check if there are any tournaments in the system
+    const tournaments = await this.getTournaments();
+    if (tournaments.length === 0) {
+      // No tournaments exist, return empty leaderboard
+      return [];
+    }
+    
     const allPlayers = await this.getPlayers();
     const leaderboard: PlayerWithHistory[] = [];
     
@@ -338,6 +345,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getGrossLeaderboard(): Promise<PlayerWithHistory[]> {
+    // First check if there are any tournaments in the system
+    const tournaments = await this.getTournaments();
+    if (tournaments.length === 0) {
+      // No tournaments exist, return empty leaderboard
+      return [];
+    }
+    
     const allPlayers = await this.getPlayers();
     const leaderboard: PlayerWithHistory[] = [];
     
