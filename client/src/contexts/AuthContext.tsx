@@ -52,6 +52,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = () => {
     setIsAuthenticated(false);
+    setIsPublicView(true); // Enable public view when logging out
   };
   
   const togglePublicView = () => {
