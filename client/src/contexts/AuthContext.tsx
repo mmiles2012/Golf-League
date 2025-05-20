@@ -23,27 +23,44 @@ type AuthProviderProps = {
 };
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  // Initialize state from localStorage if available
+  // Initialize state from sessionStorage for better session management
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    const saved = localStorage.getItem("hideout_auth");
+    const saved = sessionStorage.getItem("hideout_auth");
     return saved ? JSON.parse(saved) : false;
   });
   
   // For non-login pages, public view is enabled by default
   const [isPublicView, setIsPublicView] = useState<boolean>(() => {
-    const saved = localStorage.getItem("hideout_public_view");
+    const saved = sessionStorage.getItem("hideout_public_view");
     // Default to true to enable public view on initial load
     return saved ? JSON.parse(saved) : true;
   });
 
-  // Update localStorage when state changes
+  // Update sessionStorage when state changes for better session handling
   useEffect(() => {
-    localStorage.setItem("hideout_auth", JSON.stringify(isAuthenticated));
+    sessionStorage.setItem("hideout_auth", JSON.stringify(isAuthenticated));
   }, [isAuthenticated]);
   
   useEffect(() => {
-    localStorage.setItem("hideout_public_view", JSON.stringify(isPublicView));
+    sessionStorage.setItem("hideout_public_view", JSON.stringify(isPublicView));
   }, [isPublicView]);
+
+  // Add a global event listener to handle auth changes across components
+  useEffect(() => {
+    // Create a custom event we can dispatch from anywhere to force auth resets
+    const handleAuthEvent = (event: CustomEvent) => {
+      if (event.detail === 'logout') {
+        setIsAuthenticated(false);
+        setIsPublicView(true);
+      }
+    };
+    
+    window.addEventListener('auth-event' as any, handleAuthEvent as any);
+    
+    return () => {
+      window.removeEventListener('auth-event' as any, handleAuthEvent as any);
+    };
+  }, []);
 
   const login = () => {
     setIsAuthenticated(true);
@@ -53,6 +70,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     setIsAuthenticated(false);
     setIsPublicView(true); // Enable public view when logging out
+    
+    // Also dispatch the global event in case any components need to react
+    const event = new CustomEvent('auth-event', { detail: 'logout' });
+    window.dispatchEvent(event);
   };
   
   const togglePublicView = () => {

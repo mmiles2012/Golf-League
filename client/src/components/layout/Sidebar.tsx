@@ -30,15 +30,15 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
   };
   
   const handleLogout = (e: React.MouseEvent) => {
-    // Prevent event bubbling that might be interfering with the logout action
     e.preventDefault();
     e.stopPropagation();
     
-    // Add a small delay to ensure the UI event completes
-    setTimeout(() => {
-      logout();
-      window.location.href = "/";
-    }, 10);
+    // First log out using the context function
+    logout();
+    
+    // Force a full page reload to ensure clean state 
+    // This is a reliable approach that works on all pages
+    window.location.href = '/';
     
     if (onNavigation) onNavigation();
   };
