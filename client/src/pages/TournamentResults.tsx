@@ -160,6 +160,19 @@ export default function TournamentResults() {
     );
   }
   
+  // Function to format handicap display with "+" sign if needed
+  const formatHandicap = (result: any) => {
+    if (result.handicap === null) return "N/A";
+    
+    // Check if handicap should show with a "+" sign
+    // For stroke play: if netScore > grossScore, the handicap was added (not subtracted)
+    if (result.netScore !== null && result.grossScore !== null && result.netScore > result.grossScore) {
+      return `+${Math.abs(result.handicap)}`;
+    }
+    
+    return result.handicap;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -231,7 +244,7 @@ export default function TournamentResults() {
                             {result.netScore ?? "N/A"}
                           </TableCell>
                           <TableCell className="text-center">
-                            {result.handicap !== null ? result.handicap : "N/A"}
+                            {formatHandicap(result)}
                           </TableCell>
                           <TableCell className="text-right font-semibold">
                             {result.points}
@@ -291,7 +304,7 @@ export default function TournamentResults() {
                             {result.netScore ?? "N/A"}
                           </TableCell>
                           <TableCell className="text-center">
-                            {result.handicap !== null ? result.handicap : "N/A"}
+                            {formatHandicap(result)}
                           </TableCell>
                           <TableCell className="text-right font-semibold">
                             {result.grossPoints || 0}
