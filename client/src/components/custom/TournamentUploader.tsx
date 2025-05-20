@@ -228,18 +228,22 @@ export default function TournamentUploader() {
         // Handle scores based on scoring type
         let grossScore, netScore;
         
-        if ((row.Scoring === "StrokeNet" || row.Scoring === "Stroke") && row.Total !== undefined && row["Course Handicap"] !== undefined) {
+        if ((row.Scoring === "StrokeNet" || row.Scoring === "Stroke") && row.Total !== undefined) {
           // For Stroke/StrokeNet scoring tournaments:
           // - For the Gross leaderboard, "Total" is the gross score
-          // - For the Net leaderboard, "Total" + "Course Handicap" is the net score
+          // - For the Net leaderboard, "Total" + "Playing Handicap" is the net score
           
           // The Total column is the gross score
           grossScore = parseInt(String(row.Total));
           
-          // The net score is calculated by adding the handicap (not subtracting, as per user's instruction)
-          netScore = parseInt(String(row.Total)) + parseInt(String(row["Course Handicap"]));
+          // First try to use Playing handicap, then fall back to Course handicap if Playing handicap is not available
+          const handicapValue = row["Playing Handicap"] !== undefined ? parseFloat(String(row["Playing Handicap"])) :
+                              row["Course Handicap"] !== undefined ? parseFloat(String(row["Course Handicap"])) : 0;
           
-          console.log(`Stroke/StrokeNet scoring: Total=${row.Total} (Gross), Handicap=${row["Course Handicap"]}, calculated Net=${netScore}`);
+          // The net score is calculated by adding the handicap (not subtracting, as per user's instruction)
+          netScore = parseFloat(String(row.Total)) + handicapValue;
+          
+          console.log(`Stroke/StrokeNet scoring: Total=${row.Total} (Gross), Playing Handicap=${row["Playing Handicap"] || 'N/A'}, Course Handicap=${row["Course Handicap"] || 'N/A'}, calculated Net=${netScore}`);
         } else {
           // For regular scoring, use Total as gross score
           grossScore = 
@@ -254,6 +258,7 @@ export default function TournamentUploader() {
         }
         
         const handicap = 
+          row["Playing Handicap"] !== undefined ? parseFloat(String(row["Playing Handicap"])) :
           row["Course Handicap"] !== undefined ? parseFloat(String(row["Course Handicap"])) :
           row.handicap !== undefined ? parseFloat(String(row.handicap)) : 
           row.Handicap !== undefined ? parseFloat(String(row.Handicap)) : null;

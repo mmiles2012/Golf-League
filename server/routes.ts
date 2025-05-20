@@ -434,8 +434,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                    row.Net !== undefined ? Number(row.Net) : null;
         }
         
-        // Extract handicap
-        const handicap = row["Course Handicap"] !== undefined ? Number(row["Course Handicap"]) :
+        // Extract handicap - prioritize Playing Handicap over Course Handicap
+        const handicap = row["Playing Handicap"] !== undefined ? Number(row["Playing Handicap"]) :
+                       row["Course Handicap"] !== undefined ? Number(row["Course Handicap"]) :
                        row.handicap !== undefined ? Number(row.handicap) : 
                        row.Handicap !== undefined ? Number(row.Handicap) : null;
         
