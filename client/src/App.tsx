@@ -22,8 +22,8 @@ function Router() {
   return (
     <Switch>
       {/* Main Admin Routes */}
-      <Route path="/" component={Dashboard} />
-      <Route path="/leaderboards" component={Leaderboards} />
+      <Route path="/" component={Leaderboards} />
+      <Route path="/dashboard" component={Dashboard} />
       <Route path="/upload" component={UploadScores} />
       <Route path="/manual-entry" component={ManualEntry} />
       <Route path="/tournaments" component={TournamentManagement} />
