@@ -151,7 +151,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteLeague(id: number): Promise<boolean> {
     const result = await db.delete(leagues).where(eq(leagues.id, id));
-    return result.rowCount > 0;
+    return result && result.rowCount ? result.rowCount > 0 : false;
   }
 
   async getTournamentsByLeague(leagueId: number): Promise<Tournament[]> {
