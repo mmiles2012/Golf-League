@@ -34,19 +34,19 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
                 className={`sidebar-link ${isActive("/") ? "active" : ""}`}
                 onClick={onNavigation}
               >
-                <LayoutDashboard className="sidebar-icon mr-2" />
-                <span>Dashboard</span>
+                <Trophy className="sidebar-icon mr-2" />
+                <span>Leaderboards</span>
               </a>
             </Link>
           </li>
           <li>
-            <Link href="/leaderboards">
+            <Link href="/dashboard">
               <a 
-                className={`sidebar-link ${isActive("/leaderboards") ? "active" : ""}`}
+                className={`sidebar-link ${isActive("/dashboard") ? "active" : ""}`}
                 onClick={onNavigation}
               >
-                <Trophy className="sidebar-icon mr-2" />
-                <span>Leaderboards</span>
+                <LayoutDashboard className="sidebar-icon mr-2" />
+                <span>Dashboard</span>
               </a>
             </Link>
           </li>
