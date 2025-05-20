@@ -70,60 +70,7 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
         </div>
       </div>
       
-      {/* Player Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex flex-col gap-1">
-              <p className="text-neutral-600 text-sm">Rank</p>
-              {isLoading ? (
-                <Skeleton className="h-8 w-16" />
-              ) : (
-                <h3 className="text-2xl font-bold">{playerHistory?.rank || "N/A"}</h3>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex flex-col gap-1">
-              <p className="text-neutral-600 text-sm">Total Points</p>
-              {isLoading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <h3 className="text-2xl font-bold">{playerHistory?.totalPoints.toLocaleString() || "0"}</h3>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex flex-col gap-1">
-              <p className="text-neutral-600 text-sm">Events</p>
-              {isLoading ? (
-                <Skeleton className="h-8 w-12" />
-              ) : (
-                <h3 className="text-2xl font-bold">{playerHistory?.totalEvents || "0"}</h3>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex flex-col gap-1">
-              <p className="text-neutral-600 text-sm">Best Finish</p>
-              {isLoading ? (
-                <Skeleton className="h-8 w-16" />
-              ) : (
-                <h3 className="text-2xl font-bold">{getBestFinish()}</h3>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Removed Player Stats Cards as requested */}
       
       {/* Point Breakdown Card */}
       <Card>
@@ -192,7 +139,9 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
                 <th className="px-2 py-2 text-center text-sm font-medium text-neutral-700">Gross Pos</th>
                 <th className="px-2 py-2 text-center text-sm font-medium text-neutral-700">Gross</th>
                 <th className="px-2 py-2 text-center text-sm font-medium text-neutral-700">Net</th>
-                <th className="px-2 py-2 text-right text-sm font-medium text-neutral-700">Points</th>
+                <th className="px-2 py-2 text-center text-sm font-medium text-neutral-700">Gross Points</th>
+                <th className="px-2 py-2 text-center text-sm font-medium text-neutral-700">Net Points</th>
+                <th className="px-2 py-2 text-right text-sm font-medium text-neutral-700">Total Points</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200">
@@ -253,6 +202,12 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
                         {tournament.netScore || "N/A"}
+                      </td>
+                      <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
+                        {tournament.grossPoints || "0"}
+                      </td>
+                      <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
+                        {tournament.netPoints || tournament.points || "0"}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-right font-medium">
                         {tournament.points.toLocaleString()}
