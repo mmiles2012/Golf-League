@@ -50,11 +50,9 @@ export default function TournamentManagement() {
     setIsDeleteDialogOpen(true);
   };
   
-  // Get player count for each tournament
-  const getPlayerCount = (tournamentId: number) => {
-    // In a real implementation, this would query the API for player results
-    // For now, let's return a random number between 30 and 70
-    return Math.floor(Math.random() * 40) + 30;
+  // Get player count for each tournament from the results
+  const getPlayerCount = (tournament: Tournament) => {
+    return tournament.results?.length || 0;
   };
   
   return (
@@ -152,7 +150,7 @@ export default function TournamentManagement() {
                       </Badge>
                     </td>
                     <td className="px-2 py-3 whitespace-nowrap text-sm">
-                      {tournament.status === 'upcoming' ? '-' : getPlayerCount(tournament.id)}
+                      {tournament.status === 'upcoming' ? '-' : getPlayerCount(tournament)}
                     </td>
                     <td className="px-2 py-3 whitespace-nowrap text-sm">
                       <Badge variant={tournament.status}>
