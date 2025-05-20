@@ -30,6 +30,7 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
     <>
       <nav className="flex-grow py-4">
         <ul className="space-y-1">
+          {/* First Group - Main Views */}
           <li>
             <Link href="/">
               <div 
@@ -38,6 +39,44 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
               >
                 <Trophy className="sidebar-icon mr-2" />
                 <span>Leaderboards</span>
+              </div>
+            </Link>
+          </li>
+          <li>
+            <Link href="/tournament-results">
+              <div 
+                className={`sidebar-link ${isActive("/tournament-results") ? "active" : ""}`}
+                onClick={onNavigation}
+              >
+                <ListOrdered className="sidebar-icon mr-2" />
+                <span>Tournament Results</span>
+              </div>
+            </Link>
+          </li>
+          <li>
+            <Link href="/players">
+              <div 
+                className={`sidebar-link ${isActive("/players") ? "active" : ""}`}
+                onClick={onNavigation}
+              >
+                <Users className="sidebar-icon mr-2" />
+                <span>Players</span>
+              </div>
+            </Link>
+          </li>
+          
+          {/* Divider */}
+          <li className="my-4 border-t border-primary-light/20"></li>
+          
+          {/* Second Group - Management */}
+          <li>
+            <Link href="/tournaments">
+              <div 
+                className={`sidebar-link ${isActive("/tournaments") ? "active" : ""}`}
+                onClick={onNavigation}
+              >
+                <Flag className="sidebar-icon mr-2" />
+                <span>Tournament Manager</span>
               </div>
             </Link>
           </li>
@@ -64,50 +103,6 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
             </Link>
           </li>
           <li>
-            <Link href="/tournaments">
-              <div 
-                className={`sidebar-link ${isActive("/tournaments") ? "active" : ""}`}
-                onClick={onNavigation}
-              >
-                <Flag className="sidebar-icon mr-2" />
-                <span>Tournament Manager</span>
-              </div>
-            </Link>
-          </li>
-          <li>
-            <Link href="/tournament-results">
-              <div 
-                className={`sidebar-link ${isActive("/tournament-results") ? "active" : ""}`}
-                onClick={onNavigation}
-              >
-                <ListOrdered className="sidebar-icon mr-2" />
-                <span>Tournament Results</span>
-              </div>
-            </Link>
-          </li>
-          <li>
-            <Link href="/leagues">
-              <div 
-                className={`sidebar-link ${isActive("/leagues") ? "active" : ""}`}
-                onClick={onNavigation}
-              >
-                <Award className="sidebar-icon mr-2" />
-                <span>Leagues</span>
-              </div>
-            </Link>
-          </li>
-          <li>
-            <Link href="/players">
-              <div 
-                className={`sidebar-link ${isActive("/players") ? "active" : ""}`}
-                onClick={onNavigation}
-              >
-                <Users className="sidebar-icon mr-2" />
-                <span>Players</span>
-              </div>
-            </Link>
-          </li>
-          <li>
             <Link href="/points-config">
               <div 
                 className={`sidebar-link ${isActive("/points-config") ? "active" : ""}`}
@@ -115,17 +110,6 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
               >
                 <Settings className="sidebar-icon mr-2" />
                 <span>Points Config</span>
-              </div>
-            </Link>
-          </li>
-          <li>
-            <Link href="/embed">
-              <div 
-                className={`sidebar-link ${isActive("/embed") ? "active" : ""}`}
-                onClick={onNavigation}
-              >
-                <Code className="sidebar-icon mr-2" />
-                <span>Embed</span>
               </div>
             </Link>
           </li>
