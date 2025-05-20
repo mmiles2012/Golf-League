@@ -204,6 +204,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Auto-delete players without tournament results
+  app.post("/api/players/auto-delete-inactive", async (_req: Request, res: Response) => {
+    try {
+      // Get all players
+      const allPlayers = await storage.getPlayers();
+      const deletedCount = { success: 0, failed: 0 };
+      const deletedPlayers: string[] = [];
+      
+      // Process each player
+      for (const player of allPlayers) {
+        // Check if player has any results
+        const results = await storage.getPlayerResultsByPlayer(player.id);
+        
+        if (results.length === 0) {
+          // This player has no tournament results, delete them
+          const success = await storage.deletePlayer(player.id);
+          
+          if (success) {
+            deletedCount.success++;
+            deletedPlayers.push(player.name);
+          } else {
+            deletedCount.failed++;
+          }
+        }
+      }
+      
+      res.json({
+        message: `Auto-deleted ${deletedCount.success} players without tournament results. ${deletedCount.failed} failed.`,
+        deletedCount,
+        deletedPlayers
+      });
+    } catch (error) {
+      console.error("Error auto-deleting inactive players:", error);
+      res.status(500).json({ message: "Failed to auto-delete inactive players" });
+    }
+  });
+  
   // Tournaments endpoints
   app.get("/api/tournaments", async (_req: Request, res: Response) => {
     try {

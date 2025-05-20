@@ -32,6 +32,9 @@ export default function Players() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   
+  // State for auto-delete feature
+  const [isAutoDeleting, setIsAutoDeleting] = useState(false);
+  
   // Fetch all players or search results
   const { data: players, isLoading } = useQuery<Player[]>({
     queryKey: ["/api/players", debouncedSearchQuery ? `/search?q=${debouncedSearchQuery}` : ""],
@@ -125,6 +128,50 @@ export default function Players() {
     setPlayerToDelete(player);
   };
   
+  // Function to auto-delete inactive players
+  const handleAutoDeleteInactive = async () => {
+    if (isAutoDeleting) return;
+    
+    setIsAutoDeleting(true);
+    
+    try {
+      const response = await fetch('/api/players/auto-delete-inactive', {
+        method: 'POST',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to auto-delete inactive players');
+      }
+      
+      const result = await response.json();
+      
+      // Refresh the players list
+      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+      
+      if (result.deletedCount.success > 0) {
+        toast({
+          title: 'Auto-delete complete',
+          description: `Successfully deleted ${result.deletedCount.success} inactive players`,
+        });
+      } else {
+        toast({
+          title: 'Auto-delete complete',
+          description: 'No inactive players found to delete',
+          variant: 'default',
+        });
+      }
+    } catch (error) {
+      console.error('Error auto-deleting inactive players:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to auto-delete inactive players',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAutoDeleting(false);
+    }
+  };
+  
   return (
     <section className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -145,7 +192,29 @@ export default function Players() {
             />
           </div>
           
-          <Button className="whitespace-nowrap">
+          <Button
+            variant="outline"
+            className="whitespace-nowrap"
+            onClick={handleAutoDeleteInactive}
+            disabled={isAutoDeleting}
+          >
+            {isAutoDeleting ? (
+              <>
+                <span className="animate-spin mr-2 h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+                Cleaning...
+              </>
+            ) : (
+              <>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Auto-Delete Inactive
+              </>
+            )}
+          </Button>
+          
+          <Button 
+            className="whitespace-nowrap"
+            onClick={() => navigate("/players/new")}
+          >
             <UserPlus className="mr-2 h-4 w-4" />
             Add Player
           </Button>
