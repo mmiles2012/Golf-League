@@ -18,6 +18,7 @@ interface Tournament {
   type: 'major' | 'tour' | 'league' | 'supr';
   status: 'completed' | 'upcoming' | 'in-progress';
   createdAt: string;
+  playerCount?: number; // Added for player count from API
 }
 
 export default function TournamentManagement() {
@@ -50,9 +51,10 @@ export default function TournamentManagement() {
     setIsDeleteDialogOpen(true);
   };
   
-  // Get player count for each tournament from the results
+  // Display player count from the tournament data
   const getPlayerCount = (tournament: Tournament) => {
-    return tournament.results?.length || 0;
+    // Use the playerCount property returned from the API
+    return tournament.playerCount || 0;
   };
   
   return (
