@@ -98,7 +98,18 @@ export default function Leaderboards() {
             </div>
           )
         },
-        cell: ({ row }) => <div className="font-medium">{row.original.player.name}</div>,
+        cell: ({ row }) => (
+          <a 
+            href={`/player/${row.original.player.id}`} 
+            className="font-medium text-primary hover:underline cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              window.location.href = `/player/${row.original.player.id}`;
+            }}
+          >
+            {row.original.player.name}
+          </a>
+        ),
         enableSorting: true,
       },
       {
