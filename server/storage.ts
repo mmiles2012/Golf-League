@@ -16,6 +16,13 @@ import {
 
 // Interface for storage operations
 export interface IStorage {
+  // League operations
+  getLeagues(): Promise<League[]>;
+  getLeague(id: number): Promise<League | undefined>;
+  createLeague(league: InsertLeague): Promise<League>;
+  updateLeague(id: number, league: Partial<InsertLeague>): Promise<League | undefined>;
+  deleteLeague(id: number): Promise<boolean>;
+  
   // Player operations
   getPlayers(): Promise<Player[]>;
   getPlayer(id: number): Promise<Player | undefined>;
@@ -25,6 +32,7 @@ export interface IStorage {
   
   // Tournament operations
   getTournaments(): Promise<Tournament[]>;
+  getTournamentsByLeague(leagueId: number): Promise<Tournament[]>;
   getTournament(id: number): Promise<Tournament | undefined>;
   createTournament(tournament: InsertTournament): Promise<Tournament>;
   updateTournament(id: number, tournament: Partial<InsertTournament>): Promise<Tournament | undefined>;
@@ -56,19 +64,23 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
+  private leagues: Map<number, League>;
   private players: Map<number, Player>;
   private tournaments: Map<number, Tournament>;
   private playerResults: Map<number, PlayerResult>;
   private pointsConfig: PointsConfig;
   private appSettings: AppSettings;
+  private leagueCurrentId: number;
   private playerCurrentId: number;
   private tournamentCurrentId: number;
   private playerResultCurrentId: number;
   
   constructor() {
+    this.leagues = new Map();
     this.players = new Map();
     this.tournaments = new Map();
     this.playerResults = new Map();
+    this.leagueCurrentId = 1;
     this.playerCurrentId = 1;
     this.tournamentCurrentId = 1;
     this.playerResultCurrentId = 1;
@@ -199,6 +211,53 @@ export class MemStorage implements IStorage {
   }
   
   // Player methods
+  // League operations
+  async getLeagues(): Promise<League[]> {
+    return Array.from(this.leagues.values());
+  }
+
+  async getLeague(id: number): Promise<League | undefined> {
+    return this.leagues.get(id);
+  }
+
+  async createLeague(league: InsertLeague): Promise<League> {
+    const id = this.leagueCurrentId++;
+    const now = new Date();
+    const newLeague: League = {
+      id,
+      name: league.name,
+      description: league.description || null,
+      season: league.season || null,
+      isActive: league.isActive ?? true,
+      createdAt: now,
+    };
+    this.leagues.set(id, newLeague);
+    return newLeague;
+  }
+
+  async updateLeague(id: number, league: Partial<InsertLeague>): Promise<League | undefined> {
+    const existingLeague = this.leagues.get(id);
+    if (!existingLeague) return undefined;
+
+    const updatedLeague: League = {
+      ...existingLeague,
+      ...league,
+    };
+    this.leagues.set(id, updatedLeague);
+    return updatedLeague;
+  }
+
+  async deleteLeague(id: number): Promise<boolean> {
+    return this.leagues.delete(id);
+  }
+
+  async getTournamentsByLeague(leagueId: number): Promise<Tournament[]> {
+    return Array.from(this.tournaments.values()).filter(
+      (tournament) => tournament.leagueId === leagueId
+    );
+  }
+
+  // Player operations
   async getPlayers(): Promise<Player[]> {
     return Array.from(this.players.values());
   }

@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import multer from "multer";
 import * as XLSX from "xlsx";
-import { tournamentUploadSchema, manualEntrySchema, editTournamentSchema } from "@shared/schema";
+import { tournamentUploadSchema, manualEntrySchema, editTournamentSchema, insertLeagueSchema } from "@shared/schema";
 
 // Set up multer for file uploads
 const upload = multer({
@@ -26,6 +26,95 @@ const upload = multer({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API Routes - All prefixed with /api
+  
+  // Leagues endpoints
+  app.get("/api/leagues", async (_req: Request, res: Response) => {
+    try {
+      const leagues = await storage.getLeagues();
+      res.json(leagues);
+    } catch (error) {
+      console.error("Error fetching leagues:", error);
+      res.status(500).json({ message: "Failed to fetch leagues" });
+    }
+  });
+
+  app.get("/api/leagues/:id", async (req: Request, res: Response) => {
+    try {
+      const league = await storage.getLeague(Number(req.params.id));
+      if (!league) {
+        return res.status(404).json({ message: "League not found" });
+      }
+      res.json(league);
+    } catch (error) {
+      console.error("Error fetching league:", error);
+      res.status(500).json({ message: "Failed to fetch league" });
+    }
+  });
+
+  app.post("/api/leagues", async (req: Request, res: Response) => {
+    try {
+      const validation = insertLeagueSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ message: "Invalid league data", errors: validation.error.format() });
+      }
+      
+      const league = await storage.createLeague(validation.data);
+      res.status(201).json(league);
+    } catch (error) {
+      console.error("Error creating league:", error);
+      res.status(500).json({ message: "Failed to create league" });
+    }
+  });
+
+  app.put("/api/leagues/:id", async (req: Request, res: Response) => {
+    try {
+      const validation = insertLeagueSchema.partial().safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ message: "Invalid league data", errors: validation.error.format() });
+      }
+      
+      const league = await storage.updateLeague(Number(req.params.id), validation.data);
+      if (!league) {
+        return res.status(404).json({ message: "League not found" });
+      }
+      
+      res.json(league);
+    } catch (error) {
+      console.error("Error updating league:", error);
+      res.status(500).json({ message: "Failed to update league" });
+    }
+  });
+
+  app.delete("/api/leagues/:id", async (req: Request, res: Response) => {
+    try {
+      const success = await storage.deleteLeague(Number(req.params.id));
+      if (!success) {
+        return res.status(404).json({ message: "League not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting league:", error);
+      res.status(500).json({ message: "Failed to delete league" });
+    }
+  });
+
+  app.get("/api/leagues/:id/tournaments", async (req: Request, res: Response) => {
+    try {
+      const leagueId = Number(req.params.id);
+      const league = await storage.getLeague(leagueId);
+      
+      if (!league) {
+        return res.status(404).json({ message: "League not found" });
+      }
+      
+      const tournaments = await storage.getTournamentsByLeague(leagueId);
+      res.json(tournaments);
+    } catch (error) {
+      console.error("Error fetching league tournaments:", error);
+      res.status(500).json({ message: "Failed to fetch league tournaments" });
+    }
+  });
   
   // Players endpoints
   app.get("/api/players", async (_req: Request, res: Response) => {
