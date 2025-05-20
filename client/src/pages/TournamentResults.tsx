@@ -189,13 +189,19 @@ export default function TournamentResults() {
           onValueChange={(value) => setActiveTab(value as "net" | "gross")}
           className="w-full"
         >
-          {/* Sticky tabs that remain visible when scrolling */}
-          <div className="sticky top-0 z-50 bg-white py-2 shadow-md border-b">
-            <TabsList className="mx-auto">
-              <TabsTrigger value="net">
+          {/* Sticky tabs container */}
+          <div className="sticky top-0 left-0 right-0 w-full bg-white py-3 px-4 shadow-lg border-b border-gray-200 z-50" style={{ position: 'sticky', top: 0 }}>
+            <TabsList className="mx-auto max-w-xl">
+              <TabsTrigger 
+                value="net" 
+                className="px-6 py-2 text-base font-medium"
+              >
                 Net Leaderboard
               </TabsTrigger>
-              <TabsTrigger value="gross">
+              <TabsTrigger 
+                value="gross" 
+                className="px-6 py-2 text-base font-medium"
+              >
                 Gross Leaderboard
               </TabsTrigger>
             </TabsList>
