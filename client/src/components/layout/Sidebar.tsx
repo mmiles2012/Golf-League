@@ -40,17 +40,6 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
             </Link>
           </li>
           <li>
-            <Link href="/dashboard">
-              <a 
-                className={`sidebar-link ${isActive("/dashboard") ? "active" : ""}`}
-                onClick={onNavigation}
-              >
-                <LayoutDashboard className="sidebar-icon mr-2" />
-                <span>Dashboard</span>
-              </a>
-            </Link>
-          </li>
-          <li>
             <Link href="/upload">
               <a 
                 className={`sidebar-link ${isActive("/upload") ? "active" : ""}`}
