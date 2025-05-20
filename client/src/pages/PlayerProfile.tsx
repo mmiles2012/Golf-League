@@ -141,7 +141,6 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
                 <th className="px-2 py-2 text-center text-sm font-medium text-neutral-700">Net</th>
                 <th className="px-2 py-2 text-center text-sm font-medium text-neutral-700">Gross Points</th>
                 <th className="px-2 py-2 text-center text-sm font-medium text-neutral-700">Net Points</th>
-                <th className="px-2 py-2 text-right text-sm font-medium text-neutral-700">Total Points</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200">
@@ -174,9 +173,6 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
                     </td>
                     <td className="px-2 py-3 whitespace-nowrap text-center">
                       <Skeleton className="h-5 w-12 mx-auto" />
-                    </td>
-                    <td className="px-2 py-3 whitespace-nowrap text-right">
-                      <Skeleton className="h-5 w-16 ml-auto" />
                     </td>
                   </tr>
                 ))
@@ -216,9 +212,6 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
                         {tournament.tournamentType !== 'tour' || !tournament.grossPosition || tournament.grossPosition > 3 
                           ? tournament.points : "0"}
-                      </td>
-                      <td className="px-2 py-3 whitespace-nowrap text-sm text-right font-medium">
-                        {tournament.points.toLocaleString()}
                       </td>
                     </tr>
                   ))

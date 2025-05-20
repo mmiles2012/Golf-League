@@ -69,7 +69,6 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
                     <TableHead className="text-center">Net</TableHead>
                     <TableHead className="text-center">Gross Points</TableHead>
                     <TableHead className="text-center">Net Points</TableHead>
-                    <TableHead className="text-right">Points</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="divide-y divide-neutral-200">
@@ -112,7 +111,6 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
                         {tournament.tournamentType !== 'tour' || !tournament.grossPosition || tournament.grossPosition > 3 
                           ? tournament.points : "0"}
                       </TableCell>
-                      <TableCell className="text-right font-medium">{tournament.points}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
