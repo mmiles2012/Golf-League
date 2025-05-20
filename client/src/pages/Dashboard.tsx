@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,8 +6,16 @@ import { Trophy, FileUp, Calendar, CalendarCheck, Users, Flag } from "lucide-rea
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
+import PlayerDetailsModal from "@/components/custom/PlayerDetailsModal";
 
 export default function Dashboard() {
+  const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
+  const [isPlayerDetailsOpen, setIsPlayerDetailsOpen] = useState(false);
+  
+  const handlePlayerClick = (playerId: number) => {
+    setSelectedPlayerId(playerId);
+    setIsPlayerDetailsOpen(true);
+  };
   const { data: netLeaderboard, isLoading: isLoadingNet } = useQuery({
     queryKey: ["/api/leaderboard/net"],
     staleTime: 60 * 1000, // 1 minute
