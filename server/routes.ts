@@ -405,21 +405,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Handle Stroke and StrokeNet scoring specifically
         let grossScore, netScore;
         
-        if ((row.Scoring === "StrokeNet" || row.Scoring === "Stroke") && row.Total !== undefined && row["Course Handicap"] !== undefined) {
+        if ((row.Scoring === "StrokeNet" || row.Scoring === "Stroke") && row.Total !== undefined) {
           // For Stroke/StrokeNet scoring:
           // In tournaments with "Stroke" scoring type:
           // - Gross score = Total (raw strokes)
-          // - Net score = Total + Course Handicap
+          // - Net score = Total + Playing handicap
           
           // Total column represents the gross score
           grossScore = Number(row.Total);
           
-          // Net score is calculated by adding handicap to gross score
-          netScore = Number(row.Total) + Number(row["Course Handicap"]);
+          // First try to use Playing handicap, then fall back to Course handicap if Playing handicap is not available
+          const handicapValue = row["Playing Handicap"] !== undefined ? Number(row["Playing Handicap"]) :
+                              row["Course Handicap"] !== undefined ? Number(row["Course Handicap"]) : 0;
           
-          console.log(`Stroke/StrokeNet scoring: Total=${row.Total} (Gross), Handicap=${row["Course Handicap"]}, calculated Net=${netScore}`);
+          // Net score is calculated by adding handicap to gross score
+          netScore = Number(row.Total) + handicapValue;
+          
+          console.log(`Stroke/StrokeNet scoring: Total=${row.Total} (Gross), Playing Handicap=${row["Playing Handicap"] || 'N/A'}, Course Handicap=${row["Course Handicap"] || 'N/A'}, calculated Net=${netScore}`);
         } else {
-          // For regular scoring, use the Total as the gross score
+          // For regular scoring, use Total as gross score
           grossScore = row.Total !== undefined ? Number(row.Total) : 
                       row["Gross Score"] !== undefined ? Number(row["Gross Score"]) : 
                       row.grossScore !== undefined ? Number(row.grossScore) : null;
