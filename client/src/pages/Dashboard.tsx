@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import PlayerDetailsModal from "@/components/custom/PlayerDetailsModal";
+import type { PlayerWithHistory } from "@shared/schema";
 
 export default function Dashboard() {
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
@@ -16,17 +17,17 @@ export default function Dashboard() {
     setSelectedPlayerId(playerId);
     setIsPlayerDetailsOpen(true);
   };
-  const { data: netLeaderboard, isLoading: isLoadingNet } = useQuery({
+  const { data: netLeaderboard, isLoading: isLoadingNet } = useQuery<PlayerWithHistory[]>({
     queryKey: ["/api/leaderboard/net"],
     staleTime: 60 * 1000, // 1 minute
   });
   
-  const { data: grossLeaderboard, isLoading: isLoadingGross } = useQuery({
+  const { data: grossLeaderboard, isLoading: isLoadingGross } = useQuery<PlayerWithHistory[]>({
     queryKey: ["/api/leaderboard/gross"],
     staleTime: 60 * 1000, // 1 minute
   });
   
-  const { data: tournaments, isLoading: isLoadingTournaments } = useQuery({
+  const { data: tournaments, isLoading: isLoadingTournaments } = useQuery<any[]>({
     queryKey: ["/api/tournaments"],
     staleTime: 60 * 1000, // 1 minute
   });
@@ -265,9 +266,12 @@ export default function Dashboard() {
                             {player.rank}
                           </td>
                           <td className="px-2 py-3 whitespace-nowrap text-sm">
-                            <Link href={`/players/${player.player.id}`}>
-                              <a className="hover:text-primary font-medium">{player.player.name}</a>
-                            </Link>
+                            <button 
+                              onClick={() => handlePlayerClick(player.player.id)}
+                              className="hover:text-primary font-medium text-left bg-transparent border-0 p-0 cursor-pointer"
+                            >
+                              {player.player.name}
+                            </button>
                           </td>
                           <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
                             {player.totalEvents}
