@@ -1,21 +1,18 @@
-import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useForm } from "react-hook-form";
 import { format } from "date-fns";
-import type { League, InsertLeague } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
 
-// UI components
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,184 +22,203 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 // Form schema for creating/editing leagues
 const leagueFormSchema = z.object({
-  name: z.string().min(1, "League name is required"),
-  description: z.string().optional(),
-  season: z.string().optional(),
-  isActive: z.boolean().default(true),
+  name: z.string().min(2, { message: "League name must be at least 2 characters." }),
+  description: z.string().nullable().optional(),
+  season: z.string().nullable().optional(),
+  isActive: z.boolean().default(true)
 });
 
 type LeagueFormValues = z.infer<typeof leagueFormSchema>;
 
+// The main LeagueManagement component
 export default function LeagueManagement() {
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingLeague, setEditingLeague] = useState<League | null>(null);
-  const [deleteLeagueId, setDeleteLeagueId] = useState<number | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  // Fetch leagues
-  const { data: leagues = [], isLoading } = useQuery<League[]>({
-    queryKey: ["/api/leagues"],
+  const { toast } = useToast();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [currentLeague, setCurrentLeague] = useState<any>(null);
+  
+  // Initialize the form
+  const form = useForm<LeagueFormValues>({
+    resolver: zodResolver(leagueFormSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      season: "",
+      isActive: true
+    }
   });
-
-  // Create league mutation
+  
+  // Create mutation
   const createLeagueMutation = useMutation({
-    mutationFn: (data: InsertLeague) => 
-      apiRequest("/api/leagues", { method: "POST", data }),
+    mutationFn: (data: any) => 
+      fetch("/api/leagues", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      }).then(res => {
+        if (!res.ok) throw new Error("Failed to create league");
+        return res.json();
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/leagues"] });
-      setIsCreateDialogOpen(false);
       toast({
         title: "League Created",
         description: "The league has been created successfully.",
-        variant: "default",
       });
+      setIsCreateModalOpen(false);
+      form.reset();
     },
     onError: (error) => {
       toast({
-        title: "Error Creating League",
-        description: "There was a problem creating the league. Please try again.",
+        title: "Error",
+        description: `Failed to create league: ${error.message}`,
         variant: "destructive",
       });
-      console.error("Create league error:", error);
-    },
+    }
   });
-
-  // Update league mutation
-  const updateLeagueMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<InsertLeague> }) => 
-      apiRequest(`/api/leagues/${id}`, { method: "PUT", data }),
+  
+  // Edit mutation
+  const editLeagueMutation = useMutation({
+    mutationFn: (data: any) => 
+      fetch(`/api/leagues/${currentLeague?.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      }).then(res => {
+        if (!res.ok) throw new Error("Failed to update league");
+        return res.json();
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/leagues"] });
-      setIsEditDialogOpen(false);
       toast({
         title: "League Updated",
         description: "The league has been updated successfully.",
-        variant: "default",
       });
+      setIsEditModalOpen(false);
     },
     onError: (error) => {
       toast({
-        title: "Error Updating League",
-        description: "There was a problem updating the league. Please try again.",
+        title: "Error",
+        description: `Failed to update league: ${error.message}`,
         variant: "destructive",
       });
-      console.error("Update league error:", error);
-    },
+    }
   });
-
-  // Delete league mutation
+  
+  // Delete mutation
   const deleteLeagueMutation = useMutation({
-    mutationFn: (id: number) => 
-      apiRequest(`/api/leagues/${id}`, { method: "DELETE" }),
+    mutationFn: () => 
+      fetch(`/api/leagues/${currentLeague?.id}`, {
+        method: "DELETE"
+      }).then(res => {
+        if (!res.ok) throw new Error("Failed to delete league");
+        return res.json();
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/leagues"] });
-      setIsDeleteDialogOpen(false);
       toast({
         title: "League Deleted",
         description: "The league has been deleted successfully.",
-        variant: "default",
       });
+      setIsDeleteDialogOpen(false);
     },
     onError: (error) => {
       toast({
-        title: "Error Deleting League",
-        description: "There was a problem deleting the league. Please try again.",
+        title: "Error",
+        description: `Failed to delete league: ${error.message}`,
         variant: "destructive",
       });
-      console.error("Delete league error:", error);
-    },
+    }
   });
-
-  // Form for creating a new league
-  const createForm = useForm<LeagueFormValues>({
-    resolver: zodResolver(leagueFormSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      season: "",
-      isActive: true,
-    },
+  
+  // Fetch leagues
+  const { data: leagues, isLoading, error } = useQuery({
+    queryKey: ["/api/leagues"],
+    queryFn: () => fetch("/api/leagues").then(res => res.json())
   });
-
-  // Form for editing a league
-  const editForm = useForm<LeagueFormValues>({
-    resolver: zodResolver(leagueFormSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      season: "",
-      isActive: true,
-    },
-  });
-
-  // Handle form submission for new league
+  
+  // Form submission handlers
   const onCreateSubmit = (values: LeagueFormValues) => {
     createLeagueMutation.mutate(values);
   };
-
-  // Handle form submission for editing league
+  
   const onEditSubmit = (values: LeagueFormValues) => {
-    if (editingLeague) {
-      updateLeagueMutation.mutate({ id: editingLeague.id, data: values });
-    }
+    editLeagueMutation.mutate(values);
   };
-
+  
   // Handle edit button click
-  const handleEditClick = (league: League) => {
-    setEditingLeague(league);
-    
-    // Reset form with league data
-    editForm.reset({
+  const handleEditClick = (league: any) => {
+    setCurrentLeague(league);
+    form.reset({
       name: league.name,
       description: league.description || "",
       season: league.season || "",
-      isActive: league.isActive,
+      isActive: league.isActive
     });
-    
-    setIsEditDialogOpen(true);
+    setIsEditModalOpen(true);
   };
-
+  
   // Handle delete button click
-  const handleDeleteClick = (id: number) => {
-    setDeleteLeagueId(id);
+  const handleDeleteClick = (league: any) => {
+    setCurrentLeague(league);
     setIsDeleteDialogOpen(true);
   };
-
-  // Handle confirm delete
-  const handleConfirmDelete = () => {
-    if (deleteLeagueId !== null) {
-      deleteLeagueMutation.mutate(deleteLeagueId);
-    }
-  };
-
+  
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-heading font-bold">League Management</h1>
-          <p className="text-neutral-600">Create and manage multiple golf leagues</p>
+          <h1 className="text-3xl font-bold">League Management</h1>
+          <p className="text-muted-foreground">Create and manage your golf leagues</p>
         </div>
-        
-        <Button 
-          onClick={() => {
-            createForm.reset();
-            setIsCreateDialogOpen(true);
-          }}
-          className="flex items-center gap-2"
-        >
-          <PlusCircle size={18} />
-          <span>Add League</span>
+        <Button onClick={() => {
+          form.reset({
+            name: "",
+            description: "",
+            season: "",
+            isActive: true
+          });
+          setIsCreateModalOpen(true);
+        }}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          New League
         </Button>
       </div>
-
+      
       {isLoading ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map(i => (
+            <Card key={i} className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <Skeleton className="h-6 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-24 w-full" />
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Skeleton className="h-10 w-20" />
+                <Skeleton className="h-10 w-20" />
+              </CardFooter>
+            </Card>
+          ))}
         </div>
-      ) : leagues.length === 0 ? (
+      ) : error ? (
+        <Card className="bg-destructive/10 border-destructive">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              <p className="text-destructive">Failed to load leagues</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : leagues?.length === 0 ? (
         <Card className="border-dashed border-2">
           <CardContent className="flex flex-col items-center justify-center py-10 text-center space-y-4">
             <Trophy className="h-12 w-12 text-neutral-300" />
@@ -211,102 +227,102 @@ export default function LeagueManagement() {
               <p className="text-neutral-500 max-w-md mt-1">
                 Create your first league to get started. Each league can have its own tournaments and leaderboards.
               </p>
+              <Button 
+                className="mt-4"
+                onClick={() => {
+                  form.reset({
+                    name: "",
+                    description: "",
+                    season: "",
+                    isActive: true
+                  });
+                  setIsCreateModalOpen(true);
+                }}
+              >
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Create League
+              </Button>
             </div>
-            <Button 
-              onClick={() => {
-                createForm.reset();
-                setIsCreateDialogOpen(true);
-              }}
-              className="mt-2"
-            >
-              Create First League
-            </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="rounded-lg border overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>League Name</TableHead>
-                <TableHead>Season</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="w-[150px] text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {leagues.map((league) => (
-                <TableRow key={league.id}>
-                  <TableCell className="font-medium">
-                    <div className="font-medium">{league.name}</div>
-                    {league.description && (
-                      <div className="text-sm text-neutral-500 mt-1 max-w-xs truncate">
-                        {league.description}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>{league.season || "—"}</TableCell>
-                  <TableCell>
-                    {league.isActive ? (
-                      <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">
-                        Active
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="bg-neutral-100 text-neutral-800 hover:bg-neutral-100">
-                        Inactive
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(league.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditClick(league)}
-                      >
-                        <Edit size={16} className="mr-1" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDeleteClick(league.id)}
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {leagues.map((league: any) => (
+            <Card key={league.id} className={`overflow-hidden ${!league.isActive ? 'opacity-75' : ''}`}>
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <CardTitle>{league.name}</CardTitle>
+                  {league.isActive ? (
+                    <Badge variant="default" className="bg-green-500">Active</Badge>
+                  ) : (
+                    <Badge variant="outline">Inactive</Badge>
+                  )}
+                </div>
+                {league.season && (
+                  <CardDescription className="flex items-center">
+                    <Calendar className="h-3 w-3 mr-1" />
+                    Season: {league.season}
+                  </CardDescription>
+                )}
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground line-clamp-4">
+                  {league.description || "No description provided."}
+                </p>
+                
+                {/* Stats section */}
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="flex flex-col items-center justify-center bg-muted rounded-md p-2">
+                    <span className="text-xs text-muted-foreground">Tournaments</span>
+                    <span className="font-medium">{league.tournamentCount || 0}</span>
+                  </div>
+                  <div className="flex flex-col items-center justify-center bg-muted rounded-md p-2">
+                    <span className="text-xs text-muted-foreground">Players</span>
+                    <span className="font-medium">{league.playerCount || 0}</span>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button variant="outline" onClick={() => handleEditClick(league)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  onClick={() => handleDeleteClick(league)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
         </div>
       )}
-
+      
       {/* Create League Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+      <Dialog 
+        open={isCreateModalOpen} 
+        onOpenChange={setIsCreateModalOpen}
+      >
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Create New League</DialogTitle>
             <DialogDescription>
-              Create a new golf league. You can add tournaments to this league later.
+              Enter the details of your new golf league.
             </DialogDescription>
           </DialogHeader>
           
-          <Form {...createForm}>
-            <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onCreateSubmit)} className="space-y-4">
               <FormField
-                control={createForm.control}
+                control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>League Name</FormLabel>
+                    <FormLabel>League Name*</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter league name" {...field} />
+                      <Input placeholder="Hideout Golf League" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -314,28 +330,35 @@ export default function LeagueManagement() {
               />
               
               <FormField
-                control={createForm.control}
+                control={form.control}
                 name="season"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Season</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., 2025" {...field} />
+                      <Input placeholder="2025" {...field} value={field.value || ""} />
                     </FormControl>
-                    <FormDescription>Optional season or year for this league</FormDescription>
+                    <FormDescription>
+                      Optionally add a season year or name
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               
               <FormField
-                control={createForm.control}
+                control={form.control}
                 name="description"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Enter league description" className="resize-none" {...field} />
+                      <Textarea 
+                        placeholder="Enter a description of this league..." 
+                        className="resize-none" 
+                        {...field} 
+                        value={field.value || ""}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -343,66 +366,78 @@ export default function LeagueManagement() {
               />
               
               <FormField
-                control={createForm.control}
+                control={form.control}
                 name="isActive"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                     <div className="space-y-0.5">
                       <FormLabel>Active Status</FormLabel>
                       <FormDescription>
-                        Active leagues are displayed in the main leaderboard
+                        Whether this league is currently active
                       </FormDescription>
                     </div>
                     <FormControl>
-                      <Switch 
+                      <Switch
                         checked={field.value}
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
               
               <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsCreateDialogOpen(false)}
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsCreateModalOpen(false)}
                 >
                   Cancel
                 </Button>
                 <Button 
-                  type="submit"
+                  type="submit" 
                   disabled={createLeagueMutation.isPending}
                 >
-                  {createLeagueMutation.isPending ? "Creating..." : "Create League"}
+                  {createLeagueMutation.isPending ? (
+                    <span className="flex items-center">
+                      <span className="animate-spin mr-2">⟳</span> Creating...
+                    </span>
+                  ) : (
+                    <span className="flex items-center">
+                      <CheckCircle className="mr-2 h-4 w-4" /> Create League
+                    </span>
+                  )}
                 </Button>
               </DialogFooter>
             </form>
           </Form>
         </DialogContent>
       </Dialog>
-
+      
       {/* Edit League Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog 
+        open={isEditModalOpen} 
+        onOpenChange={setIsEditModalOpen}
+      >
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit League</DialogTitle>
             <DialogDescription>
-              Update the league details.
+              Update the details of {currentLeague?.name}
             </DialogDescription>
           </DialogHeader>
           
-          <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onEditSubmit)} className="space-y-4">
               <FormField
-                control={editForm.control}
+                control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>League Name</FormLabel>
+                    <FormLabel>League Name*</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter league name" {...field} />
+                      <Input placeholder="Hideout Golf League" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -410,28 +445,35 @@ export default function LeagueManagement() {
               />
               
               <FormField
-                control={editForm.control}
+                control={form.control}
                 name="season"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Season</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., 2025" {...field} />
+                      <Input placeholder="2025" {...field} value={field.value || ""} />
                     </FormControl>
-                    <FormDescription>Optional season or year for this league</FormDescription>
+                    <FormDescription>
+                      Optionally add a season year or name
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               
               <FormField
-                control={editForm.control}
+                control={form.control}
                 name="description"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Enter league description" className="resize-none" {...field} />
+                      <Textarea 
+                        placeholder="Enter a description of this league..." 
+                        className="resize-none" 
+                        {...field} 
+                        value={field.value || ""}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -439,63 +481,81 @@ export default function LeagueManagement() {
               />
               
               <FormField
-                control={editForm.control}
+                control={form.control}
                 name="isActive"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                     <div className="space-y-0.5">
                       <FormLabel>Active Status</FormLabel>
                       <FormDescription>
-                        Active leagues are displayed in the main leaderboard
+                        Whether this league is currently active
                       </FormDescription>
                     </div>
                     <FormControl>
-                      <Switch 
+                      <Switch
                         checked={field.value}
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
               
               <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsEditDialogOpen(false)}
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsEditModalOpen(false)}
                 >
                   Cancel
                 </Button>
                 <Button 
-                  type="submit"
-                  disabled={updateLeagueMutation.isPending}
+                  type="submit" 
+                  disabled={editLeagueMutation.isPending}
                 >
-                  {updateLeagueMutation.isPending ? "Saving..." : "Save Changes"}
+                  {editLeagueMutation.isPending ? (
+                    <span className="flex items-center">
+                      <span className="animate-spin mr-2">⟳</span> Updating...
+                    </span>
+                  ) : (
+                    <span className="flex items-center">
+                      <CheckCircle className="mr-2 h-4 w-4" /> Update League
+                    </span>
+                  )}
                 </Button>
               </DialogFooter>
             </form>
           </Form>
         </DialogContent>
       </Dialog>
-
+      
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action will permanently delete this league and all its associated data. This action cannot be undone.
+              This will permanently delete the league "{currentLeague?.name}" and all its associated data.
+              This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleConfirmDelete}
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                deleteLeagueMutation.mutate();
+              }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={deleteLeagueMutation.isPending}
             >
-              {deleteLeagueMutation.isPending ? "Deleting..." : "Delete League"}
+              {deleteLeagueMutation.isPending ? (
+                <span className="flex items-center">
+                  <span className="animate-spin mr-2">⟳</span> Deleting...
+                </span>
+              ) : (
+                "Delete League"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
