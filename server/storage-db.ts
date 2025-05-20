@@ -8,6 +8,7 @@ import {
   type InsertPlayerResult,
   type EditTournament,
   type PlayerWithHistory,
+  type PointsConfig,
   players,
   tournaments,
   playerResults
@@ -16,6 +17,67 @@ import { db } from "./db";
 import { IStorage } from "./storage";
 // Use points calculator from client lib for consistency 
 import { calculatePoints } from "../client/src/lib/points-calculator";
+
+// Default points configurations based on provided PDFs
+const DEFAULT_POINTS_CONFIG = {
+  major: {
+    // Values from Majors Points List PDF
+    positions: {
+      1: 750, 2: 400, 3: 350, 4: 325, 5: 300, 
+      6: 275, 7: 225, 8: 200, 9: 175, 10: 150,
+      11: 130, 12: 120, 13: 110, 14: 90, 15: 80,
+      16: 70, 17: 65, 18: 60, 19: 55, 20: 50,
+      21: 48, 22: 46, 23: 44, 24: 42, 25: 40,
+      26: 38, 27: 36, 28: 34, 29: 32.5, 30: 31,
+      31: 29.5, 32: 28, 33: 26.5, 34: 25, 35: 24,
+      36: 23, 37: 22, 38: 21, 39: 20.25, 40: 19.5,
+      41: 18.75, 42: 18, 43: 17.25, 44: 16.5, 45: 15.75,
+      46: 15, 47: 14.25, 48: 13.5, 49: 13, 50: 12.5,
+      51: 12, 52: 11.5, 53: 11, 54: 10.5, 55: 10,
+      56: 9.5, 57: 9, 58: 8.5, 59: 8, 60: 7.75,
+      61: 7.5, 62: 7.25, 63: 7
+    }
+  },
+  tour: {
+    // Values from Tour Points List PDF
+    positions: {
+      1: 500, 2: 300, 3: 190, 4: 135, 5: 110,
+      6: 100, 7: 90, 8: 85, 9: 80, 10: 75,
+      11: 70, 12: 65, 13: 60, 14: 55, 15: 53,
+      16: 51, 17: 49, 18: 47, 19: 45, 20: 43,
+      21: 41, 22: 39, 23: 37, 24: 35.5, 25: 34,
+      26: 32.5, 27: 31, 28: 29.5, 29: 28, 30: 26.5,
+      31: 25, 32: 23.5, 33: 22, 34: 21, 35: 20,
+      36: 19, 37: 18, 38: 17, 39: 16, 40: 15,
+      41: 14, 42: 13, 43: 12, 44: 11, 45: 10.5,
+      46: 10, 47: 9.5, 48: 9, 49: 8.5, 50: 8,
+      51: 7.5, 52: 7, 53: 6.5, 54: 6, 55: 5.8,
+      56: 5.6, 57: 5.4, 58: 5.2, 59: 5, 60: 4.8,
+      61: 4.6, 62: 4.4, 63: 4.2, 64: 4, 65: 3.8
+    }
+  },
+  league: {
+    // Values from League Points List PDF
+    positions: {
+      1: 93.75, 2: 50, 3: 43.75, 4: 40.625, 5: 37.5,
+      6: 34.375, 7: 28.125, 8: 25, 9: 21.875, 10: 18.75,
+      11: 16.25, 12: 15, 13: 13.75, 14: 11.25, 15: 10,
+      16: 8.75, 17: 8.125, 18: 7.5, 19: 6.875, 20: 6
+    }
+  },
+  supr: {
+    // Values from SUPR Club Points List PDF
+    positions: {
+      1: 93.75, 2: 50, 3: 43.75, 4: 40.625, 5: 37.5,
+      6: 34.375, 7: 28.125, 8: 25, 9: 21.875, 10: 18.75,
+      11: 16.25, 12: 15, 13: 13.75, 14: 11.25, 15: 10,
+      16: 8.75, 17: 8.125, 18: 7.5, 19: 6.875, 20: 6
+    }
+  }
+};
+
+// Store the config in memory - can be upgraded to database storage later if needed
+let pointsConfig: PointsConfig = { ...DEFAULT_POINTS_CONFIG };
 
 export class DatabaseStorage implements IStorage {
   // Player operations
@@ -526,5 +588,15 @@ export class DatabaseStorage implements IStorage {
       // Display either gross or net score based on the leaderboard type
       averageScore: scoreType === 'gross' ? averageGrossScore : averageNetScore
     };
+  }
+
+  // Points configuration operations
+  async getPointsConfig(): Promise<PointsConfig> {
+    return pointsConfig;
+  }
+
+  async updatePointsConfig(config: PointsConfig): Promise<PointsConfig> {
+    pointsConfig = { ...config };
+    return pointsConfig;
   }
 }
