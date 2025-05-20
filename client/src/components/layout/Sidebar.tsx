@@ -29,11 +29,17 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
     return location.startsWith(path);
   };
   
-  const handleLogout = () => {
-    logout();
-    // Force page refresh to ensure auth state is properly reset
-    // This fixes the issue with logout on the leaderboard page
-    window.location.href = "/";
+  const handleLogout = (e: React.MouseEvent) => {
+    // Prevent event bubbling that might be interfering with the logout action
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Add a small delay to ensure the UI event completes
+    setTimeout(() => {
+      logout();
+      window.location.href = "/";
+    }, 10);
+    
     if (onNavigation) onNavigation();
   };
   
@@ -171,13 +177,14 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
             </div>
             <div>
               <p className="text-white font-medium">Admin User</p>
-              <div 
-                className="text-xs text-white opacity-75 hover:opacity-100 flex items-center cursor-pointer"
+              <button 
+                type="button"
+                className="text-xs text-white opacity-75 hover:opacity-100 flex items-center cursor-pointer bg-transparent border-0"
                 onClick={handleLogout}
               >
                 <span>Sign Out</span>
                 <LogOut className="h-3 w-3 ml-1" />
-              </div>
+              </button>
             </div>
           </div>
         ) : (
