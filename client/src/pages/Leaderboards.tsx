@@ -395,8 +395,36 @@ export default function Leaderboards() {
         <span>Click on any player to view their tournament history</span>
       </div>
       
+      {/* Fixed tab navigation at bottom of screen */}
+      <div className="fixed bottom-4 left-0 right-0 z-50 flex justify-center">
+        <div className="bg-white rounded-full shadow-lg border px-4 py-3">
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setActiveTab("net")}
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+                activeTab === "net" 
+                  ? "bg-primary text-white" 
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              Net
+            </button>
+            <button
+              onClick={() => setActiveTab("gross")}
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+                activeTab === "gross" 
+                  ? "bg-primary text-white" 
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              Gross
+            </button>
+          </div>
+        </div>
+      </div>
+      
       {/* Leaderboard Table */}
-      <Card>
+      <Card className="mb-20">
         <div className="px-5 py-4 border-b border-neutral-200 flex justify-between items-center">
           <h3 className="font-heading font-bold text-lg">{activeTab === "net" ? "Net" : "Gross"} Leaderboard</h3>
           <div className="flex gap-2">
