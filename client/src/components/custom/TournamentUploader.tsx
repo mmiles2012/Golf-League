@@ -241,22 +241,30 @@ export default function TournamentUploader() {
           
           // Handle Playing Handicap
           if (row["Playing Handicap"] !== undefined) {
+            // Convert to string to handle all types of inputs
+            const handicapStr = String(row["Playing Handicap"]);
+            
             // Check if the playing handicap has a "+" sign
-            if (typeof row["Playing Handicap"] === 'string' && row["Playing Handicap"].includes('+')) {
-              // If it has a "+" sign, add the absolute value to the total
-              handicapValue = parseFloat(String(row["Playing Handicap"]).replace('+', ''));
+            if (handicapStr.includes('+')) {
+              // If it has a "+" sign, add the handicap to the total (positive value)
+              handicapValue = parseFloat(handicapStr.replace('+', ''));
             } else {
               // If it doesn't have a "+" sign, subtract the handicap from the total
-              handicapValue = -Math.abs(parseFloat(String(row["Playing Handicap"])));
+              handicapValue = -Math.abs(parseFloat(handicapStr));
             }
           } 
           // Fall back to Course Handicap if Playing Handicap isn't available
           else if (row["Course Handicap"] !== undefined) {
+            // Convert to string to handle all types of inputs
+            const handicapStr = String(row["Course Handicap"]);
+            
             // Apply the same logic to Course Handicap
-            if (typeof row["Course Handicap"] === 'string' && row["Course Handicap"].includes('+')) {
-              handicapValue = parseFloat(String(row["Course Handicap"]).replace('+', ''));
+            if (handicapStr.includes('+')) {
+              // If it has a "+" sign, add the handicap to the total (positive value)
+              handicapValue = parseFloat(handicapStr.replace('+', ''));
             } else {
-              handicapValue = -Math.abs(parseFloat(String(row["Course Handicap"])));
+              // If it doesn't have a "+" sign, subtract the handicap from the total
+              handicapValue = -Math.abs(parseFloat(handicapStr));
             }
           } else {
             handicapValue = 0;
