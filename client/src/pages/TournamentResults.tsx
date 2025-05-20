@@ -64,12 +64,24 @@ export default function TournamentResults() {
   
   const isLoading = tournamentLoading || resultsLoading;
   
-  // Sort results by position for net and gross scores
-  const sortedNetResults = results
-    ? [...results].sort((a, b) => a.position - b.position)
-    : [];
+  // Get scored points by position based on tournament type
+  const getPointsByPosition = (position: number, tournamentType: string): number => {
+    if (tournamentType === 'major') {
+      const majorPoints = [750, 400, 350, 325, 300, 275, 225, 200, 175, 150];
+      return position <= 10 ? majorPoints[position - 1] : 100;
+    } else if (tournamentType === 'tour') {
+      const tourPoints = [500, 300, 190, 135, 110, 100, 90, 85, 80, 75];
+      return position <= 10 ? tourPoints[position - 1] : 50;
+    } else {
+      const leaguePoints = [93.75, 50, 43.75, 40.625, 37.5, 34.375, 28.125, 25, 21.875, 18.75];
+      return position <= 10 ? leaguePoints[position - 1] : 15;
+    }
+  };
     
-  // For gross results, sort by gross score and calculate points based on position in gross scoring
+  // For net results, use the original positions from the database
+  const sortedNetResults = results ? [...results].sort((a, b) => a.position - b.position) : [];
+    
+  // For gross results, sort by gross score (lower is better)
   const sortedGrossResults = results
     ? [...results]
         .filter(result => result.grossScore !== null)
@@ -82,71 +94,11 @@ export default function TournamentResults() {
           if (b.grossScore === null) return -1;
           return a.grossScore - b.grossScore;
         })
-        .map((result, index) => {
-          // Clone the result object to avoid mutating the original
-          const grossResult = { ...result };
-          
-          // Calculate gross points based on position in this sorted list using the tournament type
-          const grossPosition = index + 1;
-          
-          // Calculate proper points based on tournament type for gross leaderboard
-          if (tournament) {
-            // For major tournaments
-            if (tournament.type === 'major') {
-              // First place in a major gets 750 points
-              switch (grossPosition) {
-                case 1: grossResult.grossPoints = 750; break;
-                case 2: grossResult.grossPoints = 400; break;
-                case 3: grossResult.grossPoints = 350; break;
-                case 4: grossResult.grossPoints = 325; break;
-                case 5: grossResult.grossPoints = 300; break;
-                case 6: grossResult.grossPoints = 275; break;
-                case 7: grossResult.grossPoints = 225; break;
-                case 8: grossResult.grossPoints = 200; break;
-                case 9: grossResult.grossPoints = 175; break;
-                case 10: grossResult.grossPoints = 150; break;
-                default: 
-                  if (grossPosition <= 20) {
-                    const points = [130, 120, 110, 90, 80, 70, 65, 60, 55, 50];
-                    grossResult.grossPoints = points[grossPosition - 11] || 50;
-                  } else {
-                    grossResult.grossPoints = 50;
-                  }
-              }
-            } 
-            // For tour tournaments
-            else if (tournament.type === 'tour') {
-              switch (grossPosition) {
-                case 1: grossResult.grossPoints = 500; break;
-                case 2: grossResult.grossPoints = 300; break;
-                case 3: grossResult.grossPoints = 190; break;
-                case 4: grossResult.grossPoints = 135; break;
-                case 5: grossResult.grossPoints = 110; break;
-                case 6: grossResult.grossPoints = 100; break;
-                case 7: grossResult.grossPoints = 90; break;
-                case 8: grossResult.grossPoints = 85; break;
-                case 9: grossResult.grossPoints = 80; break;
-                case 10: grossResult.grossPoints = 75; break;
-                default: grossResult.grossPoints = 70;
-              }
-            }
-            // For league or supr
-            else {
-              switch (grossPosition) {
-                case 1: grossResult.grossPoints = 93.75; break;
-                case 2: grossResult.grossPoints = 50; break;
-                case 3: grossResult.grossPoints = 43.75; break;
-                case 4: grossResult.grossPoints = 40.625; break;
-                case 5: grossResult.grossPoints = 37.5; break;
-                default: grossResult.grossPoints = 30;
-              }
-            }
-          } else {
-            grossResult.grossPoints = 0;
-          }
-          
-          return grossResult;
-        })
+        .map((result, index) => ({
+          ...result,
+          // Calculate points based on position in gross leaderboard and tournament type
+          grossPoints: tournament ? getPointsByPosition(index + 1, tournament.type) : 0
+        }))
     : [];
     
   // Add null gross score players at the end, sorted alphabetically
@@ -249,10 +201,10 @@ export default function TournamentResults() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {sortedNetResults.map((result) => (
+                      {sortedNetResults.map((result, index) => (
                         <TableRow key={result.id}>
                           <TableCell className="font-semibold">
-                            {result.position}<sup>{getOrdinalSuffix(result.position)}</sup>
+                            {index + 1}<sup>{getOrdinalSuffix(index + 1)}</sup>
                           </TableCell>
                           <TableCell>
                             <a 
@@ -276,7 +228,7 @@ export default function TournamentResults() {
                             {formatHandicap(result)}
                           </TableCell>
                           <TableCell className="text-right font-semibold">
-                            {result.points}
+                            {tournament && tournament.type === 'major' && index === 0 ? 750 : result.points}
                           </TableCell>
                         </TableRow>
                       ))}
