@@ -402,15 +402,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
                         row.Position !== undefined ? Number(row.Position) : 
                         row.position !== undefined ? Number(row.position) : (index + 1);
         
-        // Handle StrokeNet scoring specifically
+        // Handle Stroke and StrokeNet scoring specifically
         let grossScore, netScore;
         
-        if (row.Scoring === "StrokeNet" && row.Total !== undefined && row["Course Handicap"] !== undefined) {
-          // For StrokeNet scoring, the Total is actually the net score
-          netScore = Number(row.Total);
-          // Calculate gross score by adding handicap to the Total (net score)
-          grossScore = Number(row.Total) + Number(row["Course Handicap"]);
-          console.log(`StrokeNet scoring: Total=${row.Total}, Handicap=${row["Course Handicap"]}, calculated Gross=${grossScore}, Net=${netScore}`);
+        if ((row.Scoring === "StrokeNet" || row.Scoring === "Stroke") && row.Total !== undefined && row["Course Handicap"] !== undefined) {
+          // For Stroke/StrokeNet scoring:
+          // In tournaments with "Stroke" scoring type:
+          // - Gross score = Total (raw strokes)
+          // - Net score = Total + Course Handicap
+          
+          // Total column represents the gross score
+          grossScore = Number(row.Total);
+          
+          // Net score is calculated by adding handicap to gross score
+          netScore = Number(row.Total) + Number(row["Course Handicap"]);
+          
+          console.log(`Stroke/StrokeNet scoring: Total=${row.Total} (Gross), Handicap=${row["Course Handicap"]}, calculated Net=${netScore}`);
         } else {
           // For regular scoring, use the Total as the gross score
           grossScore = row.Total !== undefined ? Number(row.Total) : 
