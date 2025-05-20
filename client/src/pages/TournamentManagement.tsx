@@ -66,21 +66,10 @@ export default function TournamentManagement() {
         </div>
       </div>
       
-      {/* Featured Image for Tournaments */}
+      {/* Tournament Database Header */}
       <Card className="overflow-hidden shadow-lg">
-        <div className="h-64 overflow-hidden">
-          <img 
-            src="https://images.unsplash.com/photo-1592919505780-303950717480?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=400&q=80" 
-            alt="Golf tournament leaderboard" 
-            className="w-full h-64 object-cover"
-          />
-        </div>
         <CardContent className="p-5">
           <h2 className="text-xl font-heading font-bold">Tournament Database</h2>
-          <p className="text-neutral-600 mt-2">
-            All tournament results are stored in the database. You can edit or delete tournament data if needed. 
-            Deleting a tournament will recalculate all season points.
-          </p>
         </CardContent>
       </Card>
       
