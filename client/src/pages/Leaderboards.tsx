@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { PlayerWithHistory } from "@shared/schema";
+import type { PlayerWithHistory, AppSettings } from "@shared/schema";
 import PlayerDetailsModal from "@/components/custom/PlayerDetailsModal";
 import { FileDown, Printer } from "lucide-react";
 
@@ -17,6 +17,11 @@ export default function Leaderboards() {
   const [activeTab, setActiveTab] = useState("net");
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
   const [isPlayerDetailsOpen, setIsPlayerDetailsOpen] = useState(false);
+  
+  // Fetch app settings to get custom page title
+  const { data: appSettings } = useQuery<AppSettings>({
+    queryKey: ["/api/settings"],
+  });
   
   // Fetch leaderboard data based on active tab
   const { data: leaderboardData, isLoading } = useQuery<PlayerWithHistory[]>({
@@ -325,7 +330,7 @@ export default function Leaderboards() {
     <section className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-heading font-bold text-neutral-800">Leaderboards</h1>
+          <h1 className="text-2xl md:text-3xl font-heading font-bold text-neutral-800">{appSettings?.pageTitle || "Leaderboards"}</h1>
           <p className="text-neutral-600">Season standings and player performance</p>
         </div>
         
