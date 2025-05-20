@@ -79,7 +79,7 @@ export default function Leaderboards() {
   
   // Define columns for DataTable
   const getColumns = (): ColumnDef<PlayerWithHistory>[] => {
-    // Base columns that are the same for both leaderboards
+    // Base columns that exclude Events as it will be positioned near Total Points
     const baseColumns: ColumnDef<PlayerWithHistory>[] = [
       {
         accessorKey: "rank",
@@ -126,32 +126,14 @@ export default function Leaderboards() {
         cell: ({ row }) => <div className="text-center">{row.original.majorPoints.toLocaleString()}</div>,
         enableSorting: true,
       },
-      {
-        accessorKey: "totalEvents",
-        header: ({ column }) => {
-          return (
-            <div 
-              className="flex items-center justify-center cursor-pointer select-none"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            >
-              Events
-              {column.getIsSorted() === "asc" ? (
-                <span className="ml-1">▲</span>
-              ) : column.getIsSorted() === "desc" ? (
-                <span className="ml-1">▼</span>
-              ) : null}
-            </div>
-          )
-        },
-        cell: ({ row }) => <div className="text-center">{row.original.totalEvents}</div>,
-        enableSorting: true,
-      },
     ];
     
     // Columns specific to net leaderboard
     if (activeTab === "net") {
       // Create a new array with "Total Points" column right after player name
       const rankAndPlayerColumns = baseColumns.slice(0, 2); // Take rank and player columns
+      
+      // Total Points column
       const totalPointsColumn: ColumnDef<PlayerWithHistory> = {
         accessorKey: "totalPoints",
         header: ({ column }) => {
@@ -172,12 +154,36 @@ export default function Leaderboards() {
         cell: ({ row }) => <div className="font-bold text-right">{row.original.totalPoints.toLocaleString()}</div>,
         enableSorting: true,
       };
-      const remainingColumns = baseColumns.slice(2); // Get the remaining columns
+      
+      // Events column (moved next to Total Points)
+      const eventsColumn: ColumnDef<PlayerWithHistory> = {
+        accessorKey: "totalEvents",
+        header: ({ column }) => {
+          return (
+            <div 
+              className="flex items-center justify-center cursor-pointer select-none"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              Events
+              {column.getIsSorted() === "asc" ? (
+                <span className="ml-1">▲</span>
+              ) : column.getIsSorted() === "desc" ? (
+                <span className="ml-1">▼</span>
+              ) : null}
+            </div>
+          )
+        },
+        cell: ({ row }) => <div className="text-center">{row.original.totalEvents}</div>,
+        enableSorting: true,
+      };
+      
+      const remainingColumns = baseColumns.slice(2); // Get the remaining columns (Major Points)
       
       return [
         ...rankAndPlayerColumns, // Rank, Player Name
         totalPointsColumn, // Total Points right after player name
-        ...remainingColumns, // Major Points, Events
+        eventsColumn, // Events right after Total Points
+        ...remainingColumns, // Major Points
         {
           accessorKey: "tourPoints",
           header: ({ column }) => {
@@ -244,6 +250,8 @@ export default function Leaderboards() {
     else {
       // Create a new array with "Gross Points" column right after player name
       const rankAndPlayerColumns = baseColumns.slice(0, 2); // Take rank and player columns
+      
+      // Gross Total Points column
       const grossTotalPointsColumn: ColumnDef<PlayerWithHistory> = {
         accessorKey: "grossTotalPoints",
         header: ({ column }) => {
@@ -264,12 +272,36 @@ export default function Leaderboards() {
         cell: ({ row }) => <div className="font-bold text-right">{(row.original.grossTotalPoints || 0).toLocaleString()}</div>,
         enableSorting: true,
       };
-      const remainingColumns = baseColumns.slice(2); // Get the remaining columns
+      
+      // Events column (moved next to Gross Points)
+      const eventsColumn: ColumnDef<PlayerWithHistory> = {
+        accessorKey: "totalEvents",
+        header: ({ column }) => {
+          return (
+            <div 
+              className="flex items-center justify-center cursor-pointer select-none"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              Events
+              {column.getIsSorted() === "asc" ? (
+                <span className="ml-1">▲</span>
+              ) : column.getIsSorted() === "desc" ? (
+                <span className="ml-1">▼</span>
+              ) : null}
+            </div>
+          )
+        },
+        cell: ({ row }) => <div className="text-center">{row.original.totalEvents}</div>,
+        enableSorting: true,
+      };
+      
+      const remainingColumns = baseColumns.slice(2); // Get the remaining columns (Major Points)
       
       return [
         ...rankAndPlayerColumns, // Rank, Player Name
         grossTotalPointsColumn, // Gross Points right after player name
-        ...remainingColumns, // Major Points, Events
+        eventsColumn, // Events right after Gross Points
+        ...remainingColumns, // Major Points
         {
           accessorKey: "grossTourPoints",
           header: ({ column }) => {
