@@ -37,19 +37,24 @@ export default function SetupPage() {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   // Fetch current settings
-  const { data: currentSettings, isLoading } = useQuery<AppSettings>({
-    queryKey: ["/api/settings"],
-    onError: () => {
-      // If settings don't exist yet, use defaults
+  const { data: currentSettings, isLoading, isError } = useQuery<AppSettings>({
+    queryKey: ["/api/settings"]
+  });
+  
+  // If there's an error fetching settings, use defaults
+  React.useEffect(() => {
+    if (isError) {
       setSettings(DEFAULT_SETTINGS);
     }
-  });
+  }, [isError]);
 
   // Update state when settings are loaded
   useEffect(() => {
     if (currentSettings) {
-      setSettings(currentSettings);
-      setLogoPreview(currentSettings.logoUrl);
+      // Type assertion to ensure it's treated as AppSettings
+      const typedSettings = currentSettings as AppSettings;
+      setSettings(typedSettings);
+      setLogoPreview(typedSettings.logoUrl);
     }
   }, [currentSettings]);
 

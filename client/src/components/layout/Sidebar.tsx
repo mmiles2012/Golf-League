@@ -105,6 +105,17 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
               </a>
             </Link>
           </li>
+          <li>
+            <Link href="/setup">
+              <a 
+                className={`sidebar-link ${isActive("/setup") ? "active" : ""}`}
+                onClick={onNavigation}
+              >
+                <Settings className="sidebar-icon mr-2" />
+                <span>App Setup</span>
+              </a>
+            </Link>
+          </li>
         </ul>
       </nav>
       

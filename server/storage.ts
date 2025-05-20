@@ -446,6 +446,16 @@ export class MemStorage implements IStorage {
     return tournament;
   }
   
+  // App settings methods
+  async getAppSettings(): Promise<AppSettings> {
+    return this.appSettings;
+  }
+  
+  async updateAppSettings(settings: AppSettings): Promise<AppSettings> {
+    this.appSettings = settings;
+    return this.appSettings;
+  }
+  
   // Helper methods
   private async calculatePlayerHistory(playerId: number, scoreType: 'net' | 'gross'): Promise<PlayerWithHistory | undefined> {
     const player = await this.getPlayer(playerId);

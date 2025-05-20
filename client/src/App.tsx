@@ -17,6 +17,7 @@ import Players from "@/pages/Players";
 import PlayerProfile from "@/pages/PlayerProfile";
 import PublicLeaderboard from "@/pages/PublicLeaderboard";
 import PointsConfiguration from "@/pages/PointsConfiguration";
+import SetupPage from "@/pages/SetupPage";
 
 function Router() {
   return (
@@ -29,6 +30,7 @@ function Router() {
       <Route path="/tournaments" component={TournamentManagement} />
       <Route path="/players" component={Players} />
       <Route path="/points-config" component={PointsConfiguration} />
+      <Route path="/setup" component={SetupPage} />
       <Route path="/embed" component={Embed} />
       
       {/* Player Profile */}
