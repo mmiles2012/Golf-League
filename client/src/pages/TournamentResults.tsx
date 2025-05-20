@@ -182,26 +182,6 @@ export default function TournamentResults() {
         <Button variant="outline" onClick={() => window.history.back()}>Back</Button>
       </div>
       
-      {/* Sticky tabs that remain visible when scrolling */}
-      <div className="sticky top-0 z-50 bg-white py-2 shadow-md border-b">
-        <TabsList className="mx-auto">
-          <TabsTrigger 
-            value="net" 
-            onClick={() => setActiveTab("net")}
-            className={activeTab === "net" ? "bg-primary text-white" : ""}
-          >
-            Net Leaderboard
-          </TabsTrigger>
-          <TabsTrigger 
-            value="gross" 
-            onClick={() => setActiveTab("gross")}
-            className={activeTab === "gross" ? "bg-primary text-white" : ""}
-          >
-            Gross Leaderboard
-          </TabsTrigger>
-        </TabsList>
-      </div>
-      
       <div className="flex justify-start">
         <Tabs 
           defaultValue="net" 
@@ -209,6 +189,17 @@ export default function TournamentResults() {
           onValueChange={(value) => setActiveTab(value as "net" | "gross")}
           className="w-full"
         >
+          {/* Sticky tabs that remain visible when scrolling */}
+          <div className="sticky top-0 z-50 bg-white py-2 shadow-md border-b">
+            <TabsList className="mx-auto">
+              <TabsTrigger value="net">
+                Net Leaderboard
+              </TabsTrigger>
+              <TabsTrigger value="gross">
+                Gross Leaderboard
+              </TabsTrigger>
+            </TabsList>
+          </div>
           
           <TabsContent value="net">
             <Card>
