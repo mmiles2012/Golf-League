@@ -35,13 +35,37 @@ function Router() {
       <Route path="/tournament-results" component={AllTournamentResults} />
       <Route path="/players" component={Players} />
       
-      {/* Admin-only Routes */}
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/upload" component={UploadScores} />
-      <Route path="/manual-entry" component={ManualEntry} />
-      <Route path="/tournaments" component={TournamentManagement} />
-      <Route path="/points-config" component={PointsConfiguration} />
-      <Route path="/setup" component={SetupPage} />
+      {/* Admin-only Routes - Protected */}
+      <Route path="/dashboard">
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/upload">
+        <ProtectedRoute>
+          <UploadScores />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/manual-entry">
+        <ProtectedRoute>
+          <ManualEntry />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/tournaments">
+        <ProtectedRoute>
+          <TournamentManagement />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/points-config">
+        <ProtectedRoute>
+          <PointsConfiguration />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/setup">
+        <ProtectedRoute>
+          <SetupPage />
+        </ProtectedRoute>
+      </Route>
       
       {/* Player Profile */}
       <Route path="/player/:id">
@@ -54,7 +78,11 @@ function Router() {
       </Route>
       
       <Route path="/tournament/edit/:id">
-        {params => <EditTournament />}
+        {params => (
+          <ProtectedRoute>
+            <EditTournament />
+          </ProtectedRoute>
+        )}
       </Route>
       
       {/* Public Routes */}
