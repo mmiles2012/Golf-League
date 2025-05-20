@@ -183,3 +183,14 @@ export const pointsConfigSchema = z.object({
 });
 
 export type PointsConfig = z.infer<typeof pointsConfigSchema>;
+
+// App Settings schema
+export const appSettingsSchema = z.object({
+  appName: z.string(),
+  pageTitle: z.string(),
+  scoringType: z.enum(['net', 'gross', 'both']),
+  sidebarColor: z.string(),
+  logoUrl: z.string()
+});
+
+export type AppSettings = z.infer<typeof appSettingsSchema>;

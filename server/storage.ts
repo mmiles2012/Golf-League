@@ -9,6 +9,7 @@ import {
   PlayerWithHistory,
   EditTournament,
   PointsConfig,
+  AppSettings,
 } from "@shared/schema";
 
 // Interface for storage operations
@@ -41,6 +42,10 @@ export interface IStorage {
   getPointsConfig(): Promise<PointsConfig>;
   updatePointsConfig(config: PointsConfig): Promise<PointsConfig>;
   
+  // App settings operations
+  getAppSettings(): Promise<AppSettings>;
+  updateAppSettings(settings: AppSettings): Promise<AppSettings>;
+  
   // Combined operations
   getNetLeaderboard(): Promise<PlayerWithHistory[]>;
   getGrossLeaderboard(): Promise<PlayerWithHistory[]>;
@@ -53,6 +58,7 @@ export class MemStorage implements IStorage {
   private tournaments: Map<number, Tournament>;
   private playerResults: Map<number, PlayerResult>;
   private pointsConfig: PointsConfig;
+  private appSettings: AppSettings;
   private playerCurrentId: number;
   private tournamentCurrentId: number;
   private playerResultCurrentId: number;
