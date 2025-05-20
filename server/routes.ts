@@ -415,11 +415,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
           grossScore = Number(row.Total);
           
           // First try to use Playing handicap, then fall back to Course handicap if Playing handicap is not available
-          const handicapValue = row["Playing Handicap"] !== undefined ? Number(row["Playing Handicap"]) :
-                              row["Course Handicap"] !== undefined ? Number(row["Course Handicap"]) : 0;
+          let handicapValue;
           
-          // Net score is calculated by adding handicap to gross score
+          // Handle Playing Handicap
+          if (row["Playing Handicap"] !== undefined) {
+            // Check if the playing handicap has a "+" sign
+            if (typeof row["Playing Handicap"] === 'string' && row["Playing Handicap"].includes('+')) {
+              // If it has a "+" sign, add the absolute value to the total
+              handicapValue = Number(row["Playing Handicap"].replace('+', ''));
+            } else {
+              // If it doesn't have a "+" sign, subtract the handicap from the total
+              handicapValue = -Math.abs(Number(row["Playing Handicap"]));
+            }
+          } 
+          // Fall back to Course Handicap if Playing Handicap isn't available
+          else if (row["Course Handicap"] !== undefined) {
+            // Apply the same logic to Course Handicap
+            if (typeof row["Course Handicap"] === 'string' && row["Course Handicap"].includes('+')) {
+              handicapValue = Number(row["Course Handicap"].replace('+', ''));
+            } else {
+              handicapValue = -Math.abs(Number(row["Course Handicap"]));
+            }
+          } else {
+            handicapValue = 0;
+          }
+          
+          // Net score is calculated based on whether the handicap is positive or negative
           netScore = Number(row.Total) + handicapValue;
+          
+          console.log(`Handicap calculation: Total=${row.Total}, Handicap=${handicapValue} (${handicapValue >= 0 ? 'added' : 'subtracted'}), Net=${netScore}`);
           
           console.log(`Stroke/StrokeNet scoring: Total=${row.Total} (Gross), Playing Handicap=${row["Playing Handicap"] || 'N/A'}, Course Handicap=${row["Course Handicap"] || 'N/A'}, calculated Net=${netScore}`);
         } else {
