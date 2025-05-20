@@ -10,7 +10,8 @@ import {
   LogOut,
   User,
   Settings,
-  Award
+  Award,
+  ListOrdered
 } from "lucide-react";
 
 interface SidebarProps {
@@ -69,7 +70,18 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
                 onClick={onNavigation}
               >
                 <Flag className="sidebar-icon mr-2" />
-                <span>Tournaments</span>
+                <span>Tournament Manager</span>
+              </div>
+            </Link>
+          </li>
+          <li>
+            <Link href="/tournament-results">
+              <div 
+                className={`sidebar-link ${isActive("/tournament-results") ? "active" : ""}`}
+                onClick={onNavigation}
+              >
+                <ListOrdered className="sidebar-icon mr-2" />
+                <span>Tournament Results</span>
               </div>
             </Link>
           </li>
