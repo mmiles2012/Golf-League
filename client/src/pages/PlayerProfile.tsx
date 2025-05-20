@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { calculatePoints } from "@/lib/points-calculator";
 import type { PlayerWithHistory } from "@shared/schema";
 
 interface PlayerProfileProps {
@@ -206,12 +207,14 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
                         {tournament.netScore || "N/A"}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
-                        {tournament.grossPosition && tournament.grossPosition <= 10 
-                          ? tournament.points : "0"}
+                        {tournament.grossPosition 
+                          ? calculatePoints(tournament.grossPosition, tournament.tournamentType) 
+                          : "0"}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
-                        {!tournament.grossPosition || tournament.position < tournament.grossPosition 
-                          ? tournament.points : "0"}
+                        {tournament.position 
+                          ? calculatePoints(tournament.position, tournament.tournamentType) 
+                          : "0"}
                       </td>
                     </tr>
                   ))

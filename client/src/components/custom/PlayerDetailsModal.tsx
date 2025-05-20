@@ -15,6 +15,7 @@ import { Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { PlayerWithHistory } from "@shared/schema";
 import { formatDate } from "@/lib/utils";
+import { calculatePoints } from "@/lib/points-calculator";
 
 interface PlayerDetailsModalProps {
   playerId: number | null;
@@ -104,12 +105,14 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
                         {tournament.netScore ? tournament.netScore : "N/A"}
                       </TableCell>
                       <TableCell className="text-center">
-                        {tournament.grossPosition && tournament.grossPosition <= 10 
-                          ? tournament.points : "0"}
+                        {tournament.grossPosition 
+                          ? calculatePoints(tournament.grossPosition, tournament.tournamentType) 
+                          : "0"}
                       </TableCell>
                       <TableCell className="text-center">
-                        {!tournament.grossPosition || tournament.position < tournament.grossPosition 
-                          ? tournament.points : "0"}
+                        {tournament.position 
+                          ? calculatePoints(tournament.position, tournament.tournamentType) 
+                          : "0"}
                       </TableCell>
                     </TableRow>
                   ))}
