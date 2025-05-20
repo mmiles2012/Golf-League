@@ -330,9 +330,12 @@ export default function Dashboard() {
                             {player.rank}
                           </td>
                           <td className="px-2 py-3 whitespace-nowrap text-sm">
-                            <Link href={`/players/${player.player.id}`}>
-                              <a className="hover:text-primary font-medium">{player.player.name}</a>
-                            </Link>
+                            <button 
+                              onClick={() => handlePlayerClick(player.player.id)}
+                              className="hover:text-primary font-medium text-left bg-transparent border-0 p-0 cursor-pointer"
+                            >
+                              {player.player.name}
+                            </button>
                           </td>
                           <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
                             {player.totalEvents}
@@ -446,6 +449,13 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Player Details Modal */}
+      <PlayerDetailsModal
+        playerId={selectedPlayerId}
+        isOpen={isPlayerDetailsOpen}
+        onClose={() => setIsPlayerDetailsOpen(false)}
+      />
     </section>
   );
 }
