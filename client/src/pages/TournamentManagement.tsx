@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,7 +10,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/use-debounce";
 import { formatDate } from "@/lib/utils";
 import DeleteTournamentDialog from "@/components/custom/DeleteTournamentDialog";
-import EditTournamentDialog from "@/components/custom/EditTournamentDialog";
 
 interface Tournament {
   id: number;
@@ -23,10 +23,10 @@ interface Tournament {
 export default function TournamentManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const [, navigate] = useLocation();
   
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   // Fetch tournaments data
   const { data: tournaments, isLoading } = useQuery<Tournament[]>({
@@ -41,8 +41,8 @@ export default function TournamentManagement() {
     ) : [];
   
   const handleEditClick = (tournament: Tournament) => {
-    setSelectedTournament(tournament);
-    setIsEditDialogOpen(true);
+    // Navigate to the edit tournament page
+    navigate(`/tournament/edit/${tournament.id}`);
   };
   
   const handleDeleteClick = (tournament: Tournament) => {

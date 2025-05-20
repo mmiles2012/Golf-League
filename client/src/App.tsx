@@ -11,6 +11,7 @@ import UploadScores from "@/pages/UploadScores";
 import ManualEntry from "@/pages/ManualEntry";
 import TournamentManagement from "@/pages/TournamentManagement";
 import TournamentResults from "@/pages/TournamentResults";
+import EditTournament from "@/pages/EditTournament";
 import Embed from "@/pages/Embed";
 import Players from "@/pages/Players";
 import PlayerProfile from "@/pages/PlayerProfile";
@@ -35,9 +36,13 @@ function Router() {
         {params => <PlayerProfile id={parseInt(params.id)} />}
       </Route>
       
-      {/* Tournament Results */}
+      {/* Tournament Routes */}
       <Route path="/tournament/:id">
         {params => <TournamentResults />}
+      </Route>
+      
+      <Route path="/tournament/edit/:id">
+        {params => <EditTournament />}
       </Route>
       
       {/* Public Routes */}
