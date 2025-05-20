@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, ArrowUpRight, CalendarDays } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tournament } from "@shared/schema";
+import { Tournament, PlayerResult } from "@shared/schema";
 import { useDebounce } from "@/hooks/use-debounce";
 import { formatDate } from "@/lib/utils";
 
@@ -62,11 +62,23 @@ export default function AllTournamentResults() {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   
-  // Fetch all tournaments
+  // Fetch all tournaments with their player counts
   const { data: tournaments, isLoading } = useQuery<Tournament[]>({
     queryKey: ["/api/tournaments"],
     staleTime: 60 * 1000, // 1 minute
   });
+  
+  // Fetch player results for player count calculation
+  const { data: playerResults } = useQuery<PlayerResult[]>({
+    queryKey: ["/api/player-results"],
+    staleTime: 60 * 1000, // 1 minute
+  });
+  
+  // Calculate player count for each tournament
+  const getPlayerCount = (tournamentId: number) => {
+    if (!playerResults || !Array.isArray(playerResults)) return 0;
+    return playerResults.filter(result => result.tournamentId === tournamentId).length;
+  };
   
   // Filter tournaments based on search query
   const filteredTournaments = tournaments ? 
@@ -156,7 +168,7 @@ export default function AllTournamentResults() {
                             {getTournamentTypeLabel(tournament.type)}
                           </Badge>
                         </TableCell>
-                        <TableCell>{tournament.playerCount || "-"}</TableCell>
+                        <TableCell>{getPlayerCount(tournament.id)}</TableCell>
                         <TableCell className="text-right">
                           <Button 
                             size="sm" 
