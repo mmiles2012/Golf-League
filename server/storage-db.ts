@@ -1,5 +1,8 @@
 import { and, eq, desc, sql, inArray } from "drizzle-orm";
-import { 
+import {
+  leagues,
+  type League,
+  type InsertLeague,
   type Player, 
   type Tournament, 
   type PlayerResult,
@@ -122,6 +125,43 @@ let appSettings: AppSettings = {
 };
 
 export class DatabaseStorage implements IStorage {
+  // League operations
+  async getLeagues(): Promise<League[]> {
+    return db.select().from(leagues).orderBy(leagues.name);
+  }
+
+  async getLeague(id: number): Promise<League | undefined> {
+    const [league] = await db.select().from(leagues).where(eq(leagues.id, id));
+    return league;
+  }
+
+  async createLeague(league: InsertLeague): Promise<League> {
+    const [newLeague] = await db.insert(leagues).values(league).returning();
+    return newLeague;
+  }
+
+  async updateLeague(id: number, leagueData: Partial<InsertLeague>): Promise<League | undefined> {
+    const [updatedLeague] = await db
+      .update(leagues)
+      .set(leagueData)
+      .where(eq(leagues.id, id))
+      .returning();
+    return updatedLeague;
+  }
+
+  async deleteLeague(id: number): Promise<boolean> {
+    const result = await db.delete(leagues).where(eq(leagues.id, id));
+    return result.rowCount > 0;
+  }
+
+  async getTournamentsByLeague(leagueId: number): Promise<Tournament[]> {
+    return db
+      .select()
+      .from(tournaments)
+      .where(eq(tournaments.leagueId, leagueId))
+      .orderBy(desc(tournaments.date));
+  }
+  
   // Player operations
   async getPlayers(): Promise<Player[]> {
     return db.select().from(players).orderBy(players.name);

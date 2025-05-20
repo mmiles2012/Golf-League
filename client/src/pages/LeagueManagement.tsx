@@ -52,7 +52,7 @@ export default function LeagueManagement() {
   
   // Create mutation
   const createLeagueMutation = useMutation({
-    mutationFn: (data: any) => 
+    mutationFn: (data: LeagueFormValues) => 
       fetch("/api/leagues", {
         method: "POST",
         headers: {
@@ -83,7 +83,7 @@ export default function LeagueManagement() {
   
   // Edit mutation
   const editLeagueMutation = useMutation({
-    mutationFn: (data: any) => 
+    mutationFn: (data: LeagueFormValues) => 
       fetch(`/api/leagues/${currentLeague?.id}`, {
         method: "PUT",
         headers: {
