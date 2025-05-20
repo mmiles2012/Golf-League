@@ -159,3 +159,25 @@ export const playerWithHistorySchema = z.object({
 });
 
 export type PlayerWithHistory = z.infer<typeof playerWithHistorySchema>;
+
+// Points configuration schema
+export const pointsConfigSchema = z.object({
+  major: z.array(z.object({
+    position: z.number(),
+    points: z.number()
+  })),
+  tour: z.array(z.object({
+    position: z.number(),
+    points: z.number()
+  })),
+  league: z.array(z.object({
+    position: z.number(),
+    points: z.number()
+  })),
+  supr: z.array(z.object({
+    position: z.number(),
+    points: z.number()
+  }))
+});
+
+export type PointsConfig = z.infer<typeof pointsConfigSchema>;

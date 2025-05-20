@@ -8,6 +8,7 @@ import {
   TournamentType,
   PlayerWithHistory,
   EditTournament,
+  PointsConfig,
 } from "@shared/schema";
 
 // Interface for storage operations
@@ -36,6 +37,10 @@ export interface IStorage {
   deletePlayerResult(id: number): Promise<boolean>;
   deletePlayerResultsByTournament(tournamentId: number): Promise<boolean>;
   
+  // Points configuration operations
+  getPointsConfig(): Promise<PointsConfig>;
+  updatePointsConfig(config: PointsConfig): Promise<PointsConfig>;
+  
   // Combined operations
   getNetLeaderboard(): Promise<PlayerWithHistory[]>;
   getGrossLeaderboard(): Promise<PlayerWithHistory[]>;
@@ -47,6 +52,7 @@ export class MemStorage implements IStorage {
   private players: Map<number, Player>;
   private tournaments: Map<number, Tournament>;
   private playerResults: Map<number, PlayerResult>;
+  private pointsConfig: PointsConfig;
   private playerCurrentId: number;
   private tournamentCurrentId: number;
   private playerResultCurrentId: number;
@@ -58,6 +64,118 @@ export class MemStorage implements IStorage {
     this.playerCurrentId = 1;
     this.tournamentCurrentId = 1;
     this.playerResultCurrentId = 1;
+    
+    // Initialize default points configuration
+    this.pointsConfig = {
+      major: [
+        { position: 1, points: 2000 },
+        { position: 2, points: 1200 },
+        { position: 3, points: 760 },
+        { position: 4, points: 540 },
+        { position: 5, points: 440 },
+        { position: 6, points: 400 },
+        { position: 7, points: 360 },
+        { position: 8, points: 340 },
+        { position: 9, points: 320 },
+        { position: 10, points: 300 },
+        { position: 11, points: 280 },
+        { position: 12, points: 260 },
+        { position: 13, points: 240 },
+        { position: 14, points: 220 },
+        { position: 15, points: 200 },
+        { position: 16, points: 180 },
+        { position: 17, points: 170 },
+        { position: 18, points: 160 },
+        { position: 19, points: 150 },
+        { position: 20, points: 140 },
+        { position: 21, points: 130 },
+        { position: 22, points: 120 },
+        { position: 23, points: 110 },
+        { position: 24, points: 100 },
+        { position: 25, points: 90 },
+        { position: 26, points: 85 },
+        { position: 27, points: 80 },
+        { position: 28, points: 75 },
+        { position: 29, points: 70 },
+        { position: 30, points: 65 },
+      ],
+      tour: [
+        { position: 1, points: 500 },
+        { position: 2, points: 300 },
+        { position: 3, points: 190 },
+        { position: 4, points: 135 },
+        { position: 5, points: 110 },
+        { position: 6, points: 100 },
+        { position: 7, points: 90 },
+        { position: 8, points: 85 },
+        { position: 9, points: 80 },
+        { position: 10, points: 75 },
+        { position: 11, points: 70 },
+        { position: 12, points: 68 },
+        { position: 13, points: 66 },
+        { position: 14, points: 64 },
+        { position: 15, points: 62 },
+        { position: 16, points: 60 },
+        { position: 17, points: 58 },
+        { position: 18, points: 56 },
+        { position: 19, points: 54 },
+        { position: 20, points: 52 },
+        { position: 21, points: 50 },
+        { position: 22, points: 47.5 },
+        { position: 23, points: 45 },
+        { position: 24, points: 42.5 },
+        { position: 25, points: 40 },
+        { position: 26, points: 37.5 },
+        { position: 27, points: 35 },
+        { position: 28, points: 32.5 },
+        { position: 29, points: 30 },
+        { position: 30, points: 27.5 },
+      ],
+      league: [
+        { position: 1, points: 250 },
+        { position: 2, points: 150 },
+        { position: 3, points: 95 },
+        { position: 4, points: 67.5 },
+        { position: 5, points: 55 },
+        { position: 6, points: 50 },
+        { position: 7, points: 45 },
+        { position: 8, points: 42.5 },
+        { position: 9, points: 40 },
+        { position: 10, points: 37.5 },
+        { position: 11, points: 35 },
+        { position: 12, points: 34 },
+        { position: 13, points: 33 },
+        { position: 14, points: 32 },
+        { position: 15, points: 31 },
+        { position: 16, points: 30 },
+        { position: 17, points: 29 },
+        { position: 18, points: 28 },
+        { position: 19, points: 27 },
+        { position: 20, points: 26 },
+      ],
+      supr: [
+        { position: 1, points: 150 },
+        { position: 2, points: 90 },
+        { position: 3, points: 57 },
+        { position: 4, points: 40.5 },
+        { position: 5, points: 33 },
+        { position: 6, points: 30 },
+        { position: 7, points: 27 },
+        { position: 8, points: 25.5 },
+        { position: 9, points: 24 },
+        { position: 10, points: 22.5 },
+        { position: 11, points: 21 },
+        { position: 12, points: 20.4 },
+        { position: 13, points: 19.8 },
+        { position: 14, points: 19.2 },
+        { position: 15, points: 18.6 },
+        { position: 16, points: 18 },
+        { position: 17, points: 17.4 },
+        { position: 18, points: 16.8 },
+        { position: 19, points: 16.2 },
+        { position: 20, points: 15.6 },
+      ]
+    };
     
     // Initialize with sample data for development
     this.initSampleData();
