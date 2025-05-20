@@ -44,18 +44,6 @@ export default function AppShell({ children }: AppShellProps) {
     return children;
   }
   
-  // Public view - horizontal navbar
-  if (isPublicView) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <PublicNavbar />
-        <main className="flex-grow p-4 md:p-6 w-full overflow-auto">
-          {children}
-        </main>
-      </div>
-    );
-  }
-  
   // Admin view - sidebar navigation
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
