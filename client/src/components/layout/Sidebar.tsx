@@ -31,7 +31,9 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
   
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    // Force page refresh to ensure auth state is properly reset
+    // This fixes the issue with logout on the leaderboard page
+    window.location.href = "/";
     if (onNavigation) onNavigation();
   };
   
