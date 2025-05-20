@@ -332,10 +332,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Leaderboard endpoints
+  // Cache for leaderboards to improve performance
+  const leaderboardCache = {
+    net: {
+      data: null as any[] | null,
+      timestamp: 0,
+      ttl: 5 * 60 * 1000 // 5 minutes
+    },
+    gross: {
+      data: null as any[] | null,
+      timestamp: 0,
+      ttl: 5 * 60 * 1000 // 5 minutes
+    }
+  };
+  
+  // Leaderboard endpoints with caching
   app.get("/api/leaderboard/net", async (_req: Request, res: Response) => {
     try {
+      // Check if we have a valid cache
+      const now = Date.now();
+      if (leaderboardCache.net.data && (now - leaderboardCache.net.timestamp) < leaderboardCache.net.ttl) {
+        return res.json(leaderboardCache.net.data);
+      }
+      
+      // Cache miss - fetch and store data
       const leaderboard = await storage.getNetLeaderboard();
+      leaderboardCache.net.data = leaderboard;
+      leaderboardCache.net.timestamp = now;
+      
       res.json(leaderboard);
     } catch (error) {
       console.error("Error fetching net leaderboard:", error);
@@ -345,7 +369,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/leaderboard/gross", async (_req: Request, res: Response) => {
     try {
+      // Check if we have a valid cache
+      const now = Date.now();
+      if (leaderboardCache.gross.data && (now - leaderboardCache.gross.timestamp) < leaderboardCache.gross.ttl) {
+        return res.json(leaderboardCache.gross.data);
+      }
+      
+      // Cache miss - fetch and store data
       const leaderboard = await storage.getGrossLeaderboard();
+      leaderboardCache.gross.data = leaderboard;
+      leaderboardCache.gross.timestamp = now;
+      
       res.json(leaderboard);
     } catch (error) {
       console.error("Error fetching gross leaderboard:", error);

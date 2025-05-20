@@ -23,11 +23,20 @@ export default function Leaderboards() {
     queryKey: ["/api/settings"],
   });
   
-  // Fetch leaderboard data based on active tab
-  const { data: leaderboardData, isLoading } = useQuery<PlayerWithHistory[]>({
-    queryKey: [`/api/leaderboard/${activeTab}`],
-    staleTime: 60 * 1000, // 1 minute
+  // Fetch both leaderboard types simultaneously for faster tab switching
+  const { data: netLeaderboardData, isLoading: isNetLoading } = useQuery<PlayerWithHistory[]>({
+    queryKey: [`/api/leaderboard/net`],
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
+  
+  const { data: grossLeaderboardData, isLoading: isGrossLoading } = useQuery<PlayerWithHistory[]>({
+    queryKey: [`/api/leaderboard/gross`],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+  
+  // Use the appropriate data source based on active tab
+  const leaderboardData = activeTab === "net" ? netLeaderboardData : grossLeaderboardData;
+  const isLoading = activeTab === "net" ? isNetLoading : isGrossLoading;
   
   const handlePlayerClick = (playerId: number) => {
     setSelectedPlayerId(playerId);
