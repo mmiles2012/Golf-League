@@ -206,11 +206,11 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
                         {tournament.netScore || "N/A"}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
-                        {tournament.tournamentType === 'tour' && tournament.grossPosition && tournament.grossPosition <= 3 
+                        {tournament.grossPosition && tournament.grossPosition <= 10 
                           ? tournament.points : "0"}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
-                        {tournament.tournamentType !== 'tour' || !tournament.grossPosition || tournament.grossPosition > 3 
+                        {!tournament.grossPosition || tournament.position < tournament.grossPosition 
                           ? tournament.points : "0"}
                       </td>
                     </tr>

@@ -104,11 +104,11 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
                         {tournament.netScore ? tournament.netScore : "N/A"}
                       </TableCell>
                       <TableCell className="text-center">
-                        {tournament.tournamentType === 'tour' && tournament.grossPosition && tournament.grossPosition <= 3 
+                        {tournament.grossPosition && tournament.grossPosition <= 10 
                           ? tournament.points : "0"}
                       </TableCell>
                       <TableCell className="text-center">
-                        {tournament.tournamentType !== 'tour' || !tournament.grossPosition || tournament.grossPosition > 3 
+                        {!tournament.grossPosition || tournament.position < tournament.grossPosition 
                           ? tournament.points : "0"}
                       </TableCell>
                     </TableRow>
