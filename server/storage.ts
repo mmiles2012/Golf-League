@@ -330,6 +330,18 @@ export class MemStorage implements IStorage {
     return true;
   }
   
+  // Points configuration operations
+  async getPointsConfig(): Promise<PointsConfig> {
+    // Return a deep copy of the configuration to prevent direct modification
+    return JSON.parse(JSON.stringify(this.pointsConfig));
+  }
+  
+  async updatePointsConfig(config: PointsConfig): Promise<PointsConfig> {
+    // Update the points configuration
+    this.pointsConfig = JSON.parse(JSON.stringify(config));
+    return this.getPointsConfig();
+  }
+  
   // Combined operations
   async getNetLeaderboard(): Promise<PlayerWithHistory[]> {
     const players = await this.getPlayers();

@@ -559,6 +559,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Points configuration endpoints
+  app.get("/api/points-config", async (_req: Request, res: Response) => {
+    try {
+      const pointsConfig = await storage.getPointsConfig();
+      res.json(pointsConfig);
+    } catch (error) {
+      console.error("Error fetching points configuration:", error);
+      res.status(500).json({ message: "Failed to fetch points configuration" });
+    }
+  });
+  
+  app.put("/api/points-config", async (req: Request, res: Response) => {
+    try {
+      const pointsConfig = req.body;
+      
+      // Basic validation for the points configuration
+      const tournamentTypes = ['major', 'tour', 'league', 'supr'];
+      const isValid = tournamentTypes.every(type => 
+        Array.isArray(pointsConfig[type]) && 
+        pointsConfig[type].every((item: any) => 
+          typeof item.position === 'number' && 
+          (typeof item.points === 'number' || 
+           typeof item.points === 'string' && !isNaN(parseFloat(item.points)))
+        )
+      );
+      
+      if (!isValid) {
+        return res.status(400).json({ message: "Invalid points configuration format" });
+      }
+      
+      // Normalize the points to ensure they are all numbers
+      tournamentTypes.forEach(type => {
+        pointsConfig[type] = pointsConfig[type].map((item: any) => ({
+          position: item.position,
+          points: typeof item.points === 'string' ? parseFloat(item.points) : item.points
+        }));
+      });
+      
+      const updatedConfig = await storage.updatePointsConfig(pointsConfig);
+      res.json(updatedConfig);
+    } catch (error) {
+      console.error("Error updating points configuration:", error);
+      res.status(500).json({ message: "Failed to update points configuration" });
+    }
+  });
+  
   const httpServer = createServer(app);
   return httpServer;
 }
