@@ -277,6 +277,7 @@ export default function EditTournament() {
                   <TableHead>Net Score</TableHead>
                   <TableHead>Handicap</TableHead>
                   <TableHead>Points</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -327,6 +328,16 @@ export default function EditTournament() {
                         className="w-20"
                         disabled={isSaving}
                       />
+                    </TableCell>
+                    <TableCell>
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={() => handleDeletePlayer(result.id)}
+                        disabled={isSaving}
+                      >
+                        Delete
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
