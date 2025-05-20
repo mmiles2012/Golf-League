@@ -31,101 +31,101 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
         <ul className="space-y-1">
           <li>
             <Link href="/">
-              <a 
+              <div 
                 className={`sidebar-link ${isActive("/") ? "active" : ""}`}
                 onClick={onNavigation}
               >
                 <Trophy className="sidebar-icon mr-2" />
                 <span>Leaderboards</span>
-              </a>
+              </div>
             </Link>
           </li>
           <li>
             <Link href="/upload">
-              <a 
+              <div 
                 className={`sidebar-link ${isActive("/upload") ? "active" : ""}`}
                 onClick={onNavigation}
               >
                 <FileUp className="sidebar-icon mr-2" />
                 <span>Upload Scores</span>
-              </a>
+              </div>
             </Link>
           </li>
           <li>
             <Link href="/manual-entry">
-              <a 
+              <div 
                 className={`sidebar-link ${isActive("/manual-entry") ? "active" : ""}`}
                 onClick={onNavigation}
               >
                 <PenSquare className="sidebar-icon mr-2" />
                 <span>Manual Entry</span>
-              </a>
+              </div>
             </Link>
           </li>
           <li>
             <Link href="/tournaments">
-              <a 
+              <div 
                 className={`sidebar-link ${isActive("/tournaments") ? "active" : ""}`}
                 onClick={onNavigation}
               >
                 <Flag className="sidebar-icon mr-2" />
                 <span>Tournaments</span>
-              </a>
+              </div>
             </Link>
           </li>
           <li>
             <Link href="/leagues">
-              <a 
+              <div 
                 className={`sidebar-link ${isActive("/leagues") ? "active" : ""}`}
                 onClick={onNavigation}
               >
                 <Award className="sidebar-icon mr-2" />
                 <span>Leagues</span>
-              </a>
+              </div>
             </Link>
           </li>
           <li>
             <Link href="/players">
-              <a 
+              <div 
                 className={`sidebar-link ${isActive("/players") ? "active" : ""}`}
                 onClick={onNavigation}
               >
                 <Users className="sidebar-icon mr-2" />
                 <span>Players</span>
-              </a>
+              </div>
             </Link>
           </li>
           <li>
             <Link href="/points-config">
-              <a 
+              <div 
                 className={`sidebar-link ${isActive("/points-config") ? "active" : ""}`}
                 onClick={onNavigation}
               >
                 <Settings className="sidebar-icon mr-2" />
                 <span>Points Config</span>
-              </a>
+              </div>
             </Link>
           </li>
           <li>
             <Link href="/embed">
-              <a 
+              <div 
                 className={`sidebar-link ${isActive("/embed") ? "active" : ""}`}
                 onClick={onNavigation}
               >
                 <Code className="sidebar-icon mr-2" />
                 <span>Embed</span>
-              </a>
+              </div>
             </Link>
           </li>
           <li>
             <Link href="/setup">
-              <a 
+              <div 
                 className={`sidebar-link ${isActive("/setup") ? "active" : ""}`}
                 onClick={onNavigation}
               >
                 <Settings className="sidebar-icon mr-2" />
                 <span>App Setup</span>
-              </a>
+              </div>
             </Link>
           </li>
         </ul>
@@ -138,10 +138,10 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
           </div>
           <div>
             <p className="text-white font-medium">Admin User</p>
-            <button className="text-xs text-white opacity-75 hover:opacity-100 flex items-center">
+            <div className="text-xs text-white opacity-75 hover:opacity-100 flex items-center cursor-pointer">
               <span>Sign Out</span>
               <LogOut className="h-3 w-3 ml-1" />
-            </button>
+            </div>
           </div>
         </div>
       </div>
