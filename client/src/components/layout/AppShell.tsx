@@ -33,7 +33,7 @@ export default function AppShell({ children }: AppShellProps) {
       >
         <div className="flex items-center justify-between p-4 border-b border-primary-light">
           <div className="flex items-center space-x-2">
-            <img src="/images/hideout-logo.png" alt="Hideout Logo" className="h-8 w-8" />
+            <img src="images/hideout-logo.png" alt="Hideout Logo" className="h-8 w-8" />
             <h1 className="font-heading font-bold text-white text-xl">Hideout League</h1>
           </div>
           <button 
@@ -50,7 +50,7 @@ export default function AppShell({ children }: AppShellProps) {
       {/* Mobile Header */}
       <div className="md:hidden bg-primary text-white p-4 flex justify-between items-center sticky top-0 z-30">
         <div className="flex items-center space-x-2">
-          <img src="/images/hideout-logo.png" alt="Hideout Logo" className="h-6 w-6" />
+          <img src="images/hideout-logo.png" alt="Hideout Logo" className="h-6 w-6" />
           <h1 className="font-heading font-bold">Hideout League</h1>
         </div>
         <button 
