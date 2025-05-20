@@ -169,6 +169,12 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
                     <td className="px-2 py-3 whitespace-nowrap text-center">
                       <Skeleton className="h-5 w-12 mx-auto" />
                     </td>
+                    <td className="px-2 py-3 whitespace-nowrap text-center">
+                      <Skeleton className="h-5 w-12 mx-auto" />
+                    </td>
+                    <td className="px-2 py-3 whitespace-nowrap text-center">
+                      <Skeleton className="h-5 w-12 mx-auto" />
+                    </td>
                     <td className="px-2 py-3 whitespace-nowrap text-right">
                       <Skeleton className="h-5 w-16 ml-auto" />
                     </td>
@@ -204,10 +210,12 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
                         {tournament.netScore || "N/A"}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
-                        {tournament.grossPoints || "0"}
+                        {tournament.tournamentType === 'tour' && tournament.grossPosition && tournament.grossPosition <= 3 
+                          ? tournament.points : "0"}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
-                        {tournament.netPoints || tournament.points || "0"}
+                        {tournament.tournamentType !== 'tour' || !tournament.grossPosition || tournament.grossPosition > 3 
+                          ? tournament.points : "0"}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-right font-medium">
                         {tournament.points.toLocaleString()}
