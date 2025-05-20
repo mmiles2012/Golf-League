@@ -306,16 +306,20 @@ export class DatabaseStorage implements IStorage {
       }
     });
     
-    // Sort players with valid scores by average gross score (low to high)
+    // Sort players with valid scores by total gross points (high to low)
     playersWithValidScores.sort((a, b) => {
-      const aScore = a.averageGrossScore || 999;
-      const bScore = b.averageGrossScore || 999;
+      // Primary sort by gross total points (higher is better)
+      const aTotalPoints = a.grossTotalPoints || 0;
+      const bTotalPoints = b.grossTotalPoints || 0;
       
-      if (aScore === bScore) {
-        return b.totalPoints - a.totalPoints; // Secondary sort by points (higher is better)
+      if (bTotalPoints !== aTotalPoints) {
+        return bTotalPoints - aTotalPoints;
       }
       
-      return aScore - bScore; // Primary sort by gross score (lower is better)
+      // Secondary sort by average gross score (lower is better)
+      const aScore = a.averageGrossScore || 999;
+      const bScore = b.averageGrossScore || 999;
+      return aScore - bScore;
     });
     
     // Sort players without valid scores alphabetically
