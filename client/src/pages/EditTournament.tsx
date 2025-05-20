@@ -37,25 +37,18 @@ export default function EditTournament() {
   const [results, setResults] = useState<Array<any>>([]);
   const [isSaving, setIsSaving] = useState(false);
   
-  // Fetch tournament data with results
+  // Fetch tournament data with results - directly use the tournament endpoint which includes results
   const { data: tournament, isLoading } = useQuery<TournamentWithResults>({
     queryKey: [`/api/tournaments/${id}`],
     queryFn: async () => {
-      // First fetch the tournament
+      // Fetch the tournament - it already includes the results array
       const tournamentResponse = await fetch(`/api/tournaments/${id}`);
       if (!tournamentResponse.ok) throw new Error('Failed to fetch tournament');
       const tournamentData = await tournamentResponse.json();
       
-      // Then fetch the tournament results
-      const resultsResponse = await fetch(`/api/tournaments/${id}/results`);
-      if (!resultsResponse.ok) throw new Error('Failed to fetch tournament results');
-      const resultsData = await resultsResponse.json();
+      console.log(`Loaded tournament with ${tournamentData.results?.length || 0} results`);
       
-      // Combine them
-      return {
-        ...tournamentData,
-        results: resultsData
-      };
+      return tournamentData;
     },
     enabled: !!id,
   });
