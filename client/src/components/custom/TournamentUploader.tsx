@@ -228,11 +228,18 @@ export default function TournamentUploader() {
         // Handle scores based on scoring type
         let grossScore, netScore;
         
-        if (row.Scoring === "StrokeNet" && row.Total !== undefined && row["Course Handicap"] !== undefined) {
-          // For StrokeNet scoring, Total is the net score, and we calculate gross by adding handicap
-          netScore = parseInt(String(row.Total));
-          grossScore = parseInt(String(row.Total)) + parseInt(String(row["Course Handicap"]));
-          console.log(`StrokeNet scoring: Total=${row.Total}, Handicap=${row["Course Handicap"]}, calculated Gross=${grossScore}, Net=${netScore}`);
+        if ((row.Scoring === "StrokeNet" || row.Scoring === "Stroke") && row.Total !== undefined && row["Course Handicap"] !== undefined) {
+          // For Stroke/StrokeNet scoring tournaments:
+          // - For the Gross leaderboard, "Total" is the gross score
+          // - For the Net leaderboard, "Total" + "Course Handicap" is the net score
+          
+          // The Total column is the gross score
+          grossScore = parseInt(String(row.Total));
+          
+          // The net score is calculated by adding the handicap (not subtracting, as per user's instruction)
+          netScore = parseInt(String(row.Total)) + parseInt(String(row["Course Handicap"]));
+          
+          console.log(`Stroke/StrokeNet scoring: Total=${row.Total} (Gross), Handicap=${row["Course Handicap"]}, calculated Net=${netScore}`);
         } else {
           // For regular scoring, use Total as gross score
           grossScore = 
