@@ -75,8 +75,8 @@ export const insertPlayerResultSchema = createInsertSchema(playerResults)
   })
   .extend({
     // Ensure these fields can be properly null
-    grossScore: z.number().int().nullable(),
-    netScore: z.number().int().nullable(),
+    grossScore: z.number().nullable(),
+    netScore: z.number().nullable(),
     handicap: z.number().nullable()
   });
 
@@ -102,8 +102,8 @@ export const tournamentUploadSchema = z.object({
   results: z.array(z.object({
     player: z.string().min(1, "Player name is required"),
     position: z.coerce.number().int().positive("Position must be a positive integer"),
-    grossScore: z.coerce.number().int().nullable().optional(),
-    netScore: z.coerce.number().int().nullable().optional(),
+    grossScore: z.coerce.number().nullable().optional(),
+    netScore: z.coerce.number().nullable().optional(),
     handicap: z.coerce.number().nullable().optional(),
   })).min(1, "At least one player result is required"),
 });
