@@ -20,60 +20,75 @@ import { calculatePoints } from "../client/src/lib/points-calculator";
 
 // Default points configurations based on provided PDFs
 const DEFAULT_POINTS_CONFIG = {
-  major: {
+  major: [
     // Values from Majors Points List PDF
-    positions: {
-      1: 750, 2: 400, 3: 350, 4: 325, 5: 300, 
-      6: 275, 7: 225, 8: 200, 9: 175, 10: 150,
-      11: 130, 12: 120, 13: 110, 14: 90, 15: 80,
-      16: 70, 17: 65, 18: 60, 19: 55, 20: 50,
-      21: 48, 22: 46, 23: 44, 24: 42, 25: 40,
-      26: 38, 27: 36, 28: 34, 29: 32.5, 30: 31,
-      31: 29.5, 32: 28, 33: 26.5, 34: 25, 35: 24,
-      36: 23, 37: 22, 38: 21, 39: 20.25, 40: 19.5,
-      41: 18.75, 42: 18, 43: 17.25, 44: 16.5, 45: 15.75,
-      46: 15, 47: 14.25, 48: 13.5, 49: 13, 50: 12.5,
-      51: 12, 52: 11.5, 53: 11, 54: 10.5, 55: 10,
-      56: 9.5, 57: 9, 58: 8.5, 59: 8, 60: 7.75,
-      61: 7.5, 62: 7.25, 63: 7
-    }
-  },
-  tour: {
+    { position: 1, points: 750 }, { position: 2, points: 400 }, { position: 3, points: 350 },
+    { position: 4, points: 325 }, { position: 5, points: 300 }, { position: 6, points: 275 },
+    { position: 7, points: 225 }, { position: 8, points: 200 }, { position: 9, points: 175 },
+    { position: 10, points: 150 }, { position: 11, points: 130 }, { position: 12, points: 120 },
+    { position: 13, points: 110 }, { position: 14, points: 90 }, { position: 15, points: 80 },
+    { position: 16, points: 70 }, { position: 17, points: 65 }, { position: 18, points: 60 },
+    { position: 19, points: 55 }, { position: 20, points: 50 }, { position: 21, points: 48 },
+    { position: 22, points: 46 }, { position: 23, points: 44 }, { position: 24, points: 42 },
+    { position: 25, points: 40 }, { position: 26, points: 38 }, { position: 27, points: 36 },
+    { position: 28, points: 34 }, { position: 29, points: 32.5 }, { position: 30, points: 31 },
+    { position: 31, points: 29.5 }, { position: 32, points: 28 }, { position: 33, points: 26.5 },
+    { position: 34, points: 25 }, { position: 35, points: 24 }, { position: 36, points: 23 },
+    { position: 37, points: 22 }, { position: 38, points: 21 }, { position: 39, points: 20.25 },
+    { position: 40, points: 19.5 }, { position: 41, points: 18.75 }, { position: 42, points: 18 },
+    { position: 43, points: 17.25 }, { position: 44, points: 16.5 }, { position: 45, points: 15.75 },
+    { position: 46, points: 15 }, { position: 47, points: 14.25 }, { position: 48, points: 13.5 },
+    { position: 49, points: 13 }, { position: 50, points: 12.5 }, { position: 51, points: 12 },
+    { position: 52, points: 11.5 }, { position: 53, points: 11 }, { position: 54, points: 10.5 },
+    { position: 55, points: 10 }, { position: 56, points: 9.5 }, { position: 57, points: 9 },
+    { position: 58, points: 8.5 }, { position: 59, points: 8 }, { position: 60, points: 7.75 },
+    { position: 61, points: 7.5 }, { position: 62, points: 7.25 }, { position: 63, points: 7 }
+  ],
+  tour: [
     // Values from Tour Points List PDF
-    positions: {
-      1: 500, 2: 300, 3: 190, 4: 135, 5: 110,
-      6: 100, 7: 90, 8: 85, 9: 80, 10: 75,
-      11: 70, 12: 65, 13: 60, 14: 55, 15: 53,
-      16: 51, 17: 49, 18: 47, 19: 45, 20: 43,
-      21: 41, 22: 39, 23: 37, 24: 35.5, 25: 34,
-      26: 32.5, 27: 31, 28: 29.5, 29: 28, 30: 26.5,
-      31: 25, 32: 23.5, 33: 22, 34: 21, 35: 20,
-      36: 19, 37: 18, 38: 17, 39: 16, 40: 15,
-      41: 14, 42: 13, 43: 12, 44: 11, 45: 10.5,
-      46: 10, 47: 9.5, 48: 9, 49: 8.5, 50: 8,
-      51: 7.5, 52: 7, 53: 6.5, 54: 6, 55: 5.8,
-      56: 5.6, 57: 5.4, 58: 5.2, 59: 5, 60: 4.8,
-      61: 4.6, 62: 4.4, 63: 4.2, 64: 4, 65: 3.8
-    }
-  },
-  league: {
+    { position: 1, points: 500 }, { position: 2, points: 300 }, { position: 3, points: 190 },
+    { position: 4, points: 135 }, { position: 5, points: 110 }, { position: 6, points: 100 },
+    { position: 7, points: 90 }, { position: 8, points: 85 }, { position: 9, points: 80 },
+    { position: 10, points: 75 }, { position: 11, points: 70 }, { position: 12, points: 65 },
+    { position: 13, points: 60 }, { position: 14, points: 55 }, { position: 15, points: 53 },
+    { position: 16, points: 51 }, { position: 17, points: 49 }, { position: 18, points: 47 },
+    { position: 19, points: 45 }, { position: 20, points: 43 }, { position: 21, points: 41 },
+    { position: 22, points: 39 }, { position: 23, points: 37 }, { position: 24, points: 35.5 },
+    { position: 25, points: 34 }, { position: 26, points: 32.5 }, { position: 27, points: 31 },
+    { position: 28, points: 29.5 }, { position: 29, points: 28 }, { position: 30, points: 26.5 },
+    { position: 31, points: 25 }, { position: 32, points: 23.5 }, { position: 33, points: 22 },
+    { position: 34, points: 21 }, { position: 35, points: 20 }, { position: 36, points: 19 },
+    { position: 37, points: 18 }, { position: 38, points: 17 }, { position: 39, points: 16 },
+    { position: 40, points: 15 }, { position: 41, points: 14 }, { position: 42, points: 13 },
+    { position: 43, points: 12 }, { position: 44, points: 11 }, { position: 45, points: 10.5 },
+    { position: 46, points: 10 }, { position: 47, points: 9.5 }, { position: 48, points: 9 },
+    { position: 49, points: 8.5 }, { position: 50, points: 8 }, { position: 51, points: 7.5 },
+    { position: 52, points: 7 }, { position: 53, points: 6.5 }, { position: 54, points: 6 },
+    { position: 55, points: 5.8 }, { position: 56, points: 5.6 }, { position: 57, points: 5.4 },
+    { position: 58, points: 5.2 }, { position: 59, points: 5 }, { position: 60, points: 4.8 },
+    { position: 61, points: 4.6 }, { position: 62, points: 4.4 }, { position: 63, points: 4.2 },
+    { position: 64, points: 4 }, { position: 65, points: 3.8 }
+  ],
+  league: [
     // Values from League Points List PDF
-    positions: {
-      1: 93.75, 2: 50, 3: 43.75, 4: 40.625, 5: 37.5,
-      6: 34.375, 7: 28.125, 8: 25, 9: 21.875, 10: 18.75,
-      11: 16.25, 12: 15, 13: 13.75, 14: 11.25, 15: 10,
-      16: 8.75, 17: 8.125, 18: 7.5, 19: 6.875, 20: 6
-    }
-  },
-  supr: {
+    { position: 1, points: 93.75 }, { position: 2, points: 50 }, { position: 3, points: 43.75 },
+    { position: 4, points: 40.625 }, { position: 5, points: 37.5 }, { position: 6, points: 34.375 },
+    { position: 7, points: 28.125 }, { position: 8, points: 25 }, { position: 9, points: 21.875 },
+    { position: 10, points: 18.75 }, { position: 11, points: 16.25 }, { position: 12, points: 15 },
+    { position: 13, points: 13.75 }, { position: 14, points: 11.25 }, { position: 15, points: 10 },
+    { position: 16, points: 8.75 }, { position: 17, points: 8.125 }, { position: 18, points: 7.5 },
+    { position: 19, points: 6.875 }, { position: 20, points: 6 }
+  ],
+  supr: [
     // Values from SUPR Club Points List PDF
-    positions: {
-      1: 93.75, 2: 50, 3: 43.75, 4: 40.625, 5: 37.5,
-      6: 34.375, 7: 28.125, 8: 25, 9: 21.875, 10: 18.75,
-      11: 16.25, 12: 15, 13: 13.75, 14: 11.25, 15: 10,
-      16: 8.75, 17: 8.125, 18: 7.5, 19: 6.875, 20: 6
-    }
-  }
+    { position: 1, points: 93.75 }, { position: 2, points: 50 }, { position: 3, points: 43.75 },
+    { position: 4, points: 40.625 }, { position: 5, points: 37.5 }, { position: 6, points: 34.375 },
+    { position: 7, points: 28.125 }, { position: 8, points: 25 }, { position: 9, points: 21.875 },
+    { position: 10, points: 18.75 }, { position: 11, points: 16.25 }, { position: 12, points: 15 },
+    { position: 13, points: 13.75 }, { position: 14, points: 11.25 }, { position: 15, points: 10 },
+    { position: 16, points: 8.75 }, { position: 17, points: 8.125 }, { position: 18, points: 7.5 },
+    { position: 19, points: 6.875 }, { position: 20, points: 6 }
+  ]
 };
 
 // Store the config in memory - can be upgraded to database storage later if needed

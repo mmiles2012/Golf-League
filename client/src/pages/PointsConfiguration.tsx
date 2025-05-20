@@ -151,10 +151,42 @@ export default function PointsConfiguration() {
   // State to track edited points
   const [editedPoints, setEditedPoints] = useState(DEFAULT_POINTS);
   
+  // Convert API format to component format
+  const convertApiDataToComponentFormat = (apiData: any) => {
+    if (!apiData) return DEFAULT_POINTS;
+    
+    const result: any = {
+      major: [],
+      tour: [],
+      league: [],
+      supr: []
+    };
+    
+    // Check if we're getting the old format from the API (with positions object)
+    if (apiData.major && apiData.major.positions) {
+      // Convert the old format to array format
+      ["major", "tour", "league", "supr"].forEach(type => {
+        if (apiData[type]?.positions) {
+          const positions = apiData[type].positions;
+          result[type] = Object.keys(positions).map(posStr => {
+            const position = parseInt(posStr, 10);
+            return { position, points: positions[posStr] };
+          }).sort((a, b) => a.position - b.position);
+        }
+      });
+    } else {
+      // Already in the correct array format
+      return apiData;
+    }
+    
+    return result;
+  };
+  
   // Update local state when data is loaded
   React.useEffect(() => {
     if (pointsData) {
-      setEditedPoints(pointsData);
+      const formattedData = convertApiDataToComponentFormat(pointsData);
+      setEditedPoints(formattedData);
     }
   }, [pointsData]);
   
