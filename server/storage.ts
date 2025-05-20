@@ -10,6 +10,8 @@ import {
   EditTournament,
   PointsConfig,
   AppSettings,
+  League,
+  InsertLeague,
 } from "@shared/schema";
 
 // Interface for storage operations

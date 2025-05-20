@@ -5,6 +5,16 @@ import { z } from "zod";
 export const tournamentTypes = ['major', 'tour', 'league', 'supr'] as const;
 export type TournamentType = typeof tournamentTypes[number];
 
+// League table to store multiple leagues
+export const leagues = pgTable("leagues", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  season: text("season"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const players = pgTable("players", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -19,6 +29,7 @@ export const tournaments = pgTable("tournaments", {
   date: date("date").notNull(),
   type: text("type").$type<TournamentType>().notNull(),
   status: text("status").default("completed").notNull(),
+  leagueId: integer("league_id").references(() => leagues.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -39,6 +50,11 @@ export const playerResults = pgTable("player_results", {
 });
 
 // Create insert schemas using drizzle-zod
+export const insertLeagueSchema = createInsertSchema(leagues).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertPlayerSchema = createInsertSchema(players).omit({
   id: true,
   createdAt: true,
@@ -49,6 +65,7 @@ export const insertTournamentSchema = createInsertSchema(tournaments).omit({
   createdAt: true,
 }).extend({
   type: z.enum(tournamentTypes),
+  leagueId: z.number().optional(),
 });
 
 export const insertPlayerResultSchema = createInsertSchema(playerResults)
@@ -64,6 +81,9 @@ export const insertPlayerResultSchema = createInsertSchema(playerResults)
   });
 
 // Define types using schema inference
+export type InsertLeague = z.infer<typeof insertLeagueSchema>;
+export type League = typeof leagues.$inferSelect;
+
 export type InsertPlayer = z.infer<typeof insertPlayerSchema>;
 export type Player = typeof players.$inferSelect;
 
@@ -78,6 +98,7 @@ export const tournamentUploadSchema = z.object({
   name: z.string().min(1, "Tournament name is required"),
   date: z.string().refine(val => !isNaN(Date.parse(val)), "Invalid date format"),
   type: z.enum(tournamentTypes),
+  leagueId: z.number().optional(),
   results: z.array(z.object({
     player: z.string().min(1, "Player name is required"),
     position: z.coerce.number().int().positive("Position must be a positive integer"),
@@ -91,6 +112,7 @@ export type TournamentUpload = z.infer<typeof tournamentUploadSchema>;
 
 // Schema for manual entry
 export const manualEntrySchema = insertTournamentSchema.extend({
+  leagueId: z.number().optional(),
   results: z.array(z.object({
     playerId: z.number().optional(),
     playerName: z.string().min(1, "Player name is required"),
@@ -109,6 +131,7 @@ export const editTournamentSchema = z.object({
   name: z.string().min(1, "Tournament name is required"),
   date: z.string().refine(val => !isNaN(Date.parse(val)), "Invalid date format"),
   type: z.enum(tournamentTypes),
+  leagueId: z.number().optional(),
   results: z.array(z.object({
     id: z.number().optional(),
     playerId: z.number(),
