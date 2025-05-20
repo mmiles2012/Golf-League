@@ -318,11 +318,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/tournaments/:id", async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
+      
+      // First, delete all player results associated with this tournament
+      await storage.deletePlayerResultsByTournament(id);
+      
+      // Then delete the tournament
       const success = await storage.deleteTournament(id);
       
       if (!success) {
         return res.status(404).json({ message: "Tournament not found" });
       }
+      
+      // Clear leaderboard cache to ensure fresh data
+      leaderboardCache.net.data = null;
+      leaderboardCache.net.timestamp = 0;
+      leaderboardCache.gross.data = null;
+      leaderboardCache.gross.timestamp = 0;
+      
+      console.log("Leaderboard cache cleared after tournament deletion");
       
       res.json({ message: "Tournament deleted successfully" });
     } catch (error) {

@@ -417,7 +417,7 @@ export class DatabaseStorage implements IStorage {
     ];
     
     // Get all tournaments to get results for calculating the gross points
-    const tournaments = await this.getTournaments();
+    const tournamentList = await this.getTournaments();
     const allResults: PlayerResult[] = [];
     
     // Get all player results for all tournaments
