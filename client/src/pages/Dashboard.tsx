@@ -14,6 +14,7 @@ export default function Dashboard() {
   const [isPlayerDetailsOpen, setIsPlayerDetailsOpen] = useState(false);
   
   const handlePlayerClick = (playerId: number) => {
+    console.log("Player clicked:", playerId);
     setSelectedPlayerId(playerId);
     setIsPlayerDetailsOpen(true);
   };
