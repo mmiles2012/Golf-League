@@ -38,10 +38,10 @@ export default function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
-      {/* Sidebar Navigation */}
+      {/* Sidebar Navigation - Now fixed on desktop */}
       <aside 
         style={{ backgroundColor: sidebarColor }}
-        className={`w-full md:w-64 md:flex-shrink-0 md:flex flex-col transition-transform duration-300 ease-in-out fixed md:static top-0 left-0 h-full z-40 ${
+        className={`w-full md:w-64 md:flex-shrink-0 md:flex flex-col transition-transform duration-300 ease-in-out fixed md:fixed top-0 left-0 h-full z-40 overflow-y-auto ${
           isMobileMenuOpen ? "mobile-menu-open" : "mobile-menu-closed md:transform-none"
         }`}
       >
@@ -78,8 +78,8 @@ export default function AppShell({ children }: AppShellProps) {
         </button>
       </div>
       
-      {/* Main Content */}
-      <main className="flex-grow p-4 md:p-6 overflow-auto">
+      {/* Main Content - Added left margin to account for fixed sidebar */}
+      <main className="flex-grow p-4 md:p-6 overflow-auto md:ml-64">
         {children}
       </main>
     </div>
