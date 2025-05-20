@@ -150,8 +150,34 @@ export default function Leaderboards() {
     
     // Columns specific to net leaderboard
     if (activeTab === "net") {
+      // Create a new array with "Total Points" column right after player name
+      const rankAndPlayerColumns = baseColumns.slice(0, 2); // Take rank and player columns
+      const totalPointsColumn: ColumnDef<PlayerWithHistory> = {
+        accessorKey: "totalPoints",
+        header: ({ column }) => {
+          return (
+            <div 
+              className="flex items-center justify-end cursor-pointer select-none"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              Total Points
+              {column.getIsSorted() === "asc" ? (
+                <span className="ml-1">▲</span>
+              ) : column.getIsSorted() === "desc" ? (
+                <span className="ml-1">▼</span>
+              ) : null}
+            </div>
+          )
+        },
+        cell: ({ row }) => <div className="font-bold text-right">{row.original.totalPoints.toLocaleString()}</div>,
+        enableSorting: true,
+      };
+      const remainingColumns = baseColumns.slice(2); // Get the remaining columns
+      
       return [
-        ...baseColumns,
+        ...rankAndPlayerColumns, // Rank, Player Name
+        totalPointsColumn, // Total Points right after player name
+        ...remainingColumns, // Major Points, Events
         {
           accessorKey: "tourPoints",
           header: ({ column }) => {
@@ -212,32 +238,38 @@ export default function Leaderboards() {
           cell: ({ row }) => <div className="text-center">{row.original.suprPoints.toLocaleString()}</div>,
           enableSorting: true,
         },
-        {
-          accessorKey: "totalPoints",
-          header: ({ column }) => {
-            return (
-              <div 
-                className="flex items-center justify-end cursor-pointer select-none"
-                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-              >
-                Total Points
-                {column.getIsSorted() === "asc" ? (
-                  <span className="ml-1">▲</span>
-                ) : column.getIsSorted() === "desc" ? (
-                  <span className="ml-1">▼</span>
-                ) : null}
-              </div>
-            )
-          },
-          cell: ({ row }) => <div className="font-bold text-right">{row.original.totalPoints.toLocaleString()}</div>,
-          enableSorting: true,
-        },
       ];
     } 
     // Columns specific to gross leaderboard
     else {
+      // Create a new array with "Gross Points" column right after player name
+      const rankAndPlayerColumns = baseColumns.slice(0, 2); // Take rank and player columns
+      const grossTotalPointsColumn: ColumnDef<PlayerWithHistory> = {
+        accessorKey: "grossTotalPoints",
+        header: ({ column }) => {
+          return (
+            <div 
+              className="flex items-center justify-end cursor-pointer select-none"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              Gross Points
+              {column.getIsSorted() === "asc" ? (
+                <span className="ml-1">▲</span>
+              ) : column.getIsSorted() === "desc" ? (
+                <span className="ml-1">▼</span>
+              ) : null}
+            </div>
+          )
+        },
+        cell: ({ row }) => <div className="font-bold text-right">{(row.original.grossTotalPoints || 0).toLocaleString()}</div>,
+        enableSorting: true,
+      };
+      const remainingColumns = baseColumns.slice(2); // Get the remaining columns
+      
       return [
-        ...baseColumns,
+        ...rankAndPlayerColumns, // Rank, Player Name
+        grossTotalPointsColumn, // Gross Points right after player name
+        ...remainingColumns, // Major Points, Events
         {
           accessorKey: "grossTourPoints",
           header: ({ column }) => {
@@ -299,27 +331,7 @@ export default function Leaderboards() {
           },
           cell: ({ row }) => <div className="text-center">{row.original.suprPoints.toLocaleString()}</div>,
           enableSorting: true,
-        },
-        {
-          accessorKey: "grossTotalPoints",
-          header: ({ column }) => {
-            return (
-              <div 
-                className="flex items-center justify-end cursor-pointer select-none"
-                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-              >
-                Gross Points
-                {column.getIsSorted() === "asc" ? (
-                  <span className="ml-1">▲</span>
-                ) : column.getIsSorted() === "desc" ? (
-                  <span className="ml-1">▼</span>
-                ) : null}
-              </div>
-            )
-          },
-          cell: ({ row }) => <div className="font-bold text-right">{(row.original.grossTotalPoints || 0).toLocaleString()}</div>,
-          enableSorting: true,
-        },
+        }
       ];
     }
   }
