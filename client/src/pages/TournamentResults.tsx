@@ -27,6 +27,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { Tournament } from "@shared/schema";
 import { formatDate } from "@/lib/utils";
+import { calculatePoints } from "@/lib/points-calculator";
 
 // Function to get tournament type label
 function getTournamentTypeLabel(type: string): string {
@@ -85,35 +86,63 @@ export default function TournamentResults() {
           // Clone the result object to avoid mutating the original
           const grossResult = { ...result };
           
-          // Calculate gross points based on position in this sorted list
-          // Points values follow tour points system
+          // Calculate gross points based on position in this sorted list using the tournament type
           const grossPosition = index + 1;
           
-          // Calculate points based on finishing position in gross scoring
-          switch (grossPosition) {
-            case 1: grossResult.grossPoints = 500; break;
-            case 2: grossResult.grossPoints = 300; break;
-            case 3: grossResult.grossPoints = 190; break;
-            case 4: grossResult.grossPoints = 135; break;
-            case 5: grossResult.grossPoints = 110; break;
-            case 6: grossResult.grossPoints = 100; break;
-            case 7: grossResult.grossPoints = 90; break;
-            case 8: grossResult.grossPoints = 85; break;
-            case 9: grossResult.grossPoints = 80; break;
-            case 10: grossResult.grossPoints = 75; break;
-            default:
-              // For 11th place and beyond
-              if (grossPosition <= 15) {
-                grossResult.grossPoints = 70 - ((grossPosition - 11) * 2);
-              } else if (grossPosition <= 20) {
-                grossResult.grossPoints = 60 - ((grossPosition - 16) * 2);
-              } else if (grossPosition <= 30) {
-                grossResult.grossPoints = 50 - ((grossPosition - 21) * 2.5);
-              } else if (grossPosition <= 40) {
-                grossResult.grossPoints = 25 - ((grossPosition - 31) * 1);
-              } else {
-                grossResult.grossPoints = 15;
+          // Calculate proper points based on tournament type for gross leaderboard
+          if (tournament) {
+            // For major tournaments
+            if (tournament.type === 'major') {
+              // First place in a major gets 750 points
+              switch (grossPosition) {
+                case 1: grossResult.grossPoints = 750; break;
+                case 2: grossResult.grossPoints = 400; break;
+                case 3: grossResult.grossPoints = 350; break;
+                case 4: grossResult.grossPoints = 325; break;
+                case 5: grossResult.grossPoints = 300; break;
+                case 6: grossResult.grossPoints = 275; break;
+                case 7: grossResult.grossPoints = 225; break;
+                case 8: grossResult.grossPoints = 200; break;
+                case 9: grossResult.grossPoints = 175; break;
+                case 10: grossResult.grossPoints = 150; break;
+                default: 
+                  if (grossPosition <= 20) {
+                    const points = [130, 120, 110, 90, 80, 70, 65, 60, 55, 50];
+                    grossResult.grossPoints = points[grossPosition - 11] || 50;
+                  } else {
+                    grossResult.grossPoints = 50;
+                  }
               }
+            } 
+            // For tour tournaments
+            else if (tournament.type === 'tour') {
+              switch (grossPosition) {
+                case 1: grossResult.grossPoints = 500; break;
+                case 2: grossResult.grossPoints = 300; break;
+                case 3: grossResult.grossPoints = 190; break;
+                case 4: grossResult.grossPoints = 135; break;
+                case 5: grossResult.grossPoints = 110; break;
+                case 6: grossResult.grossPoints = 100; break;
+                case 7: grossResult.grossPoints = 90; break;
+                case 8: grossResult.grossPoints = 85; break;
+                case 9: grossResult.grossPoints = 80; break;
+                case 10: grossResult.grossPoints = 75; break;
+                default: grossResult.grossPoints = 70;
+              }
+            }
+            // For league or supr
+            else {
+              switch (grossPosition) {
+                case 1: grossResult.grossPoints = 93.75; break;
+                case 2: grossResult.grossPoints = 50; break;
+                case 3: grossResult.grossPoints = 43.75; break;
+                case 4: grossResult.grossPoints = 40.625; break;
+                case 5: grossResult.grossPoints = 37.5; break;
+                default: grossResult.grossPoints = 30;
+              }
+            }
+          } else {
+            grossResult.grossPoints = 0;
           }
           
           return grossResult;
