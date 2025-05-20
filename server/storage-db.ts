@@ -91,8 +91,25 @@ const DEFAULT_POINTS_CONFIG = {
   ]
 };
 
+// Convert the default points config to the format expected by the schema
+function formatPointsConfig() {
+  const result: PointsConfig = {
+    major: [],
+    tour: [],
+    league: [],
+    supr: []
+  };
+  
+  // Copy each tournament type's points data
+  Object.keys(DEFAULT_POINTS_CONFIG).forEach(type => {
+    result[type as keyof PointsConfig] = [...DEFAULT_POINTS_CONFIG[type as keyof typeof DEFAULT_POINTS_CONFIG]];
+  });
+  
+  return result;
+}
+
 // Store the config in memory - can be upgraded to database storage later if needed
-let pointsConfig: PointsConfig = { ...DEFAULT_POINTS_CONFIG };
+let pointsConfig: PointsConfig = formatPointsConfig();
 
 export class DatabaseStorage implements IStorage {
   // Player operations
