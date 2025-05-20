@@ -131,13 +131,7 @@ export default function EditTournament() {
       };
       
       // Make the API request
-      await apiRequest(`/api/tournaments/${id}/edit`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      await apiRequest("PUT", `/api/tournaments/${id}/edit`, payload);
       
       // Show success message
       toast({

@@ -214,12 +214,6 @@ export default function TournamentManagement() {
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
       />
-      
-      <EditTournamentDialog
-        tournamentId={selectedTournament?.id || null}
-        isOpen={isEditDialogOpen}
-        onClose={() => setIsEditDialogOpen(false)}
-      />
     </section>
   );
 }
