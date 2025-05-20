@@ -13,13 +13,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { TOURNAMENT_TYPES } from "@/lib/constants";
 import type { Tournament, PlayerResult, TournamentType } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { formatDate } from "@/lib/utils";
+import { useDebounce } from "@/hooks/use-debounce";
 
 interface TournamentWithResults extends Tournament {
   results: PlayerResult[];
@@ -35,7 +36,19 @@ export default function EditTournament() {
   const [date, setDate] = useState("");
   const [type, setType] = useState<TournamentType | "">("");
   const [results, setResults] = useState<Array<any>>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Use debounce to avoid excessive filtering on every keystroke
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  
+  // Filter results based on search query
+  const filteredResults = results.filter(result => {
+    if (!debouncedSearchQuery) return true;
+    
+    // Search by player name (case insensitive)
+    return result.playerName?.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+  });
   
   // Fetch tournament data with results - directly use the tournament endpoint which includes results
   const { data: tournament, isLoading } = useQuery<TournamentWithResults>({
@@ -233,6 +246,25 @@ export default function EditTournament() {
         <CardHeader>
           <CardTitle>Player Scores</CardTitle>
           <CardDescription>Edit player scores and positions for this tournament</CardDescription>
+          <div className="relative mt-2">
+            <Input
+              type="text"
+              placeholder="Search players..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pr-8"
+            />
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <Search className="h-4 w-4 text-neutral-400" />
+            </div>
+          </div>
+          {results.length > 0 && (
+            <p className="text-sm text-neutral-500 mt-2">
+              {debouncedSearchQuery 
+                ? `Showing ${filteredResults.length} of ${results.length} players` 
+                : `${results.length} total players`}
+            </p>
+          )}
         </CardHeader>
         <CardContent>
           <div className="overflow-auto max-h-[calc(100vh-400px)]">
@@ -248,7 +280,7 @@ export default function EditTournament() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {results.map((result) => (
+                {filteredResults.map((result) => (
                   <TableRow key={result.id}>
                     <TableCell className="font-medium">{result.playerName}</TableCell>
                     <TableCell>
