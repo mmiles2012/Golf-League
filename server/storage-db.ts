@@ -350,8 +350,16 @@ export class DatabaseStorage implements IStorage {
     // Store gross tour points per player
     const playerGrossTourPoints: Record<number, number> = {};
     
-    // Process each tour tournament separately to calculate gross points
-    for (const tournament of tourTournaments) {
+    // Get points configuration for proper point distribution
+    const pointsConfig = await this.getPointsConfig();
+    
+    // Initialize player point maps for different tournament types
+    const playerGrossMajorPoints: Record<number, number> = {};
+    const playerGrossLeaguePoints: Record<number, number> = {};
+    const playerGrossSuprPoints: Record<number, number> = {};
+    
+    // Process all tournaments to calculate gross points
+    for (const tournament of tournaments.filter(t => t.status === 'completed')) {
       // Get results for this tournament
       const tournamentResults = allResults.filter(r => r.tournamentId === tournament.id);
       
@@ -366,33 +374,79 @@ export class DatabaseStorage implements IStorage {
         });
       
       // Assign points based on position in this tournament
-      validGrossResults.forEach((result, position) => {
-        if (position < tourPointsTable.length) {
-          const points = tourPointsTable[position];
+      validGrossResults.forEach((result, index) => {
+        const position = index + 1; // 1-based position index
+        
+        // Get the points for this position from the config
+        let points = 0;
+        
+        if (tournament.type && pointsConfig[tournament.type]) {
+          // Look up the points value for this position in the tournament type
+          const positionConfig = pointsConfig[tournament.type].find(p => p.position === position);
           
-          // Add these points to the player's total gross tour points
-          if (!playerGrossTourPoints[result.playerId]) {
-            playerGrossTourPoints[result.playerId] = 0;
+          if (positionConfig) {
+            points = positionConfig.points;
+          } else if (pointsConfig[tournament.type].length > 0) {
+            // If we don't have points for this specific position, use the last defined position
+            const lastPosition = pointsConfig[tournament.type].slice(-1)[0];
+            if (lastPosition) {
+              points = lastPosition.points;
+            }
           }
-          
-          playerGrossTourPoints[result.playerId] += points;
+        }
+        
+        // Track points by tournament type to properly calculate total points
+        switch(tournament.type) {
+          case 'tour':
+            if (!playerGrossTourPoints[result.playerId]) {
+              playerGrossTourPoints[result.playerId] = 0;
+            }
+            playerGrossTourPoints[result.playerId] += points;
+            break;
+          case 'major':
+            if (!playerGrossMajorPoints[result.playerId]) {
+              playerGrossMajorPoints[result.playerId] = 0;
+            }
+            playerGrossMajorPoints[result.playerId] += points;
+            break;
+          case 'league':
+            if (!playerGrossLeaguePoints[result.playerId]) {
+              playerGrossLeaguePoints[result.playerId] = 0;
+            }
+            playerGrossLeaguePoints[result.playerId] += points;
+            break;
+          case 'supr':
+            if (!playerGrossSuprPoints[result.playerId]) {
+              playerGrossSuprPoints[result.playerId] = 0;
+            }
+            playerGrossSuprPoints[result.playerId] += points;
+            break;
         }
       });
     }
     
     // Now assign ranks and calculate total gross points
     leaderboard.forEach((player, index) => {
-      // Assign rank based on position in the sorted list
-      player.rank = index + 1;
+      // Get the player's ID for lookup
+      const playerId = player.player.id;
       
-      // Get this player's calculated gross tour points
-      const grossTourPoints = playerGrossTourPoints[player.player.id] || 0;
+      // Get this player's calculated gross points for each tournament type
+      const grossTourPoints = playerGrossTourPoints[playerId] || 0;
+      const grossMajorPoints = playerGrossMajorPoints[playerId] || 0;
+      const grossLeaguePoints = playerGrossLeaguePoints[playerId] || 0;
+      const grossSuprPoints = playerGrossSuprPoints[playerId] || 0;
       
-      // Set the gross tour points
+      // Set the points in the player record
       player.grossTourPoints = grossTourPoints;
       
-      // Calculate the gross total points
-      player.grossTotalPoints = player.majorPoints + grossTourPoints + player.leaguePoints + player.suprPoints;
+      // Override the major/league/supr points with gross-calculated points
+      // This ensures points are based on gross score position, not net position
+      player.majorPoints = grossMajorPoints;
+      player.leaguePoints = grossLeaguePoints;
+      player.suprPoints = grossSuprPoints;
+      
+      // Calculate the gross total points - sum of all tournament types' gross points
+      player.grossTotalPoints = grossMajorPoints + grossTourPoints + grossLeaguePoints + grossSuprPoints;
       
       // Log player data for debugging (only top players)
       if (index < 3) {
@@ -400,15 +454,39 @@ export class DatabaseStorage implements IStorage {
       }
     });
     
-    // Now sort by grossTourPoints (highest to lowest)
-    leaderboard.sort((a, b) => (b.grossTourPoints || 0) - (a.grossTourPoints || 0));
+    // Already split players with valid scores from those without above
+    // Let's sort them now based on the updated gross points
+    
+    // Sort players with valid scores by total gross points (high to low)
+    playersWithValidScores.sort((a, b) => {
+      // Primary sort by gross total points (higher is better)
+      const aTotalPoints = a.grossTotalPoints || 0;
+      const bTotalPoints = b.grossTotalPoints || 0;
+      
+      if (bTotalPoints !== aTotalPoints) {
+        return bTotalPoints - aTotalPoints;
+      }
+      
+      // Secondary sort by average gross score (lower is better)
+      const aScore = a.averageGrossScore || 999;
+      const bScore = b.averageGrossScore || 999;
+      return aScore - bScore;
+    });
+    
+    // Sort players without valid scores alphabetically
+    playersWithoutValidScores.sort((a, b) => {
+      return a.player.name.localeCompare(b.player.name);
+    });
+    
+    // Combine the sorted lists
+    const sortedLeaderboard = [...playersWithValidScores, ...playersWithoutValidScores];
     
     // Re-assign ranks after sorting
-    leaderboard.forEach((player, index) => {
+    sortedLeaderboard.forEach((player, index) => {
       player.rank = index + 1;
     });
     
-    return leaderboard;
+    return sortedLeaderboard;
   }
 
   async getPlayerWithHistory(playerId: number): Promise<PlayerWithHistory | undefined> {
