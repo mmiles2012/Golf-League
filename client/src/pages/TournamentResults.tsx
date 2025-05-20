@@ -18,12 +18,6 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import { Tournament } from "@shared/schema";
 import { formatDate } from "@/lib/utils";
@@ -170,7 +164,7 @@ export default function TournamentResults() {
   }
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-heading font-bold">{tournament.name}</h1>
@@ -182,166 +176,196 @@ export default function TournamentResults() {
         <Button variant="outline" onClick={() => window.history.back()}>Back</Button>
       </div>
       
-      <div className="flex justify-start">
-        <Tabs 
-          defaultValue="net" 
-          value={activeTab} 
-          onValueChange={(value) => setActiveTab(value as "net" | "gross")}
-          className="w-full"
-        >
-          {/* Sticky tabs container */}
-          <div className="sticky top-0 left-0 right-0 w-full bg-white py-3 px-4 shadow-lg border-b border-gray-200 z-50" style={{ position: 'sticky', top: 0 }}>
-            <TabsList className="mx-auto max-w-xl">
-              <TabsTrigger 
-                value="net" 
-                className="px-6 py-2 text-base font-medium"
-              >
-                Net Leaderboard
-              </TabsTrigger>
-              <TabsTrigger 
-                value="gross" 
-                className="px-6 py-2 text-base font-medium"
-              >
-                Gross Leaderboard
-              </TabsTrigger>
-            </TabsList>
+      {/* Tab navigation at the top */}
+      <div className="mb-6">
+        <div className="w-full max-w-md mx-auto">
+          <div className="flex rounded-lg overflow-hidden border">
+            <button
+              onClick={() => setActiveTab("net")}
+              className={`flex-1 py-3 px-4 text-center font-medium ${
+                activeTab === "net" 
+                  ? "bg-primary text-white" 
+                  : "bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              Net Leaderboard
+            </button>
+            <button
+              onClick={() => setActiveTab("gross")}
+              className={`flex-1 py-3 px-4 text-center font-medium ${
+                activeTab === "gross" 
+                  ? "bg-primary text-white" 
+                  : "bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              Gross Leaderboard
+            </button>
           </div>
-          
-          <TabsContent value="net">
-            <Card>
-              <CardHeader>
-                <CardTitle>Net Scores</CardTitle>
-                <CardDescription>
-                  Players ranked by net score (with handicap adjustments)
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-16">Position</TableHead>
-                        <TableHead>Player</TableHead>
-                        <TableHead className="text-center">Gross Score</TableHead>
-                        <TableHead className="text-center">Net Score</TableHead>
-                        <TableHead className="text-center">Handicap</TableHead>
-                        <TableHead className="text-right">Points</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {finalNetLeaderboard.map((result, index) => {
-                        // Calculate proper points for net leaderboard position
-                        const netPoints = tournament && result.netScore !== null 
-                          ? getPointsByPosition(index + 1, tournament.type) 
-                          : 0;
-                          
-                        return (
-                          <TableRow key={result.id}>
-                            <TableCell className="font-semibold">
-                              {index + 1}<sup>{getOrdinalSuffix(index + 1)}</sup>
-                            </TableCell>
-                            <TableCell>
-                              <a 
-                                href={`/player/${result.player.id}`}
-                                className="text-primary hover:text-primary-dark hover:underline cursor-pointer"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  window.location.href = `/player/${result.player.id}`;
-                                }}
-                              >
-                                {result.player.name}
-                              </a>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {result.grossScore ?? "N/A"}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {result.netScore ?? "N/A"}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {formatHandicap(result)}
-                            </TableCell>
-                            <TableCell className="text-right font-semibold">
-                              {/* Display stored points from DB for historical consistency */}
-                              {result.points}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="gross">
-            <Card>
-              <CardHeader>
-                <CardTitle>Gross Scores</CardTitle>
-                <CardDescription>
-                  Players ranked by gross score without handicap adjustments
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-16">Position</TableHead>
-                        <TableHead>Player</TableHead>
-                        <TableHead className="text-center">Gross Score</TableHead>
-                        <TableHead className="text-center">Net Score</TableHead>
-                        <TableHead className="text-center">Handicap</TableHead>
-                        <TableHead className="text-right">Points</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {finalGrossLeaderboard.map((result, index) => {
-                        // Calculate gross points based on gross leaderboard position
-                        const grossPoints = tournament && result.grossScore !== null 
-                          ? getPointsByPosition(index + 1, tournament.type) 
-                          : 0;
-                          
-                        return (
-                          <TableRow key={result.id}>
-                            <TableCell className="font-semibold">
-                              {index + 1}<sup>{getOrdinalSuffix(index + 1)}</sup>
-                            </TableCell>
-                            <TableCell>
-                              <a 
-                                href={`/player/${result.player.id}`}
-                                className="text-primary hover:text-primary-dark hover:underline cursor-pointer"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  window.location.href = `/player/${result.player.id}`;
-                                }}
-                              >
-                                {result.player.name}
-                              </a>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {result.grossScore ?? "N/A"}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {result.netScore ?? "N/A"}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {formatHandicap(result)}
-                            </TableCell>
-                            <TableCell className="text-right font-semibold">
-                              {grossPoints}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        </div>
+      </div>
+      
+      {/* Fixed tab navigation at bottom of screen */}
+      <div className="fixed bottom-4 left-0 right-0 z-50 flex justify-center">
+        <div className="bg-white rounded-full shadow-lg border px-4 py-3">
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setActiveTab("net")}
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+                activeTab === "net" 
+                  ? "bg-primary text-white" 
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              Net
+            </button>
+            <button
+              onClick={() => setActiveTab("gross")}
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+                activeTab === "gross" 
+                  ? "bg-primary text-white" 
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              Gross
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Content area based on selected tab */}
+      <div className="content-area">
+        {activeTab === "net" ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Net Scores</CardTitle>
+              <CardDescription>
+                Players ranked by net score (with handicap adjustments)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-16">Position</TableHead>
+                      <TableHead>Player</TableHead>
+                      <TableHead className="text-center">Gross Score</TableHead>
+                      <TableHead className="text-center">Net Score</TableHead>
+                      <TableHead className="text-center">Handicap</TableHead>
+                      <TableHead className="text-right">Points</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {finalNetLeaderboard.map((result, index) => {
+                      // Calculate proper points for net leaderboard position
+                      const netPoints = tournament && result.netScore !== null 
+                        ? getPointsByPosition(index + 1, tournament.type) 
+                        : 0;
+                        
+                      return (
+                        <TableRow key={result.id}>
+                          <TableCell className="font-semibold">
+                            {index + 1}<sup>{getOrdinalSuffix(index + 1)}</sup>
+                          </TableCell>
+                          <TableCell>
+                            <a 
+                              href={`/player/${result.player.id}`}
+                              className="text-primary hover:text-primary-dark hover:underline cursor-pointer"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                window.location.href = `/player/${result.player.id}`;
+                              }}
+                            >
+                              {result.player.name}
+                            </a>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {result.grossScore ?? "N/A"}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {result.netScore ?? "N/A"}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {formatHandicap(result)}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {/* Display stored points from DB for historical consistency */}
+                            {result.points}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Gross Scores</CardTitle>
+              <CardDescription>
+                Players ranked by gross score without handicap adjustments
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-16">Position</TableHead>
+                      <TableHead>Player</TableHead>
+                      <TableHead className="text-center">Gross Score</TableHead>
+                      <TableHead className="text-center">Net Score</TableHead>
+                      <TableHead className="text-center">Handicap</TableHead>
+                      <TableHead className="text-right">Points</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {finalGrossLeaderboard.map((result, index) => {
+                      // Calculate gross points based on gross leaderboard position
+                      const grossPoints = tournament && result.grossScore !== null 
+                        ? getPointsByPosition(index + 1, tournament.type) 
+                        : 0;
+                        
+                      return (
+                        <TableRow key={result.id}>
+                          <TableCell className="font-semibold">
+                            {index + 1}<sup>{getOrdinalSuffix(index + 1)}</sup>
+                          </TableCell>
+                          <TableCell>
+                            <a 
+                              href={`/player/${result.player.id}`}
+                              className="text-primary hover:text-primary-dark hover:underline cursor-pointer"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                window.location.href = `/player/${result.player.id}`;
+                              }}
+                            >
+                              {result.player.name}
+                            </a>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {result.grossScore ?? "N/A"}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {result.netScore ?? "N/A"}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {formatHandicap(result)}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {grossPoints}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
