@@ -461,11 +461,33 @@ export default function Leaderboards() {
         </div>
         
         {isLoading ? (
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <Skeleton className="h-10 w-full" />
-              {Array(10).fill(0).map((_, index) => (
-                <Skeleton key={index} className="h-12 w-full" />
+          <CardContent className="p-4">
+            {/* Table skeleton with data structure matching the real table */}
+            <div className="border rounded">
+              {/* Header */}
+              <div className="grid grid-cols-8 gap-2 p-3 bg-neutral-50 border-b">
+                <Skeleton className="h-5 w-12" /> {/* Pos */}
+                <Skeleton className="h-5 w-32" /> {/* Player */}
+                <Skeleton className="h-5 w-24" /> {/* Total Points */}
+                <Skeleton className="h-5 w-14" /> {/* Events */}
+                <Skeleton className="h-5 w-14" /> {/* Major */}
+                <Skeleton className="h-5 w-14" /> {/* Tour */}
+                <Skeleton className="h-5 w-14" /> {/* League */}
+                <Skeleton className="h-5 w-14" /> {/* SUPR */}
+              </div>
+              
+              {/* Table rows */}
+              {Array(12).fill(0).map((_, index) => (
+                <div key={index} className="grid grid-cols-8 gap-2 p-3 border-b last:border-0 hover:bg-neutral-50">
+                  <Skeleton className="h-4 w-8" /> {/* Pos */}
+                  <Skeleton className="h-4 w-28" /> {/* Player */}
+                  <Skeleton className="h-4 w-16" /> {/* Total Points */}
+                  <Skeleton className="h-4 w-8" /> {/* Events */}
+                  <Skeleton className="h-4 w-10" /> {/* Major */}
+                  <Skeleton className="h-4 w-10" /> {/* Tour */}
+                  <Skeleton className="h-4 w-10" /> {/* League */}
+                  <Skeleton className="h-4 w-10" /> {/* SUPR */}
+                </div>
               ))}
             </div>
           </CardContent>
