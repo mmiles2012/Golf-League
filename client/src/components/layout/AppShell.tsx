@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Sidebar from "./Sidebar";
+import PublicNavbar from "./PublicNavbar";
 import { Menu, X } from "lucide-react";
 import { AppSettings } from "@shared/schema";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -10,6 +12,7 @@ interface AppShellProps {
 
 export default function AppShell({ children }: AppShellProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isAuthenticated, isPublicView } = useAuth();
   
   // Fetch app settings
   const { data: settings } = useQuery<AppSettings>({
@@ -36,6 +39,24 @@ export default function AppShell({ children }: AppShellProps) {
     };
   }, []);
 
+  // If neither authenticated nor in public view, do not render any content
+  if (!isAuthenticated && !isPublicView) {
+    return children;
+  }
+  
+  // Public view - horizontal navbar
+  if (isPublicView) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <PublicNavbar />
+        <main className="flex-grow p-4 md:p-6 w-full overflow-auto">
+          {children}
+        </main>
+      </div>
+    );
+  }
+  
+  // Admin view - sidebar navigation
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Sidebar Navigation - Fixed on desktop, slides in/out on mobile */}
