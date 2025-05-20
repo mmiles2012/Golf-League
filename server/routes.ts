@@ -540,8 +540,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             // Check if the playing handicap has a "+" sign
             if (handicapStr.includes('+')) {
-              // If it has a "+" sign, subtract the handicap from the total (for plus handicap players)
-              handicapValue = -Math.abs(Number(handicapStr.replace('+', '')));
+              // If it has a "+" sign, add the handicap to the total (for plus handicap players)
+              handicapValue = Number(handicapStr.replace('+', ''));
             } else {
               // If it doesn't have a "+" sign, subtract the handicap from the total
               handicapValue = -Math.abs(Number(handicapStr));
@@ -554,8 +554,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             // Apply the same logic to Course Handicap
             if (handicapStr.includes('+')) {
-              // If it has a "+" sign, subtract the handicap from the total (for plus handicap players)
-              handicapValue = -Math.abs(Number(handicapStr.replace('+', '')));
+              // If it has a "+" sign, add the handicap to the total (for plus handicap players)
+              handicapValue = Number(handicapStr.replace('+', ''));
             } else {
               // If it doesn't have a "+" sign, subtract the handicap from the total
               handicapValue = -Math.abs(Number(handicapStr));
