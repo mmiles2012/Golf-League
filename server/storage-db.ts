@@ -9,6 +9,7 @@ import {
   type EditTournament,
   type PlayerWithHistory,
   type PointsConfig,
+  type AppSettings,
   players,
   tournaments,
   playerResults
@@ -110,6 +111,15 @@ function formatPointsConfig() {
 
 // Store the config in memory - can be upgraded to database storage later if needed
 let pointsConfig: PointsConfig = formatPointsConfig();
+
+// Default app settings
+let appSettings: AppSettings = {
+  appName: "Hideout Golf League",
+  pageTitle: "Leaderboards",
+  scoringType: "both",
+  sidebarColor: "#0f172a",
+  logoUrl: "/images/hideout-logo.png"
+};
 
 export class DatabaseStorage implements IStorage {
   // Player operations
@@ -761,5 +771,15 @@ export class DatabaseStorage implements IStorage {
   async updatePointsConfig(config: PointsConfig): Promise<PointsConfig> {
     pointsConfig = { ...config };
     return pointsConfig;
+  }
+
+  // App settings methods
+  async getAppSettings(): Promise<AppSettings> {
+    return appSettings;
+  }
+
+  async updateAppSettings(settings: AppSettings): Promise<AppSettings> {
+    appSettings = { ...settings };
+    return appSettings;
   }
 }
