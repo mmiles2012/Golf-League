@@ -15,6 +15,7 @@ import Embed from "@/pages/Embed";
 import Players from "@/pages/Players";
 import PlayerProfile from "@/pages/PlayerProfile";
 import PublicLeaderboard from "@/pages/PublicLeaderboard";
+import PointsConfiguration from "@/pages/PointsConfiguration";
 
 function Router() {
   return (
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/manual-entry" component={ManualEntry} />
       <Route path="/tournaments" component={TournamentManagement} />
       <Route path="/players" component={Players} />
+      <Route path="/points-config" component={PointsConfiguration} />
       <Route path="/embed" component={Embed} />
       
       {/* Player Profile */}

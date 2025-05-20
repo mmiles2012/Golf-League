@@ -174,10 +174,7 @@ export default function PointsConfiguration() {
   // Save points configuration
   const saveMutation = useMutation({
     mutationFn: async (data: typeof editedPoints) => {
-      return apiRequest("/api/points-config", {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("PUT", "/api/points-config", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/points-config"] });

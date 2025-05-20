@@ -8,7 +8,8 @@ import {
   Users, 
   Code, 
   LogOut,
-  User
+  User,
+  Settings
 } from "lucide-react";
 
 interface SidebarProps {
@@ -90,6 +91,17 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
               >
                 <Users className="sidebar-icon mr-2" />
                 <span>Players</span>
+              </a>
+            </Link>
+          </li>
+          <li>
+            <Link href="/points-config">
+              <a 
+                className={`sidebar-link ${isActive("/points-config") ? "active" : ""}`}
+                onClick={onNavigation}
+              >
+                <Settings className="sidebar-icon mr-2" />
+                <span>Points Config</span>
               </a>
             </Link>
           </li>
