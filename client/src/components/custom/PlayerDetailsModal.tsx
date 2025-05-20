@@ -53,28 +53,7 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
           </div>
         ) : playerHistory ? (
           <div className="my-4">
-            <div className="flex flex-wrap gap-4 mb-4">
-              <div className="bg-neutral-100 rounded-md p-3 flex-1 min-w-[120px]">
-                <p className="text-xs text-neutral-600">Rank</p>
-                <p className="font-bold text-xl">{playerHistory.rank}</p>
-              </div>
-              <div className="bg-neutral-100 rounded-md p-3 flex-1 min-w-[120px]">
-                <p className="text-xs text-neutral-600">Events</p>
-                <p className="font-bold text-xl">{playerHistory.totalEvents}</p>
-              </div>
-              <div className="bg-neutral-100 rounded-md p-3 flex-1 min-w-[120px]">
-                <p className="text-xs text-neutral-600">Total Points</p>
-                <p className="font-bold text-xl">{playerHistory.totalPoints.toLocaleString()}</p>
-              </div>
-              <div className="bg-neutral-100 rounded-md p-3 flex-1 min-w-[120px]">
-                <p className="text-xs text-neutral-600">Best Finish</p>
-                <p className="font-bold text-xl">
-                  {playerHistory.tournaments.length > 0 ? 
-                    `${Math.min(...playerHistory.tournaments.map(t => t.position))}${getOrdinalSuffix(Math.min(...playerHistory.tournaments.map(t => t.position)))}` : 
-                    "N/A"}
-                </p>
-              </div>
-            </div>
+            {/* Statistics section removed as requested */}
             
             <h4 className="font-heading font-semibold text-md mb-2">Tournament History</h4>
             <div className="overflow-x-auto">
@@ -88,6 +67,8 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
                     <TableHead className="text-center">Gross Pos</TableHead>
                     <TableHead className="text-center">Gross</TableHead>
                     <TableHead className="text-center">Net</TableHead>
+                    <TableHead className="text-center">Gross Points</TableHead>
+                    <TableHead className="text-center">Net Points</TableHead>
                     <TableHead className="text-right">Points</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -122,6 +103,14 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
                       </TableCell>
                       <TableCell className="text-center">
                         {tournament.netScore ? tournament.netScore : "N/A"}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {tournament.tournamentType === 'tour' && tournament.grossPosition && tournament.grossPosition <= 3 
+                          ? tournament.points : "0"}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {tournament.tournamentType !== 'tour' || !tournament.grossPosition || tournament.grossPosition > 3 
+                          ? tournament.points : "0"}
                       </TableCell>
                       <TableCell className="text-right font-medium">{tournament.points}</TableCell>
                     </TableRow>
