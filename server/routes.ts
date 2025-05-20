@@ -172,6 +172,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Delete a player (only if they have no tournament results)
+  app.delete("/api/players/:id", async (req: Request, res: Response) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+      
+      // Check if player has any results first
+      const results = await storage.getPlayerResultsByPlayer(playerId);
+      
+      if (results.length > 0) {
+        return res.status(400).json({
+          message: "Cannot delete player with tournament results",
+          hasResults: true
+        });
+      }
+      
+      // Delete the player if they have no results
+      const success = await storage.deletePlayer(playerId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Player not found or could not be deleted" });
+      }
+      
+      res.json({ message: "Player deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting player:", error);
+      res.status(500).json({ message: "Failed to delete player" });
+    }
+  });
+  
   // Tournaments endpoints
   app.get("/api/tournaments", async (_req: Request, res: Response) => {
     try {

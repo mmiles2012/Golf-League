@@ -5,17 +5,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDebounce } from "@/hooks/use-debounce";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Search, UserPlus } from "lucide-react";
+import { Search, UserPlus, Trash2, AlertCircle } from "lucide-react";
 import type { Player } from "@shared/schema";
 import { SEARCH_DEBOUNCE_DELAY } from "@/lib/constants";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 export default function Players() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, SEARCH_DEBOUNCE_DELAY);
+  const queryClient = useQueryClient();
+  
+  // State for delete confirmation dialog
+  const [playerToDelete, setPlayerToDelete] = useState<Player | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   
   // Fetch all players or search results
   const { data: players, isLoading } = useQuery<Player[]>({
@@ -31,8 +46,83 @@ export default function Players() {
     },
   });
   
+  // Function to check if a player can be deleted (no tournament results)
+  const checkPlayerHasResults = async (playerId: number): Promise<boolean> => {
+    try {
+      const response = await fetch(`/api/player-results?playerId=${playerId}`);
+      if (!response.ok) throw new Error("Failed to check player results");
+      const results = await response.json();
+      return results.length > 0;
+    } catch (error) {
+      console.error("Error checking player results:", error);
+      return true; // Assume they have results if we can't check
+    }
+  };
+  
+  // Delete player function
+  const deletePlayer = async () => {
+    if (!playerToDelete) return;
+    
+    setIsDeleting(true);
+    setDeleteError(null);
+    
+    try {
+      const response = await fetch(`/api/players/${playerToDelete.id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        
+        if (errorData.hasResults) {
+          setDeleteError("This player has tournament results and cannot be deleted.");
+        } else {
+          setDeleteError(errorData.message || "Failed to delete player");
+        }
+        
+        setIsDeleting(false);
+        return;
+      }
+      
+      // Success - update the player list
+      queryClient.invalidateQueries({ queryKey: ["/api/players"] });
+      
+      toast({
+        title: "Player deleted",
+        description: `${playerToDelete.name} has been removed successfully`,
+      });
+      
+      // Close dialog
+      setPlayerToDelete(null);
+    } catch (error) {
+      console.error("Error deleting player:", error);
+      setDeleteError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+  
   const handlePlayerClick = (playerId: number) => {
     navigate(`/player/${playerId}`);
+  };
+  
+  const handleDeleteClick = async (e: React.MouseEvent, player: Player) => {
+    e.stopPropagation(); // Prevent navigation to player details
+    
+    // Check if player has results before showing delete dialog
+    const hasResults = await checkPlayerHasResults(player.id);
+    
+    if (hasResults) {
+      toast({
+        title: "Cannot delete player",
+        description: "This player has tournament results and cannot be deleted.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Show delete confirmation dialog
+    setPlayerToDelete(player);
   };
   
   return (
@@ -82,13 +172,13 @@ export default function Players() {
                 players.map((player) => (
                   <div
                     key={player.id}
-                    className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-neutral-50 transition"
+                    className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-neutral-50 transition relative group"
                     onClick={() => handlePlayerClick(player.id)}
                   >
                     <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">
                       {player.name.charAt(0)}
                     </div>
-                    <div className="ml-4">
+                    <div className="ml-4 flex-grow">
                       <div className="font-medium">{player.name}</div>
                       <div className="text-sm text-neutral-500">
                         {player.defaultHandicap !== null
@@ -96,6 +186,13 @@ export default function Players() {
                           : "No handicap set"}
                       </div>
                     </div>
+                    <button
+                      className="p-2 text-neutral-400 hover:text-red-500 rounded-full hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity absolute right-3 top-1/2 -translate-y-1/2"
+                      onClick={(e) => handleDeleteClick(e, player)}
+                      title="Delete player"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 ))
               ) : (
@@ -116,6 +213,51 @@ export default function Players() {
           )}
         </CardContent>
       </Card>
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!playerToDelete} onOpenChange={(open) => !open && setPlayerToDelete(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Player</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {playerToDelete?.name}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {deleteError && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md flex items-start">
+              <AlertCircle className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+              <p className="text-sm">{deleteError}</p>
+            </div>
+          )}
+          
+          <DialogFooter className="sm:justify-between mt-5">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPlayerToDelete(null)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="button" 
+              variant="destructive"
+              onClick={deletePlayer}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <span className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Player"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

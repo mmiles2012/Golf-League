@@ -296,6 +296,26 @@ export class MemStorage implements IStorage {
     return newPlayer;
   }
   
+  async deletePlayer(id: number): Promise<boolean> {
+    // Check if player exists
+    if (!this.players.has(id)) {
+      return false;
+    }
+    
+    // Check if player has any results
+    const hasResults = Array.from(this.playerResults.values()).some(
+      result => result.playerId === id
+    );
+    
+    if (hasResults) {
+      // Don't delete players with results
+      return false;
+    }
+    
+    // Delete the player if they have no results
+    return this.players.delete(id);
+  }
+  
   // Tournament methods
   async getTournaments(): Promise<Tournament[]> {
     return Array.from(this.tournaments.values());
