@@ -113,6 +113,17 @@ export default function EditTournament() {
     );
   };
   
+  const handleDeletePlayer = (id: number) => {
+    if (window.confirm("Are you sure you want to remove this player from the tournament? This action cannot be undone.")) {
+      setResults(prev => prev.filter(result => result.id !== id));
+      toast({
+        title: "Player removed",
+        description: "The player has been removed from this tournament",
+        variant: "default"
+      });
+    }
+  };
+  
   const handleSubmit = async () => {
     if (!id) return;
     
