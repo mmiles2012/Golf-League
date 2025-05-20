@@ -27,7 +27,6 @@ import {
 import { Loader2 } from "lucide-react";
 import { Tournament } from "@shared/schema";
 import { formatDate } from "@/lib/utils";
-import { calculatePoints } from "@/lib/points-calculator";
 
 // Function to get tournament type label
 function getTournamentTypeLabel(type: string): string {
@@ -64,7 +63,7 @@ export default function TournamentResults() {
   
   const isLoading = tournamentLoading || resultsLoading;
   
-  // Get scored points by position based on tournament type
+  // Function to get point value based on position and tournament type
   const getPointsByPosition = (position: number, tournamentType: string): number => {
     if (tournamentType === 'major') {
       const majorPoints = [750, 400, 350, 325, 300, 275, 225, 200, 175, 150];
@@ -77,16 +76,38 @@ export default function TournamentResults() {
       return position <= 10 ? leaguePoints[position - 1] : 15;
     }
   };
+  
+  // Sort results for NET leaderboard - sorted by net score
+  const sortedNetResults = results
+    ? [...results]
+        .filter(result => result.netScore !== null)
+        .sort((a, b) => {
+          // Sort by net score (lower is better)
+          if (a.netScore === null && b.netScore === null) {
+            return a.player.name.localeCompare(b.player.name);
+          }
+          if (a.netScore === null) return 1;
+          if (b.netScore === null) return -1;
+          return a.netScore - b.netScore;
+        })
+    : [];
     
-  // For net results, use the original positions from the database
-  const sortedNetResults = results ? [...results].sort((a, b) => a.position - b.position) : [];
+  // Add null net score players at the end, sorted alphabetically
+  const nullNetScorePlayers = results
+    ? [...results]
+        .filter(result => result.netScore === null)
+        .sort((a, b) => a.player.name.localeCompare(b.player.name))
+    : [];
+    
+  // Final net leaderboard
+  const finalNetLeaderboard = [...sortedNetResults, ...nullNetScorePlayers];
     
   // For gross results, sort by gross score (lower is better)
   const sortedGrossResults = results
     ? [...results]
         .filter(result => result.grossScore !== null)
         .sort((a, b) => {
-          // Sort by gross score, with null values at the end
+          // Sort by gross score
           if (a.grossScore === null && b.grossScore === null) {
             return a.player.name.localeCompare(b.player.name);
           }
@@ -94,11 +115,6 @@ export default function TournamentResults() {
           if (b.grossScore === null) return -1;
           return a.grossScore - b.grossScore;
         })
-        .map((result, index) => ({
-          ...result,
-          // Calculate points based on position in gross leaderboard and tournament type
-          grossPoints: tournament ? getPointsByPosition(index + 1, tournament.type) : 0
-        }))
     : [];
     
   // Add null gross score players at the end, sorted alphabetically
@@ -106,11 +122,23 @@ export default function TournamentResults() {
     ? [...results]
         .filter(result => result.grossScore === null)
         .sort((a, b) => a.player.name.localeCompare(b.player.name))
-        .map(result => ({ ...result, grossPoints: 0 }))
     : [];
     
-  // Combine sorted players with nulls at the end
-  const combinedGrossResults = [...sortedGrossResults, ...nullGrossScorePlayers];
+  // Final gross leaderboard
+  const finalGrossLeaderboard = [...sortedGrossResults, ...nullGrossScorePlayers];
+  
+  // Helper function to format handicap display
+  const formatHandicap = (result: any) => {
+    if (result.handicap === null) return "N/A";
+    
+    // Check if handicap should show with a "+" sign
+    // For stroke play: if netScore > grossScore, the handicap was added (not subtracted)
+    if (result.netScore !== null && result.grossScore !== null && result.netScore > result.grossScore) {
+      return `+${Math.abs(result.handicap)}`;
+    }
+    
+    return result.handicap;
+  };
   
   // Add ordinal suffix to position
   const getOrdinalSuffix = (num: number): string => {
@@ -122,7 +150,7 @@ export default function TournamentResults() {
     if (j === 3 && k !== 13) return "rd";
     return "th";
   };
-  
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -141,19 +169,6 @@ export default function TournamentResults() {
     );
   }
   
-  // Function to format handicap display with "+" sign if needed
-  const formatHandicap = (result: any) => {
-    if (result.handicap === null) return "N/A";
-    
-    // Check if handicap should show with a "+" sign
-    // For stroke play: if netScore > grossScore, the handicap was added (not subtracted)
-    if (result.netScore !== null && result.grossScore !== null && result.netScore > result.grossScore) {
-      return `+${Math.abs(result.handicap)}`;
-    }
-    
-    return result.handicap;
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -184,7 +199,7 @@ export default function TournamentResults() {
               <CardHeader>
                 <CardTitle>Net Scores</CardTitle>
                 <CardDescription>
-                  Players ranked by net score and finishing position
+                  Players ranked by net score (with handicap adjustments)
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -201,37 +216,45 @@ export default function TournamentResults() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {sortedNetResults.map((result, index) => (
-                        <TableRow key={result.id}>
-                          <TableCell className="font-semibold">
-                            {index + 1}<sup>{getOrdinalSuffix(index + 1)}</sup>
-                          </TableCell>
-                          <TableCell>
-                            <a 
-                              href={`/player/${result.player.id}`}
-                              className="text-primary hover:text-primary-dark hover:underline cursor-pointer"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                window.location.href = `/player/${result.player.id}`;
-                              }}
-                            >
-                              {result.player.name}
-                            </a>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {result.grossScore ?? "N/A"}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {result.netScore ?? "N/A"}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {formatHandicap(result)}
-                          </TableCell>
-                          <TableCell className="text-right font-semibold">
-                            {tournament && tournament.type === 'major' && index === 0 ? 750 : result.points}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {finalNetLeaderboard.map((result, index) => {
+                        // Calculate proper points for net leaderboard position
+                        const netPoints = tournament && result.netScore !== null 
+                          ? getPointsByPosition(index + 1, tournament.type) 
+                          : 0;
+                          
+                        return (
+                          <TableRow key={result.id}>
+                            <TableCell className="font-semibold">
+                              {index + 1}<sup>{getOrdinalSuffix(index + 1)}</sup>
+                            </TableCell>
+                            <TableCell>
+                              <a 
+                                href={`/player/${result.player.id}`}
+                                className="text-primary hover:text-primary-dark hover:underline cursor-pointer"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  window.location.href = `/player/${result.player.id}`;
+                                }}
+                              >
+                                {result.player.name}
+                              </a>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {result.grossScore ?? "N/A"}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {result.netScore ?? "N/A"}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {formatHandicap(result)}
+                            </TableCell>
+                            <TableCell className="text-right font-semibold">
+                              {/* Display stored points from DB for historical consistency */}
+                              {result.points}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
@@ -261,37 +284,44 @@ export default function TournamentResults() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {combinedGrossResults.map((result, index) => (
-                        <TableRow key={result.id}>
-                          <TableCell className="font-semibold">
-                            {index + 1}<sup>{getOrdinalSuffix(index + 1)}</sup>
-                          </TableCell>
-                          <TableCell>
-                            <a 
-                              href={`/player/${result.player.id}`}
-                              className="text-primary hover:text-primary-dark hover:underline cursor-pointer"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                window.location.href = `/player/${result.player.id}`;
-                              }}
-                            >
-                              {result.player.name}
-                            </a>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {result.grossScore ?? "N/A"}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {result.netScore ?? "N/A"}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {formatHandicap(result)}
-                          </TableCell>
-                          <TableCell className="text-right font-semibold">
-                            {result.grossPoints || 0}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {finalGrossLeaderboard.map((result, index) => {
+                        // Calculate gross points based on gross leaderboard position
+                        const grossPoints = tournament && result.grossScore !== null 
+                          ? getPointsByPosition(index + 1, tournament.type) 
+                          : 0;
+                          
+                        return (
+                          <TableRow key={result.id}>
+                            <TableCell className="font-semibold">
+                              {index + 1}<sup>{getOrdinalSuffix(index + 1)}</sup>
+                            </TableCell>
+                            <TableCell>
+                              <a 
+                                href={`/player/${result.player.id}`}
+                                className="text-primary hover:text-primary-dark hover:underline cursor-pointer"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  window.location.href = `/player/${result.player.id}`;
+                                }}
+                              >
+                                {result.player.name}
+                              </a>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {result.grossScore ?? "N/A"}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {result.netScore ?? "N/A"}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {formatHandicap(result)}
+                            </TableCell>
+                            <TableCell className="text-right font-semibold">
+                              {grossPoints}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
