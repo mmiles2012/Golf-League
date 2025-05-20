@@ -127,6 +127,15 @@
     @apply w-6;
   }
   
+  /* Mobile menu classes */
+  .mobile-menu-open {
+    @apply translate-x-0;
+  }
+  
+  .mobile-menu-closed {
+    @apply -translate-x-full;
+  }
+  
   .tournament-type-badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }

@@ -38,11 +38,11 @@ export default function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
-      {/* Sidebar Navigation - Now fixed on desktop */}
+      {/* Sidebar Navigation - Fixed on desktop, slides in/out on mobile */}
       <aside 
         style={{ backgroundColor: sidebarColor }}
-        className={`w-full md:w-64 md:flex-shrink-0 md:flex flex-col transition-transform duration-300 ease-in-out fixed md:fixed top-0 left-0 h-full z-40 overflow-y-auto ${
-          isMobileMenuOpen ? "mobile-menu-open" : "mobile-menu-closed md:transform-none"
+        className={`w-full md:w-64 md:flex-shrink-0 md:flex flex-col transition-transform duration-300 ease-in-out fixed top-0 left-0 h-full z-50 overflow-y-auto ${
+          isMobileMenuOpen ? "mobile-menu-open" : "mobile-menu-closed md:translate-x-0"
         }`}
       >
         <div className="flex items-center justify-between p-4 border-b border-opacity-20 border-white">
@@ -61,7 +61,7 @@ export default function AppShell({ children }: AppShellProps) {
         <Sidebar onNavigation={() => setIsMobileMenuOpen(false)} />
       </aside>
       
-      {/* Mobile Header */}
+      {/* Mobile Header - Only visible on mobile */}
       <div 
         style={{ backgroundColor: sidebarColor }}
         className="md:hidden text-white p-4 flex justify-between items-center sticky top-0 z-30"
@@ -78,8 +78,8 @@ export default function AppShell({ children }: AppShellProps) {
         </button>
       </div>
       
-      {/* Main Content - Added left margin to account for fixed sidebar */}
-      <main className="flex-grow p-4 md:p-6 overflow-auto md:ml-64">
+      {/* Main Content - Takes full width on mobile, has margin on desktop */}
+      <main className="flex-grow p-4 md:p-6 w-full overflow-auto md:ml-64 mt-14 md:mt-0">
         {children}
       </main>
     </div>
