@@ -13,17 +13,25 @@ import {
   Award,
   ListOrdered
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SidebarProps {
   onNavigation?: () => void;
 }
 
 export default function Sidebar({ onNavigation }: SidebarProps) {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
+  const { logout } = useAuth();
   
   const isActive = (path: string) => {
     if (path === "/") return location === "/";
     return location.startsWith(path);
+  };
+  
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+    if (onNavigation) onNavigation();
   };
   
   return (
@@ -134,7 +142,10 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
           </div>
           <div>
             <p className="text-white font-medium">Admin User</p>
-            <div className="text-xs text-white opacity-75 hover:opacity-100 flex items-center cursor-pointer">
+            <div 
+              className="text-xs text-white opacity-75 hover:opacity-100 flex items-center cursor-pointer"
+              onClick={handleLogout}
+            >
               <span>Sign Out</span>
               <LogOut className="h-3 w-3 ml-1" />
             </div>

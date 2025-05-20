@@ -3,8 +3,10 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/contexts/AuthContext";
 import NotFound from "@/pages/not-found";
 import AppShell from "@/components/layout/AppShell";
+import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard-fixed";
 import Leaderboards from "@/pages/Leaderboards";
 import UploadScores from "@/pages/UploadScores";
@@ -24,18 +26,21 @@ import LeagueManagement from "@/pages/LeagueManagement";
 function Router() {
   return (
     <Switch>
-      {/* Main Admin Routes */}
+      {/* Authentication Route */}
+      <Route path="/login" component={Login} />
+      
+      {/* Main Routes (available to both authenticated users and public viewers) */}
       <Route path="/" component={Leaderboards} />
+      <Route path="/tournament-results" component={AllTournamentResults} />
+      <Route path="/players" component={Players} />
+      
+      {/* Admin-only Routes */}
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/upload" component={UploadScores} />
       <Route path="/manual-entry" component={ManualEntry} />
       <Route path="/tournaments" component={TournamentManagement} />
-      <Route path="/tournament-results" component={AllTournamentResults} />
-      <Route path="/leagues" component={LeagueManagement} />
-      <Route path="/players" component={Players} />
       <Route path="/points-config" component={PointsConfiguration} />
       <Route path="/setup" component={SetupPage} />
-      <Route path="/embed" component={Embed} />
       
       {/* Player Profile */}
       <Route path="/player/:id">
@@ -65,12 +70,14 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <AppShell>
-          <Router />
-        </AppShell>
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <AppShell>
+            <Router />
+          </AppShell>
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
