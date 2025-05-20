@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { AlertCircle, PlusCircle, Edit, Trash2, CheckCircle, Calendar, GolfIcon } from "lucide-react";
+import { AlertCircle, PlusCircle, Edit, Trash2, CheckCircle, Calendar, Trophy } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 // Form schema for creating/editing leagues
@@ -205,7 +205,7 @@ export default function LeagueManagement() {
       ) : leagues.length === 0 ? (
         <Card className="border-dashed border-2">
           <CardContent className="flex flex-col items-center justify-center py-10 text-center space-y-4">
-            <GolfIcon className="h-12 w-12 text-neutral-300" />
+            <Trophy className="h-12 w-12 text-neutral-300" />
             <div>
               <h3 className="text-lg font-medium">No Leagues Found</h3>
               <p className="text-neutral-500 max-w-md mt-1">

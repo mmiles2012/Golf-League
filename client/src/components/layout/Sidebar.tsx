@@ -9,7 +9,8 @@ import {
   Code, 
   LogOut,
   User,
-  Settings
+  Settings,
+  Award
 } from "lucide-react";
 
 interface SidebarProps {
@@ -69,6 +70,17 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
               >
                 <Flag className="sidebar-icon mr-2" />
                 <span>Tournaments</span>
+              </a>
+            </Link>
+          </li>
+          <li>
+            <Link href="/leagues">
+              <a 
+                className={`sidebar-link ${isActive("/leagues") ? "active" : ""}`}
+                onClick={onNavigation}
+              >
+                <Award className="sidebar-icon mr-2" />
+                <span>Leagues</span>
               </a>
             </Link>
           </li>

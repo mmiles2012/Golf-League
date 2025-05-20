@@ -18,6 +18,7 @@ import PlayerProfile from "@/pages/PlayerProfile";
 import PublicLeaderboard from "@/pages/PublicLeaderboard";
 import PointsConfiguration from "@/pages/PointsConfiguration";
 import SetupPage from "@/pages/SetupPage";
+import LeagueManagement from "@/pages/LeagueManagement";
 
 function Router() {
   return (
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/upload" component={UploadScores} />
       <Route path="/manual-entry" component={ManualEntry} />
       <Route path="/tournaments" component={TournamentManagement} />
+      <Route path="/leagues" component={LeagueManagement} />
       <Route path="/players" component={Players} />
       <Route path="/points-config" component={PointsConfiguration} />
       <Route path="/setup" component={SetupPage} />
