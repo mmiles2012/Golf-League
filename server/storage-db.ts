@@ -193,6 +193,22 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return newPlayer;
   }
+  
+  async deletePlayer(id: number): Promise<boolean> {
+    // Check if the player has any results
+    const results = await this.getPlayerResultsByPlayer(id);
+    if (results.length > 0) {
+      // Don't delete players with results
+      return false;
+    }
+    
+    // Delete the player if they have no results
+    const [deletedPlayer] = await db.delete(players)
+      .where(eq(players.id, id))
+      .returning();
+    
+    return !!deletedPlayer;
+  }
 
   // Tournament operations
   async getTournaments(): Promise<Tournament[]> {

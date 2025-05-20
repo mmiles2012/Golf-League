@@ -29,6 +29,7 @@ export interface IStorage {
   findPlayerByName(name: string): Promise<Player | undefined>;
   searchPlayersByName(query: string): Promise<Player[]>;
   createPlayer(player: InsertPlayer): Promise<Player>;
+  deletePlayer(id: number): Promise<boolean>;
   
   // Tournament operations
   getTournaments(): Promise<Tournament[]>;
