@@ -38,14 +38,14 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>
             {isLoading ? "Loading player details..." : `${playerHistory?.player.name}`}
           </DialogTitle>
-          <p className="text-sm text-neutral-500">
+          <DialogDescription className="text-sm text-neutral-500">
             View tournament history and detailed statistics
-          </p>
+          </DialogDescription>
         </DialogHeader>
         
         {isLoading ? (
@@ -57,74 +57,72 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
             {/* Statistics section removed as requested */}
             
             <h4 className="font-heading font-semibold text-md mb-2">Tournament History</h4>
-            <div className="overflow-auto max-h-[60vh] relative">
-              <div className="overflow-x-auto min-w-full pb-4">
-                <div className="inline-block min-w-full align-middle">
-                  <Table className="min-w-full">
-                    <TableHeader className="bg-neutral-100 sticky top-0 z-10">
-                      <TableRow>
-                        <TableHead className="min-w-[160px] w-1/4">Tournament</TableHead>
-                        <TableHead className="min-w-[100px]">Date</TableHead>
-                        <TableHead className="min-w-[80px]">Type</TableHead>
-                        <TableHead className="text-center min-w-[80px]">Net Pos</TableHead>
-                        <TableHead className="text-center min-w-[80px]">Gross Pos</TableHead>
-                        <TableHead className="text-center min-w-[80px]">Gross</TableHead>
-                        <TableHead className="text-center min-w-[80px]">Net</TableHead>
-                        <TableHead className="text-center min-w-[100px]">Gross Points</TableHead>
-                        <TableHead className="text-center min-w-[100px]">Net Points</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="divide-y divide-neutral-200">
-                      {playerHistory.tournaments
-                        .sort((a, b) => new Date(b.tournamentDate).getTime() - new Date(a.tournamentDate).getTime())
-                        .map((tournament) => (
-                        <TableRow key={tournament.id}>
-                          <TableCell className="font-medium whitespace-nowrap">
-                            <a
-                              href={`/tournament/${tournament.tournamentId}`}
-                              className="text-primary hover:text-primary-dark hover:underline cursor-pointer"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                onClose();
-                                window.location.href = `/tournament/${tournament.tournamentId}`;
-                              }}
-                            >
-                              {tournament.tournamentName}
-                            </a>
-                          </TableCell>
-                          <TableCell className="whitespace-nowrap">{formatDate(tournament.tournamentDate)}</TableCell>
-                          <TableCell className="whitespace-nowrap">
-                            <Badge variant={tournament.tournamentType}>{tournamentTypeLabel(tournament.tournamentType)}</Badge>
-                          </TableCell>
-                          <TableCell className="text-center whitespace-nowrap">{tournament.position}</TableCell>
-                          <TableCell className="text-center whitespace-nowrap">
-                            {tournament.grossPosition || "N/A"}
-                          </TableCell>
-                          <TableCell className="text-center whitespace-nowrap">
-                            {tournament.grossScore ? tournament.grossScore : "N/A"}
-                          </TableCell>
-                          <TableCell className="text-center whitespace-nowrap">
-                            {tournament.netScore ? tournament.netScore : "N/A"}
-                          </TableCell>
-                          <TableCell className="text-center whitespace-nowrap">
-                            {tournament.grossPosition 
-                              ? calculatePoints(tournament.grossPosition, tournament.tournamentType) 
-                              : "0"}
-                          </TableCell>
-                          <TableCell className="text-center whitespace-nowrap">
-                            {tournament.position 
-                              ? calculatePoints(tournament.position, tournament.tournamentType) 
-                              : "0"}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+            <div className="w-full overflow-hidden max-h-[50vh] md:max-h-[60vh]">
+              {/* Mobile-optimized table with swipe scrolling */}
+              <div className="w-full overflow-x-scroll touch-pan-x pb-4 -mx-4 px-4">
+                <table className="min-w-full border-separate border-spacing-0">
+                  <thead className="bg-neutral-100 sticky top-0 z-10">
+                    <tr>
+                      <th className="py-3 px-4 text-left font-medium text-sm text-neutral-600 whitespace-nowrap min-w-[160px]">Tournament</th>
+                      <th className="py-3 px-4 text-left font-medium text-sm text-neutral-600 whitespace-nowrap min-w-[100px]">Date</th>
+                      <th className="py-3 px-4 text-left font-medium text-sm text-neutral-600 whitespace-nowrap min-w-[80px]">Type</th>
+                      <th className="py-3 px-4 text-center font-medium text-sm text-neutral-600 whitespace-nowrap min-w-[80px]">Net Pos</th>
+                      <th className="py-3 px-4 text-center font-medium text-sm text-neutral-600 whitespace-nowrap min-w-[80px]">Gross Pos</th>
+                      <th className="py-3 px-4 text-center font-medium text-sm text-neutral-600 whitespace-nowrap min-w-[80px]">Gross</th>
+                      <th className="py-3 px-4 text-center font-medium text-sm text-neutral-600 whitespace-nowrap min-w-[80px]">Net</th>
+                      <th className="py-3 px-4 text-center font-medium text-sm text-neutral-600 whitespace-nowrap min-w-[100px]">Gross Points</th>
+                      <th className="py-3 px-4 text-center font-medium text-sm text-neutral-600 whitespace-nowrap min-w-[100px]">Net Points</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-200">
+                    {playerHistory.tournaments
+                      .sort((a, b) => new Date(b.tournamentDate).getTime() - new Date(a.tournamentDate).getTime())
+                      .map((tournament) => (
+                      <tr key={tournament.id} className="hover:bg-neutral-50">
+                        <td className="py-3 px-4 text-sm font-medium whitespace-nowrap border-b border-neutral-100">
+                          <a
+                            href={`/tournament/${tournament.tournamentId}`}
+                            className="text-primary hover:text-primary-dark hover:underline cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              onClose();
+                              window.location.href = `/tournament/${tournament.tournamentId}`;
+                            }}
+                          >
+                            {tournament.tournamentName}
+                          </a>
+                        </td>
+                        <td className="py-3 px-4 text-sm whitespace-nowrap border-b border-neutral-100">{formatDate(tournament.tournamentDate)}</td>
+                        <td className="py-3 px-4 text-sm whitespace-nowrap border-b border-neutral-100">
+                          <Badge variant={tournament.tournamentType}>{tournamentTypeLabel(tournament.tournamentType)}</Badge>
+                        </td>
+                        <td className="py-3 px-4 text-sm text-center whitespace-nowrap border-b border-neutral-100">{tournament.position}</td>
+                        <td className="py-3 px-4 text-sm text-center whitespace-nowrap border-b border-neutral-100">
+                          {tournament.grossPosition || "N/A"}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-center whitespace-nowrap border-b border-neutral-100">
+                          {tournament.grossScore ? tournament.grossScore : "N/A"}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-center whitespace-nowrap border-b border-neutral-100">
+                          {tournament.netScore ? tournament.netScore : "N/A"}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-center whitespace-nowrap border-b border-neutral-100">
+                          {tournament.grossPosition 
+                            ? calculatePoints(tournament.grossPosition, tournament.tournamentType) 
+                            : "0"}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-center whitespace-nowrap border-b border-neutral-100">
+                          {tournament.position 
+                            ? calculatePoints(tournament.position, tournament.tournamentType) 
+                            : "0"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
-            <div className="mt-2 text-xs text-neutral-500 italic hidden md:block">Tip: Use mouse wheel or trackpad to scroll horizontally.</div>
-            <div className="mt-2 text-xs text-neutral-500 italic md:hidden">Tip: Swipe left/right to view all data.</div>
+            <div className="mt-2 text-xs text-neutral-500 italic text-center">Tip: Swipe left/right to view all data.</div>
           </div>
         ) : (
           <div className="text-center py-8">
