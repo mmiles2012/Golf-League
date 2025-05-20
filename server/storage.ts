@@ -71,6 +71,15 @@ export class MemStorage implements IStorage {
     this.tournamentCurrentId = 1;
     this.playerResultCurrentId = 1;
     
+    // Initialize default app settings
+    this.appSettings = {
+      appName: "Hideout Golf League",
+      pageTitle: "Leaderboards",
+      scoringType: "both",
+      sidebarColor: "#0f172a",
+      logoUrl: "/images/hideout-logo.png"
+    };
+    
     // Initialize default points configuration
     this.pointsConfig = {
       major: [

@@ -617,6 +617,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // App settings endpoints
+  app.get("/api/settings", async (_req: Request, res: Response) => {
+    try {
+      const settings = await storage.getAppSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching app settings:", error);
+      res.status(500).json({ message: "Failed to fetch app settings" });
+    }
+  });
+  
+  app.put("/api/settings", async (req: Request, res: Response) => {
+    try {
+      const settings = req.body;
+      
+      // Basic validation
+      if (!settings.appName || !settings.pageTitle || 
+          !settings.scoringType || !settings.sidebarColor || !settings.logoUrl) {
+        return res.status(400).json({ message: "Missing required settings fields" });
+      }
+      
+      // Validate scoring type
+      if (!['net', 'gross', 'both'].includes(settings.scoringType)) {
+        return res.status(400).json({ message: "Invalid scoring type" });
+      }
+      
+      const updatedSettings = await storage.updateAppSettings(settings);
+      res.json(updatedSettings);
+    } catch (error) {
+      console.error("Error updating app settings:", error);
+      res.status(500).json({ message: "Failed to update app settings" });
+    }
+  });
+  
+  // Logo upload endpoint
+  app.post("/api/upload/logo", upload.single("logo"), async (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No logo file uploaded" });
+      }
+      
+      // Get the file path relative to public directory
+      const relativePath = `/images/${req.file.filename}`;
+      
+      res.json({ url: relativePath });
+    } catch (error) {
+      console.error("Error uploading logo:", error);
+      res.status(500).json({ message: "Failed to upload logo" });
+    }
+  });
+  
   const httpServer = createServer(app);
   return httpServer;
 }
