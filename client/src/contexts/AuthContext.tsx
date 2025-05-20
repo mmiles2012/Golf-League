@@ -29,9 +29,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return saved ? JSON.parse(saved) : false;
   });
   
+  // For non-login pages, public view is enabled by default
   const [isPublicView, setIsPublicView] = useState<boolean>(() => {
     const saved = localStorage.getItem("hideout_public_view");
-    return saved ? JSON.parse(saved) : false;
+    // Default to true to enable public view on initial load
+    return saved ? JSON.parse(saved) : true;
   });
 
   // Update localStorage when state changes
