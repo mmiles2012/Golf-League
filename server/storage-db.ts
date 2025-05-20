@@ -493,6 +493,7 @@ export class DatabaseStorage implements IStorage {
     let tourPoints = 0;
     let leaguePoints = 0;
     let suprPoints = 0;
+    let grossTourPoints = 0;
     
     // Track scores for averaging
     let totalGrossScore = 0;
@@ -503,6 +504,9 @@ export class DatabaseStorage implements IStorage {
     // First, calculate gross positions for each tournament
     const tournamentResultsMap = new Map<number, PlayerResult[]>();
     const grossPositionsMap = new Map<string, number>(); // Map of "tournamentId-playerId" -> grossPosition
+    
+    // Get points configuration
+    const pointsConfig = await this.getPointsConfig();
     
     // For each tournament this player participated in
     for (const result of results) {
@@ -553,6 +557,27 @@ export class DatabaseStorage implements IStorage {
       const grossPositionKey = `${tournament.id}-${result.playerId}`;
       const grossPosition = grossPositionsMap.get(grossPositionKey);
       
+      // Calculate points for both gross and net positions
+      let netPoints = result.points; // Net points from the database
+      let grossPoints = 0; // Gross points to be calculated
+      
+      // Calculate gross points if we have a valid gross position
+      if (grossPosition && tournament.type) {
+        // Find the points value for this gross position in the tournament type
+        const positionPoints = pointsConfig[tournament.type].find(
+          p => p.position === grossPosition
+        );
+        
+        // If found, use it; otherwise, use the last position's points or zero
+        if (positionPoints) {
+          grossPoints = positionPoints.points;
+        } else if (pointsConfig[tournament.type].length > 0) {
+          // Use the points for the last defined position
+          const lastPosition = pointsConfig[tournament.type].slice(-1)[0];
+          grossPoints = lastPosition ? lastPosition.points : 0;
+        }
+      }
+      
       // Create tournament detail with the appropriate score type
       const tournamentDetail: any = {
         id: result.id,
@@ -565,7 +590,7 @@ export class DatabaseStorage implements IStorage {
         grossScore: result.grossScore,
         netScore: result.netScore,
         handicap: result.handicap,
-        points: result.points
+        points: scoreType === 'net' ? netPoints : grossPoints // Use appropriate points based on scoreType
       };
       
       // Display appropriate score based on the scoreType for consistency in the UI
@@ -577,22 +602,37 @@ export class DatabaseStorage implements IStorage {
       
       tournamentDetails.push(tournamentDetail);
       
-      totalPoints += result.points;
+      // Use appropriate points for the total based on the scoreType
+      const pointsToAdd = scoreType === 'net' ? netPoints : grossPoints;
+      totalPoints += pointsToAdd;
       
       // Add points to specific category counters
+      // Use either net or gross points based on the scoreType
+      const pointsForCategory = scoreType === 'net' ? netPoints : grossPoints;
+      
       switch (tournament.type) {
         case 'major':
-          majorPoints += result.points;
+          majorPoints += pointsForCategory;
           break;
         case 'tour':
-          tourPoints += result.points;
+          if (scoreType === 'net') {
+            tourPoints += pointsForCategory;
+          } else {
+            grossTourPoints += pointsForCategory;
+          }
           break;
         case 'league':
-          leaguePoints += result.points;
+          leaguePoints += pointsForCategory;
           break;
         case 'supr':
-          suprPoints += result.points;
+          suprPoints += pointsForCategory;
           break;
+      }
+      
+      // For gross leaderboard, track tour points separately
+      if (scoreType === 'gross' && tournament.type === 'tour') {
+        // Store gross points for calculating the gross leaderboard
+        tournamentDetail.grossPoints = grossPoints;
       }
     }
     
@@ -600,7 +640,8 @@ export class DatabaseStorage implements IStorage {
     const averageGrossScore = countGrossScores > 0 ? totalGrossScore / countGrossScores : 999; // Use high number for those without scores
     const averageNetScore = countNetScores > 0 ? totalNetScore / countNetScores : 999;
     
-    return {
+    // Build the result object based on scoreType
+    const result: PlayerWithHistory = {
       player: {
         id: player.id,
         name: player.name,
@@ -610,7 +651,7 @@ export class DatabaseStorage implements IStorage {
       tournaments: tournamentDetails,
       totalPoints,
       majorPoints,
-      tourPoints,
+      tourPoints: scoreType === 'net' ? tourPoints : grossTourPoints,
       leaguePoints,
       suprPoints,
       totalEvents: tournamentDetails.length,
@@ -620,6 +661,14 @@ export class DatabaseStorage implements IStorage {
       // Display either gross or net score based on the leaderboard type
       averageScore: scoreType === 'gross' ? averageGrossScore : averageNetScore
     };
+    
+    // Add gross-specific fields for gross leaderboard
+    if (scoreType === 'gross') {
+      result.grossTourPoints = grossTourPoints;
+      result.grossTotalPoints = totalPoints; // Total points for gross scoring
+    }
+    
+    return result;
   }
 
   // Points configuration operations
