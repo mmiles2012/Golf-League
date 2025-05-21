@@ -71,6 +71,7 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
                         <th className="py-3 px-4 text-center font-medium text-sm text-neutral-600 whitespace-nowrap" style={{ width: '80px' }}>Gross Pos</th>
                         <th className="py-3 px-4 text-center font-medium text-sm text-neutral-600 whitespace-nowrap" style={{ width: '80px' }}>Gross</th>
                         <th className="py-3 px-4 text-center font-medium text-sm text-neutral-600 whitespace-nowrap" style={{ width: '80px' }}>Net</th>
+                        <th className="py-3 px-4 text-center font-medium text-sm text-neutral-600 whitespace-nowrap" style={{ width: '80px' }}>Handicap</th>
                         <th className="py-3 px-4 text-center font-medium text-sm text-neutral-600 whitespace-nowrap" style={{ width: '100px' }}>Gross Points</th>
                         <th className="py-3 px-4 text-center font-medium text-sm text-neutral-600 whitespace-nowrap" style={{ width: '100px' }}>Net Points</th>
                       </tr>
@@ -106,6 +107,9 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
                           </td>
                           <td className="py-3 px-4 text-sm text-center whitespace-nowrap border-b border-neutral-100">
                             {tournament.netScore ? tournament.netScore : "N/A"}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-center whitespace-nowrap border-b border-neutral-100">
+                            {tournament.handicap ? tournament.handicap : "N/A"}
                           </td>
                           <td className="py-3 px-4 text-sm text-center whitespace-nowrap border-b border-neutral-100">
                             {tournament.grossPosition 
