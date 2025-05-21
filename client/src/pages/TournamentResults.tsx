@@ -142,19 +142,6 @@ export default function TournamentResults() {
   // Final gross leaderboard
   const finalGrossLeaderboard = [...sortedGrossResults, ...nullGrossScorePlayers];
   
-  // Helper function to format handicap display
-  const formatHandicap = (result: any) => {
-    if (result.handicap === null) return "N/A";
-    
-    // Check if handicap should show with a "+" sign
-    // For stroke play: if netScore > grossScore, the handicap was added (not subtracted)
-    if (result.netScore !== null && result.grossScore !== null && result.netScore > result.grossScore) {
-      return `+${Math.abs(result.handicap)}`;
-    }
-    
-    return result.handicap;
-  };
-  
   // Add ordinal suffix to position
   const getOrdinalSuffix = (num: number): string => {
     const j = num % 10;
@@ -305,9 +292,6 @@ export default function TournamentResults() {
                           <TableCell className="text-center">
                             {result.netScore ?? "N/A"}
                           </TableCell>
-                          <TableCell className="text-center">
-                            {result.handicap !== null ? result.handicap : "N/A"}
-                          </TableCell>
                           <TableCell className="text-right font-semibold">
                             {/* Use calculated net points based on current net leaderboard position */}
                             {netPoints}
@@ -369,9 +353,6 @@ export default function TournamentResults() {
                           </TableCell>
                           <TableCell className="text-center">
                             {result.netScore ?? "N/A"}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {result.handicap !== null ? result.handicap : "N/A"}
                           </TableCell>
                           <TableCell className="text-right font-semibold">
                             {grossPoints}
