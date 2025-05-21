@@ -272,6 +272,7 @@ export default function TournamentResults() {
                       <TableHead>Player</TableHead>
                       <TableHead className="text-center">Gross Score</TableHead>
                       <TableHead className="text-center">Net Score</TableHead>
+                      <TableHead className="text-center">Handicap</TableHead>
                       <TableHead className="text-right">Points</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -337,6 +338,7 @@ export default function TournamentResults() {
                       <TableHead>Player</TableHead>
                       <TableHead className="text-center">Gross Score</TableHead>
                       <TableHead className="text-center">Net Score</TableHead>
+                      <TableHead className="text-center">Handicap</TableHead>
                       <TableHead className="text-right">Points</TableHead>
                     </TableRow>
                   </TableHeader>
