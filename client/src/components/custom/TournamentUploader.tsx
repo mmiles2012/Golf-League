@@ -312,7 +312,10 @@ export default function TournamentUploader() {
             row.Net !== undefined ? parseInt(String(row.Net)) : null;
         }
         
-        const handicap = 
+        // For StrokeNet scoring, we MUST use Course Handicap as the handicap value
+        // For other scoring methods, we can follow the priority: Playing Handicap > Course Handicap > generic handicap
+        const handicap = (row.Scoring === "StrokeNet" && row["Course Handicap"] !== undefined) ? 
+          parseFloat(String(row["Course Handicap"])) :
           row["Playing Handicap"] !== undefined ? parseFloat(String(row["Playing Handicap"])) :
           row["Course Handicap"] !== undefined ? parseFloat(String(row["Course Handicap"])) :
           row.handicap !== undefined ? parseFloat(String(row.handicap)) : 
