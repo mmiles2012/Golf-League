@@ -709,6 +709,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Process player results
       const processedResults = [];
       
+      // Check if this is a StrokeNet tournament by examining the first few results
+      const isStrokeNetTournament = validData.results.length > 0 && 
+        validData.results.some(r => r.grossScore !== null && r.netScore !== null && 
+          r.handicap !== null && r.grossScore > r.netScore && 
+          Math.abs(r.grossScore - r.netScore) > 10);
+          
+      if (isStrokeNetTournament) {
+        console.log("Detected StrokeNet tournament - will use Course Handicap for display");
+      }
+      
       for (const result of validData.results) {
         console.log(`Processing result for player: ${result.player}, position: ${result.position}`);
         
@@ -730,6 +740,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const points = calculatePoints(result.position, validData.type);
         console.log(`Calculated ${points} points for position ${result.position} in ${validData.type} tournament`);
         
+        // For StrokeNet tournaments, calculate the Course Handicap based on the gross and net scores
+        let displayHandicap = result.handicap;
+        if (isStrokeNetTournament && result.grossScore !== null && result.netScore !== null) {
+          // For StrokeNet, Course Handicap = Gross Score - Net Score
+          const calculatedCourseHandicap = result.grossScore - result.netScore;
+          if (calculatedCourseHandicap > 0) {
+            displayHandicap = calculatedCourseHandicap;
+            console.log(`Using calculated Course Handicap ${displayHandicap} for player ${result.player} instead of Playing Handicap ${result.handicap}`);
+          }
+        }
+        
         // Create player result with proper null handling for optional fields
         const playerResultData = {
           playerId: player.id,
@@ -738,7 +759,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Explicitly handle nulls to avoid type issues
           grossScore: result.grossScore !== undefined ? result.grossScore : null,
           netScore: result.netScore !== undefined ? result.netScore : null, 
-          handicap: result.handicap !== undefined ? result.handicap : null,
+          handicap: displayHandicap !== undefined ? displayHandicap : null,
           points
         };
         
