@@ -140,6 +140,7 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
                 <th className="px-2 py-2 text-center text-sm font-medium text-neutral-700">Gross Pos</th>
                 <th className="px-2 py-2 text-center text-sm font-medium text-neutral-700">Gross</th>
                 <th className="px-2 py-2 text-center text-sm font-medium text-neutral-700">Net</th>
+                <th className="px-2 py-2 text-center text-sm font-medium text-neutral-700">Handicap</th>
                 <th className="px-2 py-2 text-center text-sm font-medium text-neutral-700">Gross Points</th>
                 <th className="px-2 py-2 text-center text-sm font-medium text-neutral-700">Net Points</th>
               </tr>
@@ -205,6 +206,9 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
                         {tournament.netScore || "N/A"}
+                      </td>
+                      <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
+                        {tournament.handicap || "N/A"}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
                         {tournament.grossPosition 
