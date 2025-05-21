@@ -19,6 +19,7 @@ export default function TournamentUploader() {
   const [tournamentName, setTournamentName] = useState("");
   const [tournamentDate, setTournamentDate] = useState("");
   const [tournamentType, setTournamentType] = useState("");
+  const [scoringType, setScoringType] = useState("StrokeNet");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -407,25 +408,45 @@ export default function TournamentUploader() {
               </div>
             </div>
             
-            <div className="space-y-1">
-              <Label htmlFor="tournament-type">Tournament Type</Label>
-              <Select 
-                value={tournamentType} 
-                onValueChange={setTournamentType}
-                disabled={isUploading}
-              >
-                <SelectTrigger id="tournament-type">
-                  <SelectValue placeholder="Select tournament type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TOURNAMENT_TYPES.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-sm text-neutral-500 mt-1">Points will be assigned based on the tournament type</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label htmlFor="tournament-type">Tournament Type</Label>
+                <Select 
+                  value={tournamentType} 
+                  onValueChange={setTournamentType}
+                  disabled={isUploading}
+                >
+                  <SelectTrigger id="tournament-type">
+                    <SelectValue placeholder="Select tournament type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TOURNAMENT_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-neutral-500 mt-1">Points will be assigned based on the tournament type</p>
+              </div>
+              
+              <div className="space-y-1">
+                <Label htmlFor="scoring-type">Scoring Type</Label>
+                <Select 
+                  value={scoringType} 
+                  onValueChange={setScoringType}
+                  disabled={isUploading}
+                >
+                  <SelectTrigger id="scoring-type">
+                    <SelectValue placeholder="Select scoring type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="StrokeNet">StrokeNet</SelectItem>
+                    <SelectItem value="Stroke">Stroke</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-neutral-500 mt-1">Select how handicaps are applied in this tournament</p>
+              </div>
             </div>
             
             <div className="pt-4 border-t border-neutral-200">
