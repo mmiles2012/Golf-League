@@ -604,14 +604,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
                    row.Net !== undefined ? Number(row.Net) : null;
         }
         
-        // For StrokeNet scoring, we MUST use Course Handicap as the handicap value
-        // For other scoring methods, we can follow the priority: Playing Handicap > Course Handicap > generic handicap
-        const handicap = (row.Scoring === "StrokeNet" && row["Course Handicap"] !== undefined) ? 
-          Number(row["Course Handicap"]) :
-          row["Playing Handicap"] !== undefined ? Number(row["Playing Handicap"]) :
-          row["Course Handicap"] !== undefined ? Number(row["Course Handicap"]) :
-          row.handicap !== undefined ? Number(row.handicap) : 
-          row.Handicap !== undefined ? Number(row.Handicap) : null;
+        // Extract both Course Handicap and Playing Handicap for better data integrity
+        const courseHandicap = row["Course Handicap"] !== undefined ? Number(row["Course Handicap"]) : null;
+        const playingHandicap = row["Playing Handicap"] !== undefined ? Number(row["Playing Handicap"]) : null;
+        
+        // Choose which handicap to use as the primary handicap value
+        let handicap;
+        
+        // For StrokeNet scoring, ALWAYS use Course Handicap if available
+        if (row.Scoring === "StrokeNet" && courseHandicap !== null) {
+          handicap = courseHandicap;
+          console.log(`StrokeNet tournament: Using Course Handicap (${courseHandicap}) for player ${playerName}`);
+        } else {
+          // For other scoring methods, use the standard priority
+          handicap = playingHandicap !== null ? playingHandicap : 
+                    courseHandicap !== null ? courseHandicap :
+                    row.handicap !== undefined ? Number(row.handicap) : 
+                    row.Handicap !== undefined ? Number(row.Handicap) : null;
+        }
         
         console.log(`Processed row: Player: ${playerName}, Position: ${position}, Gross: ${grossScore}, Net: ${netScore}, Handicap: ${handicap}`);
         
@@ -709,14 +719,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Process player results
       const processedResults = [];
       
-      // Check if this is a StrokeNet tournament by examining the first few results
-      const isStrokeNetTournament = validData.results.length > 0 && 
-        validData.results.some(r => r.grossScore !== null && r.netScore !== null && 
-          r.handicap !== null && r.grossScore > r.netScore && 
-          Math.abs(r.grossScore - r.netScore) > 10);
+      // Check if this is a named StrokeNet tournament based on name patterns commonly used
+      const isStrokeNetTournament = validData.name.toLowerCase().includes("cup") || 
+                                  validData.name.toLowerCase().includes("pres");
           
       if (isStrokeNetTournament) {
-        console.log("Detected StrokeNet tournament - will use Course Handicap for display");
+        console.log("Detected StrokeNet tournament - will use Course Handicap from the uploaded file");
       }
       
       for (const result of validData.results) {
@@ -740,16 +748,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const points = calculatePoints(result.position, validData.type);
         console.log(`Calculated ${points} points for position ${result.position} in ${validData.type} tournament`);
         
-        // For StrokeNet tournaments, calculate the Course Handicap based on the gross and net scores
+        // For StrokeNet tournaments, we should have stored the Course Handicap directly
+        // in the "Course Handicap" field during file processing
         let displayHandicap = result.handicap;
-        if (isStrokeNetTournament && result.grossScore !== null && result.netScore !== null) {
-          // For StrokeNet, Course Handicap = Gross Score - Net Score
-          const calculatedCourseHandicap = result.grossScore - result.netScore;
-          if (calculatedCourseHandicap > 0) {
-            displayHandicap = calculatedCourseHandicap;
-            console.log(`Using calculated Course Handicap ${displayHandicap} for player ${result.player} instead of Playing Handicap ${result.handicap}`);
-          }
-        }
+        
+        // For debugging, log the handicap value we're using
+        console.log(`Using handicap value ${displayHandicap} for player ${result.player}`);
+        
+        // The Course Handicap has already been stored properly during file upload processing
+        // We don't need to recalculate it here
         
         // Create player result with proper null handling for optional fields
         const playerResultData = {
