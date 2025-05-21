@@ -57,101 +57,79 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
             {/* Statistics section removed as requested */}
             
             <h4 className="font-heading font-semibold text-md mb-2">Tournament History</h4>
-            <div className="w-full overflow-hidden max-h-[50vh] md:max-h-[60vh]">
-              {/* Table with frozen first column */}
-              <div className="w-full relative">
-                {/* Frozen first column */}
-                <div className="absolute left-0 top-0 bottom-0 w-[170px] z-20 bg-white shadow-sm">
-                  <table className="border-separate border-spacing-0" style={{ tableLayout: 'fixed', width: '100%' }}>
-                    <thead className="bg-neutral-100 sticky top-0 z-30">
-                      <tr>
-                        <th className="py-3 px-4 text-left font-medium text-sm text-neutral-600 whitespace-nowrap" style={{ width: '170px' }}>Tournament</th>
+            <div className="w-full overflow-hidden max-h-[60vh]">
+              <div className="overflow-x-auto pb-4">
+                <table className="min-w-full border-collapse">
+                  <thead className="bg-gray-100 sticky top-0 z-10">
+                    <tr>
+                      <th className="py-2 px-4 text-left font-medium text-sm text-gray-600 bg-white sticky left-0 z-20" style={{ minWidth: '200px' }}>Tournament</th>
+                      <th className="py-2 px-4 text-left font-medium text-sm text-gray-600" style={{ minWidth: '100px' }}>Date</th>
+                      <th className="py-2 px-4 text-left font-medium text-sm text-gray-600" style={{ minWidth: '80px' }}>Type</th>
+                      <th className="py-2 px-4 text-center font-medium text-sm text-gray-600" style={{ minWidth: '80px' }}>Net Pos</th>
+                      <th className="py-2 px-4 text-center font-medium text-sm text-gray-600" style={{ minWidth: '90px' }}>Net Points</th>
+                      <th className="py-2 px-4 text-center font-medium text-sm text-gray-600" style={{ minWidth: '80px' }}>Gross Pos</th>
+                      <th className="py-2 px-4 text-center font-medium text-sm text-gray-600" style={{ minWidth: '90px' }}>Gross Points</th>
+                      <th className="py-2 px-4 text-center font-medium text-sm text-gray-600" style={{ minWidth: '70px' }}>Gross</th>
+                      <th className="py-2 px-4 text-center font-medium text-sm text-gray-600" style={{ minWidth: '70px' }}>Net</th>
+                      <th className="py-2 px-4 text-center font-medium text-sm text-gray-600" style={{ minWidth: '90px' }}>Handicap</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {playerHistory.tournaments
+                      .sort((a, b) => new Date(b.tournamentDate).getTime() - new Date(a.tournamentDate).getTime())
+                      .map((tournament) => (
+                      <tr key={tournament.id} className="hover:bg-gray-50">
+                        <td className="py-2 px-4 text-sm font-medium bg-white sticky left-0 z-10 border-b border-gray-200">
+                          <a
+                            href={`/tournament/${tournament.tournamentId}`}
+                            className="text-primary hover:text-primary-dark hover:underline"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              onClose();
+                              window.location.href = `/tournament/${tournament.tournamentId}`;
+                            }}
+                          >
+                            {tournament.tournamentName}
+                          </a>
+                        </td>
+                        <td className="py-2 px-4 text-sm border-b border-gray-200">{formatDate(tournament.tournamentDate)}</td>
+                        <td className="py-2 px-4 text-sm border-b border-gray-200">
+                          <Badge variant={tournament.tournamentType}>{tournamentTypeLabel(tournament.tournamentType)}</Badge>
+                        </td>
+                        <td className="py-2 px-4 text-sm text-center border-b border-gray-200">{tournament.position}</td>
+                        <td className="py-2 px-4 text-sm text-center border-b border-gray-200 font-medium">
+                          {tournament.position 
+                            ? calculatePoints(tournament.position, tournament.tournamentType) 
+                            : "0"}
+                        </td>
+                        <td className="py-2 px-4 text-sm text-center border-b border-gray-200">
+                          {tournament.grossPosition || "N/A"}
+                        </td>
+                        <td className="py-2 px-4 text-sm text-center border-b border-gray-200 font-medium">
+                          {tournament.grossPosition 
+                            ? calculatePoints(tournament.grossPosition, tournament.tournamentType) 
+                            : "0"}
+                        </td>
+                        <td className="py-2 px-4 text-sm text-center border-b border-gray-200">
+                          {tournament.grossScore ? tournament.grossScore : "N/A"}
+                        </td>
+                        <td className="py-2 px-4 text-sm text-center border-b border-gray-200">
+                          {tournament.netScore ? tournament.netScore : "N/A"}
+                        </td>
+                        <td className="py-2 px-4 text-sm text-center border-b border-gray-200">
+                          {tournament.handicap !== null ? 
+                            (tournament.originalHandicap ? 
+                              tournament.originalHandicap : 
+                              (tournament.handicap > 0 && 
+                               tournament.grossScore < tournament.netScore ? 
+                                `+${tournament.handicap}` : 
+                                tournament.handicap)) : 
+                            "N/A"}
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-200">
-                      {playerHistory.tournaments
-                        .sort((a, b) => new Date(b.tournamentDate).getTime() - new Date(a.tournamentDate).getTime())
-                        .map((tournament) => (
-                        <tr key={`frozen-${tournament.id}`} className="hover:bg-neutral-50">
-                          <td className="py-3 px-4 text-sm font-medium whitespace-nowrap border-b border-neutral-100 bg-white">
-                            <a
-                              href={`/tournament/${tournament.tournamentId}`}
-                              className="text-primary hover:text-primary-dark hover:underline cursor-pointer"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                onClose();
-                                window.location.href = `/tournament/${tournament.tournamentId}`;
-                              }}
-                            >
-                              {tournament.tournamentName}
-                            </a>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                
-                {/* Scrollable content */}
-                <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent pb-4 pl-[170px]">
-                  <table className="border-separate border-spacing-0" style={{ tableLayout: 'fixed', width: 'max-content', minWidth: 'calc(100% - 170px)' }}>
-                    <thead className="bg-neutral-100 sticky top-0 z-20">
-                      <tr>
-                        <th className="py-3 px-4 text-left font-medium text-sm text-neutral-600 whitespace-nowrap" style={{ width: '100px' }}>Date</th>
-                        <th className="py-3 px-4 text-left font-medium text-sm text-neutral-600 whitespace-nowrap" style={{ width: '80px' }}>Type</th>
-                        <th className="py-3 px-4 text-center font-medium text-sm text-neutral-600 whitespace-nowrap" style={{ width: '80px' }}>Net Pos</th>
-                        <th className="py-3 px-4 text-center font-medium text-sm text-neutral-600 whitespace-nowrap" style={{ width: '80px' }}>Gross Pos</th>
-                        <th className="py-3 px-4 text-center font-medium text-sm text-neutral-600 whitespace-nowrap" style={{ width: '80px' }}>Gross</th>
-                        <th className="py-3 px-4 text-center font-medium text-sm text-neutral-600 whitespace-nowrap" style={{ width: '80px' }}>Net</th>
-                        <th className="py-3 px-4 text-center font-medium text-sm text-neutral-600 whitespace-nowrap" style={{ width: '80px' }}>Handicap</th>
-                        <th className="py-3 px-4 text-center font-medium text-sm text-neutral-600 whitespace-nowrap" style={{ width: '80px' }}>Net Points</th>
-                        <th className="py-3 px-4 text-center font-medium text-sm text-neutral-600 whitespace-nowrap" style={{ width: '80px' }}>Gross Points</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-200">
-                      {playerHistory.tournaments
-                        .sort((a, b) => new Date(b.tournamentDate).getTime() - new Date(a.tournamentDate).getTime())
-                        .map((tournament) => (
-                        <tr key={tournament.id} className="hover:bg-neutral-50">
-                          <td className="py-3 px-4 text-sm whitespace-nowrap border-b border-neutral-100">{formatDate(tournament.tournamentDate)}</td>
-                          <td className="py-3 px-4 text-sm whitespace-nowrap border-b border-neutral-100">
-                            <Badge variant={tournament.tournamentType}>{tournamentTypeLabel(tournament.tournamentType)}</Badge>
-                          </td>
-                          <td className="py-3 px-4 text-sm text-center whitespace-nowrap border-b border-neutral-100">{tournament.position}</td>
-                          <td className="py-3 px-4 text-sm text-center whitespace-nowrap border-b border-neutral-100">
-                            {tournament.grossPosition || "N/A"}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-center whitespace-nowrap border-b border-neutral-100">
-                            {tournament.grossScore ? tournament.grossScore : "N/A"}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-center whitespace-nowrap border-b border-neutral-100">
-                            {tournament.netScore ? tournament.netScore : "N/A"}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-center whitespace-nowrap border-b border-neutral-100">
-                            {tournament.handicap !== null ? 
-                              (tournament.originalHandicap ? 
-                                tournament.originalHandicap : 
-                                (tournament.handicap > 0 && 
-                                 tournament.grossScore < tournament.netScore ? 
-                                  `+${tournament.handicap}` : 
-                                  tournament.handicap)) : 
-                              "N/A"}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-center whitespace-nowrap border-b border-neutral-100">
-                            {tournament.position 
-                              ? calculatePoints(tournament.position, tournament.tournamentType) 
-                              : "0"}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-center whitespace-nowrap border-b border-neutral-100">
-                            {tournament.grossPosition 
-                              ? calculatePoints(tournament.grossPosition, tournament.tournamentType) 
-                              : "0"}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
             <div className="mt-2 text-xs text-neutral-500 italic text-center">Tip: Swipe left/right to view all data.</div>
