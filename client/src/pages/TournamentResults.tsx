@@ -63,8 +63,29 @@ export default function TournamentResults() {
       const majorPoints = [750, 400, 350, 325, 300, 275, 225, 200, 175, 150];
       return position <= 10 ? majorPoints[position - 1] : 100;
     } else if (tournamentType === 'tour') {
-      const tourPoints = [500, 300, 190, 135, 110, 100, 90, 85, 80, 75];
-      return position <= 10 ? tourPoints[position - 1] : 50;
+      // Tour points distribution based on updated values
+      const tourPoints = [
+        500, 300, 190, 135, 110, 100, 90, 85, 80, 75,      // 1-10
+        70, 65, 60, 55, 53, 51, 49, 47, 45, 43,            // 11-20
+        41, 39, 37, 35.5, 34, 32.5, 31, 29.5, 28, 26.5,    // 21-30
+        25, 23.5, 22, 21, 20, 19, 18, 17, 16, 15,          // 31-40
+        14, 13, 12, 11, 10.5, 10, 9.5, 9, 8.5, 8,          // 41-50
+      ];
+      return position <= 50 ? tourPoints[position - 1] : 
+             position <= 51 ? 7.5 :
+             position <= 52 ? 7 :
+             position <= 53 ? 6.5 :
+             position <= 54 ? 6 :
+             position <= 55 ? 5.8 :
+             position <= 56 ? 5.6 :
+             position <= 57 ? 5.4 :
+             position <= 58 ? 5.2 :
+             position <= 59 ? 5 :
+             position <= 60 ? 4.8 :
+             position <= 61 ? 4.6 :
+             position <= 62 ? 4.4 :
+             position <= 63 ? 4.2 :
+             position <= 64 ? 4 : 3.8;
     } else {
       const leaguePoints = [93.75, 50, 43.75, 40.625, 37.5, 34.375, 28.125, 25, 21.875, 18.75];
       return position <= 10 ? leaguePoints[position - 1] : 15;

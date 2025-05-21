@@ -11,6 +11,7 @@ const MAJOR_POINTS = [
   7.5, 7.25, 7                                       // 61-63
 ];
 
+// Points distribution from the PDF for Tour events
 const TOUR_POINTS = [
   500, 300, 190, 135, 110, 100, 90, 85, 80, 75,      // 1-10
   70, 65, 60, 55, 53, 51, 49, 47, 45, 43,            // 11-20
