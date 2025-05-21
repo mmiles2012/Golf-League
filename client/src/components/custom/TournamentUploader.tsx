@@ -269,9 +269,27 @@ export default function TournamentUploader() {
             // - Net score = Total (as provided in the spreadsheet)
             // - Gross score = Total + Course Handicap (calculated)
             netScore = parseFloat(String(row.Total));
-            grossScore = netScore + handicapValue;
             
-            console.log(`StrokeNet scoring: Total=${row.Total} (Net), Handicap=${handicapValue}, calculated Gross=${grossScore}`);
+            // For StrokeNet, we MUST use Course Handicap, not Playing Handicap
+            let courseHandicapValue = 0;
+            if (row["Course Handicap"] !== undefined) {
+              // Convert to string to handle all types of inputs
+              const handicapStr = String(row["Course Handicap"]);
+              
+              // Apply the same logic to Course Handicap
+              if (handicapStr.includes('+')) {
+                // If it has a "+" sign, add the handicap to the total (for plus handicap players)
+                courseHandicapValue = parseFloat(handicapStr.replace('+', ''));
+              } else {
+                // If it doesn't have a "+" sign, subtract the handicap from the total
+                courseHandicapValue = Math.abs(parseFloat(handicapStr));
+              }
+            }
+            
+            // Calculate gross score using Course Handicap specifically
+            grossScore = netScore + courseHandicapValue;
+            
+            console.log(`StrokeNet scoring: Total=${row.Total} (Net), Course Handicap=${courseHandicapValue}, calculated Gross=${grossScore}`);
           } else {
             // For Stroke scoring:
             // - Gross score = Total (raw strokes)
