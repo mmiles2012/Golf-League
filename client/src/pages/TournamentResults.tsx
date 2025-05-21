@@ -58,7 +58,8 @@ export default function TournamentResults() {
   const isLoading = tournamentLoading || resultsLoading;
   
   // Check if this is a stroke tournament
-  const isStrokeTournament = tournament && tournament.name.includes("Stroke");
+  const isStrokeTournament = tournament && 
+    (tournament.scoringType === "Stroke" || tournament.name.includes("Stroke"));
   
   // Function to get point value based on position and tournament type
   const getPointsByPosition = (position: number, tournamentType: string): number => {
