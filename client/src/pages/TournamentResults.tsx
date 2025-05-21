@@ -157,6 +157,23 @@ export default function TournamentResults() {
     return "th";
   };
 
+  // Get the original handicap string (with + sign if present)
+  const getHandicapIndex = (result: any): string => {
+    // This function returns the original handicap value with the "+" sign if it was present
+    if (!result.originalHandicap) {
+      // If no originalHandicap field exists, we make an inference based on existing data
+      if (result.handicap !== null) {
+        const grossMinusNet = result.grossScore - result.netScore;
+        // If handicap is positive but net is higher than gross, it likely had a "+" sign
+        if (grossMinusNet < 0 && result.handicap > 0) {
+          return `+${result.handicap}`;
+        }
+      }
+      return result.handicap?.toString() || "N/A";
+    }
+    return result.originalHandicap;
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -264,7 +281,10 @@ export default function TournamentResults() {
                       <TableHead className="text-center">Gross Score</TableHead>
                       <TableHead className="text-center">Net Score</TableHead>
                       {isStrokeTournament && (
-                        <TableHead className="text-center">Playing Handicap</TableHead>
+                        <>
+                          <TableHead className="text-center">Playing Handicap</TableHead>
+                          <TableHead className="text-center">HDCP Index</TableHead>
+                        </>
                       )}
                       <TableHead className="text-right">Points</TableHead>
                     </TableRow>
@@ -300,9 +320,14 @@ export default function TournamentResults() {
                             {result.netScore ?? "N/A"}
                           </TableCell>
                           {isStrokeTournament && (
-                            <TableCell className="text-center">
-                              {result.handicap !== null ? result.handicap : "N/A"}
-                            </TableCell>
+                            <>
+                              <TableCell className="text-center">
+                                {result.handicap !== null ? result.handicap : "N/A"}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {getHandicapIndex(result)}
+                              </TableCell>
+                            </>
                           )}
                           <TableCell className="text-right font-semibold">
                             {/* Use calculated net points based on current net leaderboard position */}
@@ -334,7 +359,10 @@ export default function TournamentResults() {
                       <TableHead className="text-center">Gross Score</TableHead>
                       <TableHead className="text-center">Net Score</TableHead>
                       {isStrokeTournament && (
-                        <TableHead className="text-center">Playing Handicap</TableHead>
+                        <>
+                          <TableHead className="text-center">Playing Handicap</TableHead>
+                          <TableHead className="text-center">HDCP Index</TableHead>
+                        </>
                       )}
                       <TableHead className="text-right">Points</TableHead>
                     </TableRow>
@@ -370,9 +398,14 @@ export default function TournamentResults() {
                             {result.netScore ?? "N/A"}
                           </TableCell>
                           {isStrokeTournament && (
-                            <TableCell className="text-center">
-                              {result.handicap !== null ? result.handicap : "N/A"}
-                            </TableCell>
+                            <>
+                              <TableCell className="text-center">
+                                {result.handicap !== null ? result.handicap : "N/A"}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {getHandicapIndex(result)}
+                              </TableCell>
+                            </>
                           )}
                           <TableCell className="text-right font-semibold">
                             {grossPoints}
