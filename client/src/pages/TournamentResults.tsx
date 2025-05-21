@@ -289,8 +289,8 @@ export default function TournamentResults() {
                             {formatHandicap(result)}
                           </TableCell>
                           <TableCell className="text-right font-semibold">
-                            {/* Use actual points stored in the database instead of calculating */}
-                            {result.points}
+                            {/* Use calculated net points based on current net leaderboard position */}
+                            {netPoints}
                           </TableCell>
                         </TableRow>
                       );
@@ -355,7 +355,7 @@ export default function TournamentResults() {
                             {formatHandicap(result)}
                           </TableCell>
                           <TableCell className="text-right font-semibold">
-                            {result.points}
+                            {grossPoints}
                           </TableCell>
                         </TableRow>
                       );
