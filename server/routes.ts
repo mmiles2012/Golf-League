@@ -573,9 +573,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
               if (handicapStr.includes('+')) {
                 // If it has a "+" sign, add the handicap to the total (for plus handicap players)
                 courseHandicapValue = Number(handicapStr.replace('+', ''));
+              } else if (handicapStr.includes('-')) {
+                // If it has a "-" sign, it's a negative handicap (better than scratch)
+                // For negative handicaps, we should add the absolute value to get gross score
+                courseHandicapValue = -Number(handicapStr.replace('-', ''));
               } else {
-                // If it doesn't have a "+" sign, subtract the handicap from the total
-                courseHandicapValue = Math.abs(Number(handicapStr));
+                // Regular handicap (positive number)
+                courseHandicapValue = Number(handicapStr);
               }
             }
             
