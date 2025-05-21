@@ -307,7 +307,7 @@ export default function TournamentResults() {
                             {result.netScore ?? "N/A"}
                           </TableCell>
                           <TableCell className="text-center">
-                            {formatHandicap(result)}
+                            {result.handicap !== null ? result.handicap : "N/A"}
                           </TableCell>
                           <TableCell className="text-right font-semibold">
                             {/* Use calculated net points based on current net leaderboard position */}
@@ -373,7 +373,7 @@ export default function TournamentResults() {
                             {result.netScore ?? "N/A"}
                           </TableCell>
                           <TableCell className="text-center">
-                            {formatHandicap(result)}
+                            {result.handicap !== null ? result.handicap : "N/A"}
                           </TableCell>
                           <TableCell className="text-right font-semibold">
                             {grossPoints}
