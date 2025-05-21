@@ -57,6 +57,9 @@ export default function TournamentResults() {
   
   const isLoading = tournamentLoading || resultsLoading;
   
+  // Check if this is a stroke tournament
+  const isStrokeTournament = tournament && tournament.name.includes("Stroke");
+  
   // Function to get point value based on position and tournament type
   const getPointsByPosition = (position: number, tournamentType: string): number => {
     if (tournamentType === 'major') {
@@ -259,6 +262,9 @@ export default function TournamentResults() {
                       <TableHead>Player</TableHead>
                       <TableHead className="text-center">Gross Score</TableHead>
                       <TableHead className="text-center">Net Score</TableHead>
+                      {isStrokeTournament && (
+                        <TableHead className="text-center">Playing Handicap</TableHead>
+                      )}
                       <TableHead className="text-right">Points</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -292,6 +298,11 @@ export default function TournamentResults() {
                           <TableCell className="text-center">
                             {result.netScore ?? "N/A"}
                           </TableCell>
+                          {isStrokeTournament && (
+                            <TableCell className="text-center">
+                              {result.handicap !== null ? result.handicap : "N/A"}
+                            </TableCell>
+                          )}
                           <TableCell className="text-right font-semibold">
                             {/* Use calculated net points based on current net leaderboard position */}
                             {netPoints}
@@ -321,6 +332,9 @@ export default function TournamentResults() {
                       <TableHead>Player</TableHead>
                       <TableHead className="text-center">Gross Score</TableHead>
                       <TableHead className="text-center">Net Score</TableHead>
+                      {isStrokeTournament && (
+                        <TableHead className="text-center">Playing Handicap</TableHead>
+                      )}
                       <TableHead className="text-right">Points</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -354,6 +368,11 @@ export default function TournamentResults() {
                           <TableCell className="text-center">
                             {result.netScore ?? "N/A"}
                           </TableCell>
+                          {isStrokeTournament && (
+                            <TableCell className="text-center">
+                              {result.handicap !== null ? result.handicap : "N/A"}
+                            </TableCell>
+                          )}
                           <TableCell className="text-right font-semibold">
                             {grossPoints}
                           </TableCell>
