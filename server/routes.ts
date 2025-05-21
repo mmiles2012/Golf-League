@@ -586,11 +586,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } else {
             // For Stroke scoring:
             // - Gross score = Total (raw strokes)
-            // - Net score = Total - Handicap (calculated)
+            // - Net score = Total - Handicap or Total + Handicap (calculated based on "+" prefix)
             grossScore = Number(row.Total);
-            netScore = grossScore - handicapValue;
             
-            console.log(`Stroke scoring: Total=${row.Total} (Gross), Handicap=${handicapValue}, calculated Net=${netScore}`);
+            // Check if the original handicap string had a "+" sign
+            const handicapStr = String(row["Playing Handicap"] !== undefined ? row["Playing Handicap"] : row["Course Handicap"]);
+            if (handicapStr.includes('+')) {
+              // If it has a "+" sign, add the handicap to the gross score
+              netScore = grossScore + handicapValue;
+            } else {
+              // If it doesn't have a "+" sign, subtract the handicap from the gross score
+              netScore = grossScore - handicapValue;
+            }
+            
+            console.log(`Stroke scoring: Total=${row.Total} (Gross), Handicap=${handicapValue}, original=${handicapStr}, calculated Net=${netScore}`);
           }
         } else {
           // For regular scoring, use Total as gross score
