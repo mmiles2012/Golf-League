@@ -719,12 +719,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Process player results
       const processedResults = [];
       
-      // Check if this is a named StrokeNet tournament based on name patterns commonly used
-      const isStrokeNetTournament = validData.name.toLowerCase().includes("cup") || 
-                                  validData.name.toLowerCase().includes("pres");
+      // Check if this is a Stroke or StrokeNet tournament based on the scoringType parameter
+      // If scoringType is not provided, fall back to name-based detection
+      const scoringType = (validData as any).scoringType || "StrokeNet";
+      const isStrokeTournament = scoringType === "Stroke";
+      const isStrokeNetTournament = scoringType === "StrokeNet" || 
+                                 (!isStrokeTournament && (
+                                   validData.name.toLowerCase().includes("cup") || 
+                                   validData.name.toLowerCase().includes("pres")
+                                 ));
           
       if (isStrokeNetTournament) {
-        console.log("Detected StrokeNet tournament - will use Course Handicap from the uploaded file");
+        console.log("Processing as StrokeNet tournament - will use Course Handicap from the uploaded file");
+      } else if (isStrokeTournament) {
+        console.log("Processing as Stroke tournament - displaying Course Handicap in tournament view");
       }
       
       for (const result of validData.results) {

@@ -94,6 +94,7 @@ export default function TournamentUploader() {
         name: tournamentName,
         date: tournamentDate,
         type: tournamentType,
+        scoringType: scoringType,
         results: results
       };
       
