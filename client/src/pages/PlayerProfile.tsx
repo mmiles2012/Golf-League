@@ -208,7 +208,14 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
                         {tournament.netScore || "N/A"}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
-                        {tournament.handicap || "N/A"}
+                        {tournament.handicap !== null ? 
+                          (tournament.originalHandicap ? 
+                            tournament.originalHandicap : 
+                            (tournament.handicap > 0 && 
+                             tournament.grossScore < tournament.netScore ? 
+                              `+${tournament.handicap}` : 
+                              tournament.handicap)) : 
+                          "N/A"}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
                         {tournament.grossPosition 

@@ -109,7 +109,14 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
                             {tournament.netScore ? tournament.netScore : "N/A"}
                           </td>
                           <td className="py-3 px-4 text-sm text-center whitespace-nowrap border-b border-neutral-100">
-                            {tournament.handicap ? tournament.handicap : "N/A"}
+                            {tournament.handicap !== null ? 
+                              (tournament.originalHandicap ? 
+                                tournament.originalHandicap : 
+                                (tournament.handicap > 0 && 
+                                 tournament.grossScore < tournament.netScore ? 
+                                  `+${tournament.handicap}` : 
+                                  tournament.handicap)) : 
+                              "N/A"}
                           </td>
                           <td className="py-3 px-4 text-sm text-center whitespace-nowrap border-b border-neutral-100">
                             {tournament.grossPosition 
