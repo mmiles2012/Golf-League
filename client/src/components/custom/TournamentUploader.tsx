@@ -229,15 +229,11 @@ export default function TournamentUploader() {
         let grossScore, netScore;
         
         if ((row.Scoring === "StrokeNet" || row.Scoring === "Stroke") && row.Total !== undefined) {
-          // For Stroke/StrokeNet scoring tournaments:
-          // - For the Gross leaderboard, "Total" is the gross score
-          // - For the Net leaderboard, "Total" + "Playing Handicap" is the net score
-          
-          // The Total column is the gross score
-          grossScore = parseInt(String(row.Total));
+          // Determine if we're handling StrokeNet or Stroke scoring type
+          const isStrokeNet = row.Scoring === "StrokeNet";
           
           // First try to use Playing handicap, then fall back to Course handicap if Playing handicap is not available
-          let handicapValue;
+          let handicapValue = 0;
           
           // Handle Playing Handicap
           if (row["Playing Handicap"] !== undefined) {
@@ -246,11 +242,11 @@ export default function TournamentUploader() {
             
             // Check if the playing handicap has a "+" sign
             if (handicapStr.includes('+')) {
-              // If it has a "+" sign, add the handicap to the total (positive value)
+              // If it has a "+" sign, add the handicap to the total (for plus handicap players)
               handicapValue = parseFloat(handicapStr.replace('+', ''));
             } else {
               // If it doesn't have a "+" sign, subtract the handicap from the total
-              handicapValue = -Math.abs(parseFloat(handicapStr));
+              handicapValue = Math.abs(parseFloat(handicapStr));
             }
           } 
           // Fall back to Course Handicap if Playing Handicap isn't available
@@ -260,22 +256,31 @@ export default function TournamentUploader() {
             
             // Apply the same logic to Course Handicap
             if (handicapStr.includes('+')) {
-              // If it has a "+" sign, add the handicap to the total (positive value)
+              // If it has a "+" sign, add the handicap to the total (for plus handicap players)
               handicapValue = parseFloat(handicapStr.replace('+', ''));
             } else {
               // If it doesn't have a "+" sign, subtract the handicap from the total
-              handicapValue = -Math.abs(parseFloat(handicapStr));
+              handicapValue = Math.abs(parseFloat(handicapStr));
             }
-          } else {
-            handicapValue = 0;
           }
           
-          // Net score is calculated based on whether the handicap is positive or negative
-          netScore = parseFloat(String(row.Total)) + handicapValue;
-          
-          console.log(`Handicap calculation: Total=${row.Total}, Handicap=${handicapValue} (${handicapValue >= 0 ? 'added' : 'subtracted'}), Net=${netScore}`);
-          
-          console.log(`Stroke/StrokeNet scoring: Total=${row.Total} (Gross), Playing Handicap=${row["Playing Handicap"] || 'N/A'}, Course Handicap=${row["Course Handicap"] || 'N/A'}, calculated Net=${netScore}`);
+          if (isStrokeNet) {
+            // For StrokeNet scoring:
+            // - Net score = Total (as provided in the spreadsheet)
+            // - Gross score = Total + Course Handicap (calculated)
+            netScore = parseFloat(String(row.Total));
+            grossScore = netScore + handicapValue;
+            
+            console.log(`StrokeNet scoring: Total=${row.Total} (Net), Handicap=${handicapValue}, calculated Gross=${grossScore}`);
+          } else {
+            // For Stroke scoring:
+            // - Gross score = Total (raw strokes)
+            // - Net score = Total - Handicap (calculated)
+            grossScore = parseFloat(String(row.Total));
+            netScore = grossScore - handicapValue;
+            
+            console.log(`Stroke scoring: Total=${row.Total} (Gross), Handicap=${handicapValue}, calculated Net=${netScore}`);
+          }
         } else {
           // For regular scoring, use Total as gross score
           grossScore = 

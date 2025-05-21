@@ -522,16 +522,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let grossScore, netScore;
         
         if ((row.Scoring === "StrokeNet" || row.Scoring === "Stroke") && row.Total !== undefined) {
-          // For Stroke/StrokeNet scoring:
-          // In tournaments with "Stroke" scoring type:
-          // - Gross score = Total (raw strokes)
-          // - Net score = Total + Playing handicap
-          
-          // Total column represents the gross score
-          grossScore = Number(row.Total);
+          // Determine if we're handling StrokeNet or Stroke scoring type
+          const isStrokeNet = row.Scoring === "StrokeNet";
           
           // First try to use Playing handicap, then fall back to Course handicap if Playing handicap is not available
-          let handicapValue;
+          let handicapValue = 0;
           
           // Handle Playing Handicap
           if (row["Playing Handicap"] !== undefined) {
@@ -544,7 +539,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               handicapValue = Number(handicapStr.replace('+', ''));
             } else {
               // If it doesn't have a "+" sign, subtract the handicap from the total
-              handicapValue = -Math.abs(Number(handicapStr));
+              handicapValue = Math.abs(Number(handicapStr));
             }
           } 
           // Fall back to Course Handicap if Playing Handicap isn't available
@@ -558,18 +553,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
               handicapValue = Number(handicapStr.replace('+', ''));
             } else {
               // If it doesn't have a "+" sign, subtract the handicap from the total
-              handicapValue = -Math.abs(Number(handicapStr));
+              handicapValue = Math.abs(Number(handicapStr));
             }
-          } else {
-            handicapValue = 0;
           }
           
-          // Net score is calculated based on whether the handicap is positive or negative
-          netScore = Number(row.Total) + handicapValue;
-          
-          console.log(`Handicap calculation: Total=${row.Total}, Handicap=${handicapValue} (${handicapValue >= 0 ? 'added' : 'subtracted'}), Net=${netScore}`);
-          
-          console.log(`Stroke/StrokeNet scoring: Total=${row.Total} (Gross), Playing Handicap=${row["Playing Handicap"] || 'N/A'}, Course Handicap=${row["Course Handicap"] || 'N/A'}, calculated Net=${netScore}`);
+          if (isStrokeNet) {
+            // For StrokeNet scoring:
+            // - Net score = Total (as provided in the spreadsheet)
+            // - Gross score = Total + Course Handicap (calculated)
+            netScore = Number(row.Total);
+            grossScore = netScore + handicapValue;
+            
+            console.log(`StrokeNet scoring: Total=${row.Total} (Net), Handicap=${handicapValue}, calculated Gross=${grossScore}`);
+          } else {
+            // For Stroke scoring:
+            // - Gross score = Total (raw strokes)
+            // - Net score = Total - Handicap (calculated)
+            grossScore = Number(row.Total);
+            netScore = grossScore - handicapValue;
+            
+            console.log(`Stroke scoring: Total=${row.Total} (Gross), Handicap=${handicapValue}, calculated Net=${netScore}`);
+          }
         } else {
           // For regular scoring, use Total as gross score
           grossScore = row.Total !== undefined ? Number(row.Total) : 
