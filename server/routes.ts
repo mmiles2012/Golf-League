@@ -604,11 +604,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
                    row.Net !== undefined ? Number(row.Net) : null;
         }
         
-        // Extract handicap - prioritize Playing Handicap over Course Handicap
-        const handicap = row["Playing Handicap"] !== undefined ? Number(row["Playing Handicap"]) :
-                       row["Course Handicap"] !== undefined ? Number(row["Course Handicap"]) :
-                       row.handicap !== undefined ? Number(row.handicap) : 
-                       row.Handicap !== undefined ? Number(row.Handicap) : null;
+        // For StrokeNet scoring, we MUST use Course Handicap as the handicap value
+        // For other scoring methods, we can follow the priority: Playing Handicap > Course Handicap > generic handicap
+        const handicap = (row.Scoring === "StrokeNet" && row["Course Handicap"] !== undefined) ? 
+          Number(row["Course Handicap"]) :
+          row["Playing Handicap"] !== undefined ? Number(row["Playing Handicap"]) :
+          row["Course Handicap"] !== undefined ? Number(row["Course Handicap"]) :
+          row.handicap !== undefined ? Number(row.handicap) : 
+          row.Handicap !== undefined ? Number(row.Handicap) : null;
         
         console.log(`Processed row: Player: ${playerName}, Position: ${position}, Gross: ${grossScore}, Net: ${netScore}, Handicap: ${handicap}`);
         
