@@ -282,13 +282,9 @@ export default function TournamentUploader() {
               if (handicapStr.includes('+')) {
                 // If it has a "+" sign, add the handicap to the total (for plus handicap players)
                 courseHandicapValue = parseFloat(handicapStr.replace('+', ''));
-              } else if (handicapStr.includes('-')) {
-                // If it has a "-" sign, it's a negative handicap (better than scratch)
-                // For negative handicaps, we should add the absolute value to get gross score
-                courseHandicapValue = -parseFloat(handicapStr.replace('-', ''));
               } else {
-                // Regular handicap (positive number)
-                courseHandicapValue = parseFloat(handicapStr);
+                // If it doesn't have a "+" sign, subtract the handicap from the total
+                courseHandicapValue = Math.abs(parseFloat(handicapStr));
               }
             }
             
