@@ -440,9 +440,9 @@ export class DatabaseStorage implements IStorage {
 
       // For StrokeNet scoring:
       // Net Score = result.netScore (direct from "total" column)
-      // Gross Score = result.netScore + result.handicap (total + course handicap)
+      // Gross Score = result.netScore + result.handicap (net + course handicap)
       const netScore = result.netScore;
-      const grossScore = result.netScore && result.handicap ? result.netScore + result.handicap : null;
+      const grossScore = result.netScore !== null && result.handicap !== null ? result.netScore + result.handicap : null;
 
       if (netScore !== null) {
         totalNetScores += netScore;
