@@ -10,7 +10,7 @@ export default function UploadScores() {
         </div>
       </div>
       
-      <TournamentUploader />
+      <TournamentUploaderNew />
     </section>
   );
 }
