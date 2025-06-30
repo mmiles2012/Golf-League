@@ -1,4 +1,4 @@
-import TournamentUploader from "@/components/custom/TournamentUploader";
+import TournamentUploaderNew from "@/components/custom/TournamentUploaderNew";
 
 export default function UploadScores() {
   return (

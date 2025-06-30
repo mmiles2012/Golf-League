@@ -26,6 +26,8 @@ export default function TournamentUploader() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState("");
   const [previewData, setPreviewData] = useState<any[] | null>(null);
+  const [tournamentPreview, setTournamentPreview] = useState<any | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const [teamPlayers, setTeamPlayers] = useState<Array<{ original: string; options: string[] }>>([]);
   const [isTeamSelectorOpen, setIsTeamSelectorOpen] = useState(false);
   const [processedResultsCache, setProcessedResultsCache] = useState<any[] | null>(null);
@@ -39,6 +41,8 @@ export default function TournamentUploader() {
     setSelectedFile(null);
     setFileName("");
     setPreviewData(null);
+    setTournamentPreview(null);
+    setShowPreview(false);
     setTeamPlayers([]);
     setProcessedResultsCache(null);
     setIsTeamSelectorOpen(false);
@@ -187,6 +191,97 @@ export default function TournamentUploader() {
     }
   };
 
+  // Generate tournament preview with points calculations
+  const generateTournamentPreview = async (uploadedData: any[]) => {
+    try {
+      setUploadStatus("Generating tournament preview with points calculations...");
+      
+      // Process the uploaded data similar to the existing logic
+      const processedResults = uploadedData.map((row: any, index: number) => {
+        // Extract player name with fallback options
+        const playerName = row.Player || row["Player Name"] || row.player || row.Name || row.name || "";
+        
+        // Extract position with fallback options
+        const position = parseInt(String(row.Position || row.position || row.Pos || (index + 1)));
+        
+        // Handle scores based on scoring type
+        let grossScore, netScore, handicap;
+        
+        if ((row.Scoring === "StrokeNet" || row.Scoring === "Stroke") && row.Total !== undefined) {
+          const isStrokeNet = row.Scoring === "StrokeNet";
+          
+          // Handle handicap calculations
+          let handicapValue = 0;
+          if (row["Playing Handicap"] !== undefined) {
+            const handicapStr = String(row["Playing Handicap"]);
+            if (handicapStr.includes('+')) {
+              handicapValue = parseFloat(handicapStr.replace('+', ''));
+            } else {
+              handicapValue = Math.abs(parseFloat(handicapStr));
+            }
+          } else if (row["Course Handicap"] !== undefined) {
+            const handicapStr = String(row["Course Handicap"]);
+            if (handicapStr.includes('+')) {
+              handicapValue = parseFloat(handicapStr.replace('+', ''));
+            } else {
+              handicapValue = Math.abs(parseFloat(handicapStr));
+            }
+          }
+          
+          if (isStrokeNet) {
+            netScore = parseFloat(String(row.Total));
+            grossScore = netScore + handicapValue;
+            handicap = handicapValue;
+          } else {
+            grossScore = parseFloat(String(row.Total));
+            netScore = grossScore - handicapValue;
+            handicap = handicapValue;
+          }
+        } else {
+          // Handle other scoring formats
+          grossScore = row["Gross Score"] ? parseFloat(String(row["Gross Score"])) : null;
+          netScore = row["Net Score"] ? parseFloat(String(row["Net Score"])) : null;
+          handicap = row["Handicap"] || row["Course Handicap"] ? parseFloat(String(row["Handicap"] || row["Course Handicap"])) : null;
+        }
+        
+        return {
+          player: playerName,
+          position: position,
+          grossScore: grossScore,
+          netScore: netScore,
+          handicap: handicap
+        };
+      });
+
+      // Call the preview API
+      const previewResponse = await apiRequest("POST", "/api/tournaments/preview", {
+        name: tournamentName,
+        date: tournamentDate,
+        type: tournamentType,
+        scoringType: scoringType,
+        results: processedResults
+      });
+
+      if (previewResponse) {
+        setTournamentPreview(previewResponse);
+        setShowPreview(true);
+        setUploadProgress(90);
+        setUploadStatus("Preview generated successfully! Review the results below.");
+      } else {
+        throw new Error("Failed to generate preview");
+      }
+      
+    } catch (error) {
+      console.error("Error generating preview:", error);
+      setUploadErrors([{
+        type: 'preview',
+        message: 'Failed to generate tournament preview. Please check your data and try again.'
+      }]);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
@@ -222,8 +317,11 @@ export default function TournamentUploader() {
       const data = await response.json();
 
       setUploadProgress(50);
-      setUploadStatus("Processing data...");
+      setUploadStatus("Generating preview...");
       setPreviewData(data.preview);
+
+      // Generate tournament preview with points calculations
+      await generateTournamentPreview(data.preview);
 
       // Process the tournament data with more detailed logging
       console.log("Preview data:", data.preview);
