@@ -177,18 +177,20 @@ export class TieHandler {
   /**
    * Get points for a specific position and tournament type
    */
-  private getPointsForPosition(position: number, tournamentType: string): number {
+  public getPointsForPosition(position: number, tournamentType: string): number {
     const config = this.pointsConfig[tournamentType as keyof PointsConfig];
-    if (!config || typeof config !== 'object') return 0;
+    if (!config || !Array.isArray(config)) return 0;
 
-    // Convert position to string to match config keys
-    const positionStr = position.toString();
+    // Find the position in the config array
+    const positionConfig = config.find(p => p.position === position);
     
-    if (config[positionStr as keyof typeof config]) {
-      return config[positionStr as keyof typeof config] as number;
+    if (positionConfig) {
+      return positionConfig.points;
     }
 
-    return 0;
+    // If exact position not found, try to find the last available position
+    const lastPosition = config[config.length - 1];
+    return position > lastPosition.position ? 0 : lastPosition.points;
   }
 
   /**

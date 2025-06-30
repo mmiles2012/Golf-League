@@ -565,6 +565,145 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Tournament preview endpoint - shows what will be processed without saving
+  app.post("/api/tournaments/preview", async (req: Request, res: Response) => {
+    try {
+      const { name, date, type, results } = req.body;
+      
+      console.log(`Generating preview for tournament: ${name}, date: ${date}, type: ${type}, with ${results.length} player results`);
+      
+      // Format the input data with proper types for validation
+      const formattedData = {
+        name,
+        date,
+        type,
+        results: results.map((result: any) => ({
+          player: String(result.player || ""),
+          position: Number(result.position),
+          grossScore: result.grossScore !== null && result.grossScore !== undefined ? Number(result.grossScore) : null,
+          netScore: result.netScore !== null && result.netScore !== undefined ? Number(result.netScore) : null,
+          handicap: result.handicap !== null && result.handicap !== undefined ? Number(result.handicap) : null
+        }))
+      };
+      
+      const validationResult = tournamentUploadSchema.safeParse(formattedData);
+      
+      if (!validationResult.success) {
+        console.error("Validation errors:", validationResult.error.errors);
+        return res.status(400).json({ 
+          message: "Invalid tournament data",
+          errors: validationResult.error.errors
+        });
+      }
+      
+      const validData = validationResult.data;
+      
+      // Prepare data for tie handling preview
+      const playerData: Array<{
+        playerId: number | null;
+        playerName: string;
+        grossScore: number | null;
+        netScore: number | null;
+        handicap: number | null;
+      }> = [];
+
+      // Find existing players (don't create new ones for preview)
+      for (const result of validData.results) {
+        let player = await storage.findPlayerByName(result.player);
+        
+        playerData.push({
+          playerId: player?.id || null,
+          playerName: result.player,
+          grossScore: result.grossScore !== undefined ? result.grossScore : null,
+          netScore: result.netScore !== undefined ? result.netScore : null,
+          handicap: result.handicap !== undefined ? result.handicap : null
+        });
+      }
+
+      // Get points configuration and initialize tie handler
+      const pointsConfig = await storage.getPointsConfig();
+      const tieHandler = new TieHandler(pointsConfig);
+      
+      // Determine scoring type for ties
+      const scoringType = (validData as any).scoringType || "StrokeNet";
+      const isStrokeNetTournament = scoringType === "StrokeNet" || 
+                                  (validData.name.toLowerCase().includes("cup") || 
+                                   validData.name.toLowerCase().includes("pres"));
+      const scoreTypeForTies = isStrokeNetTournament ? 'net' : 'gross';
+      
+      // Process results with tie handling for existing players
+      const existingPlayerData = playerData.filter(p => p.playerId !== null) as Array<{
+        playerId: number;
+        playerName: string;
+        grossScore: number | null;
+        netScore: number | null;
+        handicap: number | null;
+      }>;
+      
+      const processedTieResults = existingPlayerData.length > 0 ? 
+        tieHandler.processResultsWithTies(existingPlayerData, validData.type, scoreTypeForTies) : [];
+
+      // Format preview data for existing players
+      const previewResults = processedTieResults.map(result => ({
+        playerName: result.playerName,
+        playerId: result.playerId,
+        position: result.position,
+        displayPosition: result.displayPosition,
+        tiedPosition: result.tiedPosition,
+        grossScore: result.grossScore,
+        netScore: result.netScore,
+        handicap: result.handicap,
+        points: result.points,
+        isNewPlayer: false
+      }));
+
+      // Add new players with calculated points
+      const newPlayerData = playerData.filter(p => p.playerId === null);
+      const newPlayerResults = newPlayerData.map((p, index) => {
+        // Calculate points for new players based on their position
+        const position = validData.results.find(r => r.player === p.playerName)?.position || (index + 1);
+        const points = tieHandler.getPointsForPosition(position, validData.type);
+        
+        return {
+          playerName: p.playerName,
+          playerId: null,
+          position: position,
+          displayPosition: `${position}`,
+          tiedPosition: false,
+          grossScore: p.grossScore,
+          netScore: p.netScore,
+          handicap: p.handicap,
+          points: points,
+          isNewPlayer: true
+        };
+      });
+
+      const allPreviewResults = [...previewResults, ...newPlayerResults]
+        .sort((a, b) => a.position - b.position);
+      
+      res.json({
+        tournament: {
+          name: validData.name,
+          date: validData.date,
+          type: validData.type,
+          scoringType: scoreTypeForTies
+        },
+        results: allPreviewResults,
+        summary: {
+          totalPlayers: allPreviewResults.length,
+          newPlayers: newPlayerResults.length,
+          existingPlayers: previewResults.length,
+          totalPoints: allPreviewResults.reduce((sum, r) => sum + r.points, 0),
+          tiesDetected: allPreviewResults.some(r => r.tiedPosition)
+        }
+      });
+      
+    } catch (error) {
+      console.error("Error generating tournament preview:", error);
+      res.status(500).json({ message: "Failed to generate tournament preview" });
+    }
+  });
+  
   // Process tournament data endpoint
   app.post("/api/tournaments/process", async (req: Request, res: Response) => {
     try {
