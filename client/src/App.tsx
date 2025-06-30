@@ -46,6 +46,11 @@ function Router() {
           <UploadScores />
         </ProtectedRoute>
       </Route>
+      <Route path="/upload-scores">
+        <ProtectedRoute>
+          <UploadScores />
+        </ProtectedRoute>
+      </Route>
       <Route path="/manual-entry">
         <ProtectedRoute>
           <ManualEntry />
