@@ -492,167 +492,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
       }
-      
+
       console.log("File uploaded:", req.file.originalname);
-      
+
       // Parse Excel file
       const workbook = XLSX.read(req.file.buffer);
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(worksheet);
-      
-      console.log("Parsed Excel data:", data.length, "rows");
-      
-      // Log the first few rows to inspect the structure
-      console.log("First row sample:", JSON.stringify(data[0], null, 2));
-      
-      // Process the data to ensure consistent column names
-      const processedData = data.map((row: any, index: number) => {
-        // Log all property names in this row for debugging
-        console.log(`Row ${index} keys:`, Object.keys(row));
-        
-        // Extract player name from Player Name field based on the format we saw in logs
-        const playerName = row["Player Name"] || row.Player || row.player || row.Name || row.name || "";
-        
-        // Extract position from Pos field based on the format we saw in logs
-        const position = row.Pos !== undefined ? Number(row.Pos) : 
-                        row.Position !== undefined ? Number(row.Position) : 
-                        row.position !== undefined ? Number(row.position) : (index + 1);
-        
-        // Handle Stroke and StrokeNet scoring specifically
-        let grossScore, netScore;
-        
-        if ((row.Scoring === "StrokeNet" || row.Scoring === "Stroke") && row.Total !== undefined) {
-          // Determine if we're handling StrokeNet or Stroke scoring type
-          const isStrokeNet = row.Scoring === "StrokeNet";
-          
-          // First try to use Playing handicap, then fall back to Course handicap if Playing handicap is not available
-          let handicapValue = 0;
-          
-          // Handle Playing Handicap
-          if (row["Playing Handicap"] !== undefined) {
-            // Convert to string to handle all types of inputs
-            const handicapStr = String(row["Playing Handicap"]);
-            
-            // Check if the playing handicap has a "+" sign
-            if (handicapStr.includes('+')) {
-              // If it has a "+" sign, add the handicap to the total (for plus handicap players)
-              handicapValue = Number(handicapStr.replace('+', ''));
-            } else {
-              // If it doesn't have a "+" sign, subtract the handicap from the total
-              handicapValue = Math.abs(Number(handicapStr));
-            }
-          } 
-          // Fall back to Course Handicap if Playing Handicap isn't available
-          else if (row["Course Handicap"] !== undefined) {
-            // Convert to string to handle all types of inputs
-            const handicapStr = String(row["Course Handicap"]);
-            
-            // Apply the same logic to Course Handicap
-            if (handicapStr.includes('+')) {
-              // If it has a "+" sign, add the handicap to the total (for plus handicap players)
-              handicapValue = Number(handicapStr.replace('+', ''));
-            } else {
-              // If it doesn't have a "+" sign, subtract the handicap from the total
-              handicapValue = Math.abs(Number(handicapStr));
-            }
-          }
-          
-          if (isStrokeNet) {
-            // For StrokeNet scoring:
-            // - Net score = Total (as provided in the spreadsheet)
-            // - Gross score = Total + Course Handicap (calculated)
-            netScore = Number(row.Total);
-            
-            // For StrokeNet, we MUST use Course Handicap, not Playing Handicap
-            let courseHandicapValue = 0;
-            if (row["Course Handicap"] !== undefined) {
-              // Convert to string to handle all types of inputs
-              const handicapStr = String(row["Course Handicap"]);
-              
-              // Apply the same logic to Course Handicap
-              if (handicapStr.includes('+')) {
-                // If it has a "+" sign, add the handicap to the total (for plus handicap players)
-                courseHandicapValue = Number(handicapStr.replace('+', ''));
-              } else {
-                // If it doesn't have a "+" sign, subtract the handicap from the total
-                courseHandicapValue = Math.abs(Number(handicapStr));
-              }
-            }
-            
-            // Calculate gross score using Course Handicap specifically
-            grossScore = netScore + courseHandicapValue;
-            
-            console.log(`StrokeNet scoring: Total=${row.Total} (Net), Course Handicap=${courseHandicapValue}, calculated Gross=${grossScore}`);
-          } else {
-            // For Stroke scoring:
-            // - Gross score = Total (raw strokes)
-            // - Net score = Total - Handicap or Total + Handicap (calculated based on "+" prefix)
-            grossScore = Number(row.Total);
-            
-            // Check if the original handicap string had a "+" sign
-            const handicapStr = String(row["Playing Handicap"] !== undefined ? row["Playing Handicap"] : row["Course Handicap"]);
-            if (handicapStr.includes('+')) {
-              // If it has a "+" sign, add the handicap to the gross score
-              netScore = grossScore + handicapValue;
-            } else {
-              // If it doesn't have a "+" sign, subtract the handicap from the gross score
-              netScore = grossScore - handicapValue;
-            }
-            
-            console.log(`Stroke scoring: Total=${row.Total} (Gross), Handicap=${handicapValue}, original=${handicapStr}, calculated Net=${netScore}`);
-          }
-        } else {
-          // For regular scoring, use Total as gross score
-          grossScore = row.Total !== undefined ? Number(row.Total) : 
-                      row["Gross Score"] !== undefined ? Number(row["Gross Score"]) : 
-                      row.grossScore !== undefined ? Number(row.grossScore) : null;
-          
-          // Extract net score from available fields
-          netScore = row["Net Score"] !== undefined ? Number(row["Net Score"]) : 
-                   row.netScore !== undefined ? Number(row.netScore) : 
-                   row.Net !== undefined ? Number(row.Net) : null;
+
+      // Fetch all players for email matching
+      let allPlayers = await storage.getPlayers();
+      let emailToPlayer = new Map(
+        allPlayers.filter(p => p.email).map(p => [p.email.toLowerCase(), p])
+      );
+
+      const processedData = [];
+      for (let index = 0; index < data.length; index++) {
+        const row: any = data[index];
+        // Extract email and validate
+        const email = (row["Email"] || row["email"] || "").toLowerCase().trim();
+        if (!email) {
+          throw new Error(`Missing email for row ${index + 1}`);
         }
-        
-        // Extract both Course Handicap and Playing Handicap for better data integrity
-        const courseHandicap = row["Course Handicap"] !== undefined ? Number(row["Course Handicap"]) : null;
-        const playingHandicap = row["Playing Handicap"] !== undefined ? Number(row["Playing Handicap"]) : null;
-        
-        // Choose which handicap to use as the primary handicap value
-        let handicap;
-        
-        // For StrokeNet scoring, ALWAYS use Course Handicap if available
-        if (row.Scoring === "StrokeNet" && courseHandicap !== null) {
-          handicap = courseHandicap;
-          console.log(`StrokeNet tournament: Using Course Handicap (${courseHandicap}) for player ${playerName}`);
-        } else {
-          // For other scoring methods, use the standard priority
-          handicap = playingHandicap !== null ? playingHandicap : 
-                    courseHandicap !== null ? courseHandicap :
-                    row.handicap !== undefined ? Number(row.handicap) : 
-                    row.Handicap !== undefined ? Number(row.Handicap) : null;
+        let player = emailToPlayer.get(email);
+        if (!player) {
+          // Create new player with display name as name
+          const displayName = row["Player"] || row["Name"] || row["Display Name"] || email.split("@")[0];
+          player = await storage.createPlayer({ name: displayName, email });
+          // Update the map for subsequent lookups
+          emailToPlayer.set(email, player);
         }
-        
-        console.log(`Processed row: Player: ${playerName}, Position: ${position}, Gross: ${grossScore}, Net: ${netScore}, Handicap: ${handicap}`);
-        
-        return {
-          // Standard column names we expect to use later
-          Player: playerName,
+
+        // Extract and validate net score (from 'Total')
+        const netScore = Number(row["Total"]);
+        if (isNaN(netScore)) {
+          throw new Error(`Invalid or missing 'Total' (net score) for row ${index + 1}`);
+        }
+
+        // Extract and validate course handicap
+        const courseHandicap = Number(row["Course Handicap"]);
+        if (isNaN(courseHandicap)) {
+          throw new Error(`Invalid or missing 'Course Handicap' for row ${index + 1}`);
+        }
+
+        // Calculate gross score
+        const grossScore = netScore + courseHandicap;
+
+        // Extract position
+        const position = row["Pos"] !== undefined ? Number(row["Pos"]) :
+                        row["Position"] !== undefined ? Number(row["Position"]) :
+                        row["position"] !== undefined ? Number(row["position"]) : (index + 1);
+
+        processedData.push({
+          Player: player.name,
+          Email: email,
           Position: position,
           "Gross Score": grossScore,
           "Net Score": netScore,
-          "Course Handicap": handicap
-        };
-      });
-      
+          "Course Handicap": courseHandicap
+        });
+      }
+
       res.json({
         message: "File uploaded successfully",
         rows: processedData.length,
         preview: processedData
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error uploading file:", error);
-      res.status(500).json({ message: "Failed to upload file" });
+      res.status(400).json({ message: error.message || "Failed to upload file" });
     }
   });
   
