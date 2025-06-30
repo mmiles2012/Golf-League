@@ -104,11 +104,7 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
                           {tournament.grossPosition || "N/A"}
                         </td>
                         <td className="py-2 px-4 text-sm text-center border-b border-gray-200 font-medium">
-                          {tournament.grossPosition
-                            ? (tournament.tournamentType === 'major' && tournament.tournamentName.includes('Open') ? 200 :
-                               tournament.tournamentType === 'tour' ? 100 : 
-                               tournament.tournamentType === 'major' ? 225 : 50)
-                            : "0"}
+                          {tournament.points || "0"}
                         </td>
                         <td className="py-2 px-4 text-sm text-center border-b border-gray-200">
                           {tournament.grossScore ? tournament.grossScore : "N/A"}

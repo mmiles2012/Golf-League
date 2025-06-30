@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Tournament } from "@shared/schema";
 import { formatDate } from "@/lib/utils";
+import { formatPosition, detectTies } from "@/lib/points-calculator";
 
 // Function to get tournament type label
 function getTournamentTypeLabel(type: string): string {
@@ -118,8 +119,37 @@ export default function TournamentResults() {
         .sort((a, b) => a.player.name.localeCompare(b.player.name))
     : [];
     
-  // Final net leaderboard
+  // Final net leaderboard with position assignment
   const finalNetLeaderboard = [...sortedNetResults, ...nullNetScorePlayers];
+  
+  // Add display positions to net leaderboard (handle ties)
+  const netLeaderboardWithPositions = finalNetLeaderboard.map((result, index) => {
+    let position = index + 1;
+    let isTied = false;
+    
+    // Check for ties by comparing scores
+    if (index > 0 && result.netScore !== null && 
+        finalNetLeaderboard[index - 1].netScore === result.netScore) {
+      // Find the position of the first player with this score
+      let firstTieIndex = index - 1;
+      while (firstTieIndex > 0 && 
+             finalNetLeaderboard[firstTieIndex - 1].netScore === result.netScore) {
+        firstTieIndex--;
+      }
+      position = firstTieIndex + 1;
+      isTied = true;
+    } else if (index < finalNetLeaderboard.length - 1 && result.netScore !== null &&
+               finalNetLeaderboard[index + 1].netScore === result.netScore) {
+      isTied = true;
+    }
+    
+    return {
+      ...result,
+      displayPosition: formatPosition(position, isTied),
+      actualPosition: position,
+      isTied
+    };
+  });
     
   // For gross results, sort by gross score (lower is better)
   const sortedGrossResults = results
@@ -143,8 +173,37 @@ export default function TournamentResults() {
         .sort((a, b) => a.player.name.localeCompare(b.player.name))
     : [];
     
-  // Final gross leaderboard
+  // Final gross leaderboard with position assignment
   const finalGrossLeaderboard = [...sortedGrossResults, ...nullGrossScorePlayers];
+  
+  // Add display positions to gross leaderboard (handle ties)
+  const grossLeaderboardWithPositions = finalGrossLeaderboard.map((result, index) => {
+    let position = index + 1;
+    let isTied = false;
+    
+    // Check for ties by comparing scores
+    if (index > 0 && result.grossScore !== null && 
+        finalGrossLeaderboard[index - 1].grossScore === result.grossScore) {
+      // Find the position of the first player with this score
+      let firstTieIndex = index - 1;
+      while (firstTieIndex > 0 && 
+             finalGrossLeaderboard[firstTieIndex - 1].grossScore === result.grossScore) {
+        firstTieIndex--;
+      }
+      position = firstTieIndex + 1;
+      isTied = true;
+    } else if (index < finalGrossLeaderboard.length - 1 && result.grossScore !== null &&
+               finalGrossLeaderboard[index + 1].grossScore === result.grossScore) {
+      isTied = true;
+    }
+    
+    return {
+      ...result,
+      displayPosition: formatPosition(position, isTied),
+      actualPosition: position,
+      isTied
+    };
+  });
   
   // Add ordinal suffix to position
   const getOrdinalSuffix = (num: number): string => {
@@ -290,16 +349,17 @@ export default function TournamentResults() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {finalNetLeaderboard.map((result, index) => {
-                      // Calculate proper points for net leaderboard position
-                      const netPoints = tournament && result.netScore !== null 
-                        ? getPointsByPosition(index + 1, tournament.type) 
-                        : 0;
+                    {netLeaderboardWithPositions.map((result, index) => {
+                      // Use actual points from database (includes tie averaging)
+                      const netPoints = result.points || 0;
                         
                       return (
                         <TableRow key={result.id}>
                           <TableCell className="font-semibold">
-                            {index + 1}<sup>{getOrdinalSuffix(index + 1)}</sup>
+                            <span className={result.isTied ? "text-orange-600" : ""}>
+                              {result.displayPosition}
+                              {!result.isTied && <sup>{getOrdinalSuffix(result.actualPosition)}</sup>}
+                            </span>
                           </TableCell>
                           <TableCell>
                             <a 
@@ -368,16 +428,17 @@ export default function TournamentResults() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {finalGrossLeaderboard.map((result, index) => {
-                      // Calculate gross points based on gross leaderboard position
-                      const grossPoints = tournament && result.grossScore !== null 
-                        ? getPointsByPosition(index + 1, tournament.type) 
-                        : 0;
+                    {grossLeaderboardWithPositions.map((result, index) => {
+                      // Use actual points from database (includes tie averaging)
+                      const grossPoints = result.points || 0;
                         
                       return (
                         <TableRow key={result.id}>
                           <TableCell className="font-semibold">
-                            {index + 1}<sup>{getOrdinalSuffix(index + 1)}</sup>
+                            <span className={result.isTied ? "text-orange-600" : ""}>
+                              {result.displayPosition}
+                              {!result.isTied && <sup>{getOrdinalSuffix(result.actualPosition)}</sup>}
+                            </span>
                           </TableCell>
                           <TableCell>
                             <a 

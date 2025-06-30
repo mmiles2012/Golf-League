@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import multer from "multer";
 import * as XLSX from "xlsx";
 import { tournamentUploadSchema, manualEntrySchema, editTournamentSchema, insertLeagueSchema } from "@shared/schema";
+import { TieHandler } from "./tie-handler";
 
 // Set up multer for file uploads
 const upload = multer({
@@ -725,11 +726,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Created tournament with ID: ${tournament.id}`);
       
-      // Process player results
+      // Process player results with proper tie handling
       const processedResults = [];
       
       // Check if this is a Stroke or StrokeNet tournament based on the scoringType parameter
-      // If scoringType is not provided, fall back to name-based detection
       const scoringType = (validData as any).scoringType || "StrokeNet";
       const isStrokeTournament = scoringType === "Stroke";
       const isStrokeNetTournament = scoringType === "StrokeNet" || 
@@ -743,11 +743,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (isStrokeTournament) {
         console.log("Processing as Stroke tournament - displaying Course Handicap in tournament view");
       }
-      
+
+      // Prepare data for tie handling
+      const playerData: Array<{
+        playerId: number;
+        playerName: string;
+        grossScore: number | null;
+        netScore: number | null;
+        handicap: number | null;
+      }> = [];
+
+      // First pass: find or create all players
       for (const result of validData.results) {
-        console.log(`Processing result for player: ${result.player}, position: ${result.position}`);
-        
-        // Find or create player
         let player = await storage.findPlayerByName(result.player);
         
         if (!player) {
@@ -760,34 +767,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else {
           console.log(`Found existing player: ${player.name} (ID: ${player.id})`);
         }
-        
-        // Calculate points based on position and tournament type
-        const points = calculatePoints(result.position, validData.type);
-        console.log(`Calculated ${points} points for position ${result.position} in ${validData.type} tournament`);
-        
-        // For StrokeNet tournaments, we should have stored the Course Handicap directly
-        // in the "Course Handicap" field during file processing
-        let displayHandicap = result.handicap;
-        
-        // For debugging, log the handicap value we're using
-        console.log(`Using handicap value ${displayHandicap} for player ${result.player}`);
-        
-        // The Course Handicap has already been stored properly during file upload processing
-        // We don't need to recalculate it here
-        
-        // Create player result with proper null handling for optional fields
-        const playerResultData = {
+
+        playerData.push({
           playerId: player.id,
+          playerName: result.player,
+          grossScore: result.grossScore !== undefined ? result.grossScore : null,
+          netScore: result.netScore !== undefined ? result.netScore : null,
+          handicap: result.handicap !== undefined ? result.handicap : null
+        });
+      }
+
+      // Get points configuration and initialize tie handler
+      const pointsConfig = await storage.getPointsConfig();
+      const tieHandler = new TieHandler(pointsConfig);
+      
+      // Process results with tie handling (use net scores for StrokeNet, gross for Stroke)
+      const scoreTypeForTies = isStrokeNetTournament ? 'net' : 'gross';
+      const processedTieResults = tieHandler.processResultsWithTies(
+        playerData,
+        validData.type,
+        scoreTypeForTies
+      );
+
+      console.log(`Processed ${processedTieResults.length} results with tie handling`);
+
+      // Second pass: create player results with proper tie handling
+      for (const result of processedTieResults) {
+        const playerResultData = {
+          playerId: result.playerId,
           tournamentId: tournament.id,
           position: result.position,
-          // Explicitly handle nulls to avoid type issues
-          grossScore: result.grossScore !== undefined ? result.grossScore : null,
-          netScore: result.netScore !== undefined ? result.netScore : null, 
-          handicap: displayHandicap !== undefined ? displayHandicap : null,
-          points
+          grossScore: result.grossScore,
+          netScore: result.netScore,
+          handicap: result.handicap,
+          points: result.points
         };
         
-        console.log("Creating player result:", JSON.stringify(playerResultData, null, 2));
+        console.log(`Creating result for ${result.playerName}: Position ${result.displayPosition}, Points ${result.points}`);
         
         try {
           const playerResult = await storage.createPlayerResult(playerResultData);
@@ -795,7 +811,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           processedResults.push(playerResult);
         } catch (error) {
           console.error("Error creating player result:", error);
-          console.error("Error details:", JSON.stringify(error, null, 2));
           throw error;
         }
       }
@@ -833,11 +848,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: "completed"
       });
       
-      // Process player results
+      // Process player results with tie handling
       const processedResults = [];
       
+      // Prepare data for tie handling
+      const playerData: Array<{
+        playerId: number;
+        playerName: string;
+        grossScore: number | null;
+        netScore: number | null;
+        handicap: number | null;
+      }> = [];
+
+      // First pass: find or create all players
       for (const result of results) {
-        // Find or create player
         let playerId = result.playerId;
         
         if (!playerId) {
@@ -846,25 +870,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (!player) {
             player = await storage.createPlayer({
               name: result.playerName,
-              defaultHandicap: result.handicap
+              defaultHandicap: result.handicap !== undefined ? result.handicap : null
             });
           }
           
           playerId = player.id;
         }
-        
-        // Calculate points based on position and tournament type
-        const points = calculatePoints(result.position, type);
-        
-        // Create player result
-        const playerResult = await storage.createPlayerResult({
+
+        playerData.push({
           playerId,
+          playerName: result.playerName,
+          grossScore: result.grossScore !== undefined ? result.grossScore : null,
+          netScore: result.netScore !== undefined ? result.netScore : null,
+          handicap: result.handicap !== undefined ? result.handicap : null
+        });
+      }
+
+      // Get points configuration and initialize tie handler
+      const pointsConfig = await storage.getPointsConfig();
+      const tieHandler = new TieHandler(pointsConfig);
+      
+      // Process results with tie handling (default to net score for manual entry)
+      const processedTieResults = tieHandler.processResultsWithTies(
+        playerData,
+        type,
+        'net'
+      );
+
+      // Second pass: create player results with proper tie handling
+      for (const result of processedTieResults) {
+        const playerResult = await storage.createPlayerResult({
+          playerId: result.playerId,
           tournamentId: tournament.id,
           position: result.position,
           grossScore: result.grossScore,
           netScore: result.netScore,
           handicap: result.handicap,
-          points
+          points: result.points
         });
         
         processedResults.push(playerResult);

@@ -19,8 +19,8 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { IStorage } from "./storage";
-// Use points calculator from client lib for consistency 
-import { calculatePoints } from "../client/src/lib/points-calculator";
+import { LeaderboardCalculator } from "./leaderboard-calculator";
+import { calculatePoints } from "./utils";
 
 // Default points configurations based on provided PDFs
 const DEFAULT_POINTS_CONFIG = {
@@ -125,6 +125,11 @@ let appSettings: AppSettings = {
 };
 
 export class DatabaseStorage implements IStorage {
+  private leaderboardCalculator: LeaderboardCalculator;
+
+  constructor() {
+    this.leaderboardCalculator = new LeaderboardCalculator(pointsConfig);
+  }
   // League operations
   async getLeagues(): Promise<League[]> {
     return db.select().from(leagues).orderBy(leagues.name);
@@ -315,61 +320,15 @@ export class DatabaseStorage implements IStorage {
 
   // Combined operations
   async getNetLeaderboard(): Promise<PlayerWithHistory[]> {
-    const allPlayers = await this.getPlayers();
-    const leaderboard: PlayerWithHistory[] = [];
-    
-    for (const player of allPlayers) {
-      const playerHistory = await this.calculatePlayerHistory(player.id, 'net');
-      if (playerHistory) {
-        leaderboard.push(playerHistory);
-      }
-    }
-    
-    // Sort by total points (descending), then by average net score (ascending - lower is better)
-    leaderboard.sort((a, b) => {
-      if (b.totalPoints !== a.totalPoints) {
-        return b.totalPoints - a.totalPoints;
-      }
-      return (a.averageNetScore || 999) - (b.averageNetScore || 999);
-    });
-    
-    // Assign ranks
-    leaderboard.forEach((player, index) => {
-      player.rank = index + 1;
-    });
-    
-    return leaderboard;
+    return this.leaderboardCalculator.generateNetLeaderboard();
   }
 
   async getGrossLeaderboard(): Promise<PlayerWithHistory[]> {
-    const allPlayers = await this.getPlayers();
-    const leaderboard: PlayerWithHistory[] = [];
-    
-    for (const player of allPlayers) {
-      const playerHistory = await this.calculatePlayerHistory(player.id, 'gross');
-      if (playerHistory) {
-        leaderboard.push(playerHistory);
-      }
-    }
-    
-    // Sort by total points (descending), then by average gross score (ascending - lower is better)
-    leaderboard.sort((a, b) => {
-      if (b.totalPoints !== a.totalPoints) {
-        return b.totalPoints - a.totalPoints;
-      }
-      return (a.averageGrossScore || 999) - (b.averageGrossScore || 999);
-    });
-    
-    // Assign ranks
-    leaderboard.forEach((player, index) => {
-      player.rank = index + 1;
-    });
-    
-    return leaderboard;
+    return this.leaderboardCalculator.generateGrossLeaderboard();
   }
 
   async getPlayerWithHistory(playerId: number): Promise<PlayerWithHistory | undefined> {
-    return this.calculatePlayerHistory(playerId, 'net');
+    return this.leaderboardCalculator.calculatePlayerHistory(playerId, 'net');
   }
 
   async processEditTournament(data: EditTournament): Promise<Tournament | undefined> {
@@ -405,110 +364,7 @@ export class DatabaseStorage implements IStorage {
     return tournament;
   }
 
-  // Helper methods
-  private async calculatePlayerHistory(playerId: number, scoreType: 'net' | 'gross'): Promise<PlayerWithHistory | undefined> {
-    const player = await this.getPlayer(playerId);
-    if (!player) return undefined;
-
-    const results = await this.getPlayerResultsByPlayer(playerId);
-    if (!results.length) return undefined;
-
-    // Get tournaments for these results
-    const tournamentIds = results.map(r => r.tournamentId);
-    const tournamentList = await db.select()
-      .from(tournaments)
-      .where(inArray(tournaments.id, tournamentIds));
-    
-    const tournamentMap = new Map<number, Tournament>();
-    tournamentList.forEach((t: Tournament) => tournamentMap.set(t.id, t));
-
-    const tournamentDetails = [];
-    let totalPoints = 0;
-    let majorPoints = 0;
-    let tourPoints = 0;
-    let leaguePoints = 0;
-    let suprPoints = 0;
-
-    // Track scores for averaging
-    let totalNetScores = 0;
-    let totalGrossScores = 0;
-    let scoreCount = 0;
-
-    for (const result of results) {
-      const tournament = tournamentMap.get(result.tournamentId);
-      if (!tournament) continue;
-
-      // For StrokeNet scoring:
-      // Net Score = result.netScore (this is the "total" from the file)
-      // Gross Score = Net Score + Course Handicap
-      const netScore = result.netScore;
-      const grossScore = result.netScore !== null && result.handicap !== null ? result.netScore + result.handicap : null;
-
-      if (netScore !== null) {
-        totalNetScores += netScore;
-        if (grossScore !== null) {
-          totalGrossScores += grossScore;
-        }
-        scoreCount++;
-      }
-
-      const tournamentDetail = {
-        id: result.id,
-        tournamentId: tournament.id,
-        tournamentName: tournament.name,
-        tournamentDate: tournament.date,
-        tournamentType: tournament.type,
-        position: result.position,
-        netScore: netScore,
-        grossScore: grossScore,
-        handicap: result.handicap,
-        points: result.points || 0
-      };
-
-      tournamentDetails.push(tournamentDetail);
-      totalPoints += result.points || 0;
-
-      // Add points to category totals
-      const points = result.points || 0;
-      switch (tournament.type) {
-        case 'major':
-          majorPoints += points;
-          break;
-        case 'tour':
-          tourPoints += points;
-          break;
-        case 'league':
-          leaguePoints += points;
-          break;
-        case 'supr':
-          suprPoints += points;
-          break;
-      }
-    }
-
-    const averageNetScore = scoreCount > 0 ? totalNetScores / scoreCount : 0;
-    const averageGrossScore = scoreCount > 0 ? totalGrossScores / scoreCount : 0;
-
-    return {
-      player: {
-        id: player.id,
-        name: player.name,
-        email: player.email,
-        defaultHandicap: player.defaultHandicap
-      },
-      tournaments: tournamentDetails,
-      totalPoints,
-      majorPoints,
-      tourPoints,
-      leaguePoints,
-      suprPoints,
-      totalEvents: tournamentDetails.length,
-      rank: 0, // Will be set in leaderboard sorting
-      averageNetScore,
-      averageGrossScore,
-      averageScore: scoreType === 'net' ? averageNetScore : averageGrossScore
-    };
-  }
+  // Helper methods - now handled by LeaderboardCalculator
 
   // Points configuration operations
   async getPointsConfig(): Promise<PointsConfig> {
@@ -517,6 +373,8 @@ export class DatabaseStorage implements IStorage {
 
   async updatePointsConfig(config: PointsConfig): Promise<PointsConfig> {
     pointsConfig = { ...config };
+    // Update the calculator with new points config
+    this.leaderboardCalculator = new LeaderboardCalculator(pointsConfig);
     return pointsConfig;
   }
 
