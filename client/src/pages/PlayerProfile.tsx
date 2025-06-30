@@ -219,13 +219,11 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
                         {tournament.grossPosition 
-                          ? calculatePoints(tournament.grossPosition, tournament.tournamentType) 
+                          ? (tournament.points || "0")
                           : "0"}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
-                        {tournament.position 
-                          ? calculatePoints(tournament.position, tournament.tournamentType) 
-                          : "0"}
+                        {tournament.points || "0"}
                       </td>
                     </tr>
                   ))
