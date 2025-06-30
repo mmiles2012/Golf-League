@@ -664,7 +664,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         handicap: p.handicap
       }));
       
+      console.log("DEBUG: Data being sent to TieHandler:", JSON.stringify(allPlayerDataForTies, null, 2));
+      console.log("DEBUG: Tournament type:", validData.type, "Score type for ties:", scoreTypeForTies);
+      
       const processedTieResults = tieHandler.processResultsWithTies(allPlayerDataForTies, validData.type, scoreTypeForTies);
+      
+      console.log("DEBUG: Results from TieHandler:", JSON.stringify(processedTieResults, null, 2));
 
       // Format preview data for all players
       const previewResults = processedTieResults
