@@ -863,17 +863,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Processed ${processedTieResults.length} results with tie handling`);
 
-      // Calculate gross positions and points
-      const sortedByGrossScore = [...processedTieResults]
-        .filter(r => r.grossScore !== null)
-        .sort((a, b) => (a.grossScore || 999) - (b.grossScore || 999));
+      // Calculate gross positions and points with proper tie handling
+      const grossTieHandler = new TieHandler({
+        ...pointsConfig,
+        tour: pointsConfig.tour.map(entry => ({ 
+          position: entry.position, 
+          points: calculateGrossPoints(entry.position) 
+        }))
+      });
+      
+      const processedGrossResults = grossTieHandler.processResultsWithTies(
+        playerData,
+        'tour', // Always use tour points for gross regardless of tournament type
+        'gross'
+      );
       
       // Create a map of playerId to gross position and points
       const grossPositionMap = new Map<number, { position: number, points: number }>();
-      sortedByGrossScore.forEach((result, index) => {
-        const grossPosition = index + 1;
-        const grossPoints = calculateGrossPoints(grossPosition);
-        grossPositionMap.set(result.playerId, { position: grossPosition, points: grossPoints });
+      processedGrossResults.forEach((result) => {
+        grossPositionMap.set(result.playerId, { 
+          position: result.position, 
+          points: result.points 
+        });
       });
 
       // Second pass: create player results with proper tie handling and gross points
@@ -985,17 +996,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'net'
       );
 
-      // Calculate gross positions and points for manual entry
-      const sortedByGrossScore = [...processedTieResults]
-        .filter(r => r.grossScore !== null)
-        .sort((a, b) => (a.grossScore || 999) - (b.grossScore || 999));
+      // Calculate gross positions and points with proper tie handling for manual entry
+      const grossTieHandler = new TieHandler({
+        ...pointsConfig,
+        tour: pointsConfig.tour.map(entry => ({ 
+          position: entry.position, 
+          points: calculateGrossPoints(entry.position) 
+        }))
+      });
+      
+      const processedGrossResults = grossTieHandler.processResultsWithTies(
+        playerData,
+        'tour', // Always use tour points for gross regardless of tournament type
+        'gross'
+      );
       
       // Create a map of playerId to gross position and points
       const grossPositionMap = new Map<number, { position: number, points: number }>();
-      sortedByGrossScore.forEach((result, index) => {
-        const grossPosition = index + 1;
-        const grossPoints = calculateGrossPoints(grossPosition);
-        grossPositionMap.set(result.playerId, { position: grossPosition, points: grossPoints });
+      processedGrossResults.forEach((result) => {
+        grossPositionMap.set(result.playerId, { 
+          position: result.position, 
+          points: result.points 
+        });
       });
 
       // Second pass: create player results with proper tie handling and gross points
