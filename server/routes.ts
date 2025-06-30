@@ -863,8 +863,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Processed ${processedTieResults.length} results with tie handling`);
 
-      // Second pass: create player results with proper tie handling
+      // Calculate gross positions and points
+      const sortedByGrossScore = [...processedTieResults]
+        .filter(r => r.grossScore !== null)
+        .sort((a, b) => (a.grossScore || 999) - (b.grossScore || 999));
+      
+      // Create a map of playerId to gross position and points
+      const grossPositionMap = new Map<number, { position: number, points: number }>();
+      sortedByGrossScore.forEach((result, index) => {
+        const grossPosition = index + 1;
+        const grossPoints = calculateGrossPoints(grossPosition);
+        grossPositionMap.set(result.playerId, { position: grossPosition, points: grossPoints });
+      });
+
+      // Second pass: create player results with proper tie handling and gross points
       for (const result of processedTieResults) {
+        const grossData = grossPositionMap.get(result.playerId) || { position: 999, points: 0 };
+        
         const playerResultData = {
           playerId: result.playerId,
           tournamentId: tournament.id,
@@ -872,7 +887,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           grossScore: result.grossScore,
           netScore: result.netScore,
           handicap: result.handicap,
-          points: result.points
+          points: result.points,
+          grossPoints: grossData.points
         };
         
         console.log(`Creating result for ${result.playerName}: Position ${result.displayPosition}, Points ${result.points}`);
@@ -969,8 +985,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'net'
       );
 
-      // Second pass: create player results with proper tie handling
+      // Calculate gross positions and points for manual entry
+      const sortedByGrossScore = [...processedTieResults]
+        .filter(r => r.grossScore !== null)
+        .sort((a, b) => (a.grossScore || 999) - (b.grossScore || 999));
+      
+      // Create a map of playerId to gross position and points
+      const grossPositionMap = new Map<number, { position: number, points: number }>();
+      sortedByGrossScore.forEach((result, index) => {
+        const grossPosition = index + 1;
+        const grossPoints = calculateGrossPoints(grossPosition);
+        grossPositionMap.set(result.playerId, { position: grossPosition, points: grossPoints });
+      });
+
+      // Second pass: create player results with proper tie handling and gross points
       for (const result of processedTieResults) {
+        const grossData = grossPositionMap.get(result.playerId) || { position: 999, points: 0 };
+        
         const playerResult = await storage.createPlayerResult({
           playerId: result.playerId,
           tournamentId: tournament.id,
@@ -978,7 +1009,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           grossScore: result.grossScore,
           netScore: result.netScore,
           handicap: result.handicap,
-          points: result.points
+          points: result.points,
+          grossPoints: grossData.points
         });
         
         processedResults.push(playerResult);
