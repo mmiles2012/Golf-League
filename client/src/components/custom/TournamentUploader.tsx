@@ -1,7 +1,3 @@
-The code implements error handling to reject improperly formatted tournament uploads by adding a check for processing success and setting an error message if it fails.
-```
-
-```replit_final_file
 import { useState, ChangeEvent, FormEvent } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
