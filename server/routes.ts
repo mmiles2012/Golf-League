@@ -510,18 +510,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const processedData = [];
       for (let index = 0; index < data.length; index++) {
         const row: any = data[index];
-        // Extract email and validate
+        // Extract email (optional for preview system)
         const email = (row["Email"] || row["email"] || "").toLowerCase().trim();
-        if (!email) {
-          throw new Error(`Missing email for row ${index + 1}`);
-        }
-        let player = emailToPlayer.get(email);
-        if (!player) {
-          // Create new player with display name as name
-          const displayName = row["Player"] || row["Name"] || row["Display Name"] || email.split("@")[0];
-          player = await storage.createPlayer({ name: displayName, email });
-          // Update the map for subsequent lookups
-          emailToPlayer.set(email, player);
+        let player = null;
+        let playerName = "";
+        
+        if (email) {
+          // Email-based processing (legacy)
+          player = emailToPlayer.get(email);
+          if (!player) {
+            // Create new player with display name as name
+            const displayName = row["Player"] || row["Name"] || row["Display Name"] || email.split("@")[0];
+            player = await storage.createPlayer({ name: displayName, email });
+            // Update the map for subsequent lookups
+            emailToPlayer.set(email, player);
+          }
+          playerName = player.name;
+        } else {
+          // Name-based processing (for preview system)
+          playerName = row["Player"] || row["Name"] || row["Display Name"] || `Player ${index + 1}`;
         }
 
         // Extract and validate net score (from 'Total')
@@ -545,12 +552,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
                         row["position"] !== undefined ? Number(row["position"]) : (index + 1);
 
         processedData.push({
-          Player: player.name,
-          Email: email,
+          Player: playerName,
+          Email: email || undefined,
           Position: position,
+          "Total": netScore,
           "Gross Score": grossScore,
           "Net Score": netScore,
-          "Course Handicap": courseHandicap
+          "Course Handicap": courseHandicap,
+          Handicap: courseHandicap
         });
       }
 
