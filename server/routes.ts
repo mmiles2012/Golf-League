@@ -5,6 +5,7 @@ import multer from "multer";
 import * as XLSX from "xlsx";
 import { tournamentUploadSchema, manualEntrySchema, editTournamentSchema, insertLeagueSchema } from "@shared/schema";
 import { TieHandler } from "./tie-handler";
+import { calculatePoints, calculateGrossPoints } from "./utils";
 
 // Set up multer for file uploads
 const upload = multer({
