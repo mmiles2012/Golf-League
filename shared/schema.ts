@@ -119,7 +119,7 @@ export const manualEntrySchema = insertTournamentSchema.extend({
   results: z.array(z.object({
     playerId: z.number().optional(),
     playerName: z.string().min(1, "Player name is required"),
-    position: z.number().int().positive("Position must be a positive integer"),
+    position: z.number().int().positive("Position must be a positive integer").optional(), // Optional for automatic position calculation
     grossScore: z.number().optional(),
     netScore: z.number().optional(),
     handicap: z.number().optional(),
