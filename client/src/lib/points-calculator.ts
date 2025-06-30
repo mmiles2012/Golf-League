@@ -78,3 +78,49 @@ export function calculateGrossScore(netScore: number, handicap: number): number 
 export function calculateNetScore(grossScore: number, handicap: number): number {
   return grossScore - handicap;
 }
+
+/**
+ * Calculate points for tied positions
+ * Points are averaged across all tied positions
+ * @param startPosition - Starting position of the tie
+ * @param numTiedPlayers - Number of players tied
+ * @param tournamentType - Type of tournament
+ * @returns Average points for tied players
+ */
+export function calculateTiePoints(startPosition: number, numTiedPlayers: number, tournamentType: TournamentType): number {
+  let totalPoints = 0;
+
+  // Sum points for all tied positions
+  for (let i = 0; i < numTiedPlayers; i++) {
+    const position = startPosition + i;
+    totalPoints += calculatePoints(position, tournamentType);
+  }
+
+  // Return average points (rounded to 1 decimal place)
+  return Math.round((totalPoints / numTiedPlayers) * 10) / 10;
+}
+
+/**
+ * Format position display for ties
+ * @param position - Actual position
+ * @param isTied - Whether this position is tied
+ * @returns Formatted position string (e.g., "T2" for tied 2nd)
+ */
+export function formatPosition(position: number, isTied: boolean): string {
+  return isTied ? `T${position}` : `${position}`;
+}
+
+/**
+ * Check if a group of results contains ties based on scores
+ * @param results - Array of results with scores
+ * @param scoreType - Whether to check 'net' or 'gross' scores
+ * @returns True if ties are detected
+ */
+export function detectTies(results: Array<{ netScore?: number | null; grossScore?: number | null }>, scoreType: 'net' | 'gross' = 'net'): boolean {
+  const scores = results
+    .map(r => scoreType === 'net' ? r.netScore : r.grossScore)
+    .filter(score => score !== null && score !== undefined);
+  
+  const uniqueScores = new Set(scores);
+  return scores.length !== uniqueScores.size;
+}
