@@ -14,6 +14,8 @@ A professional golf league management platform that provides comprehensive tourn
   - **Fixed gross points tie handling**: Applied proper tie detection and point averaging to gross score calculations
   - Fixed tournament upload and manual entry endpoints to use TieHandler for gross score ties
   - Migrated all existing tournament data to correct gross points with proper tie averaging
+  - **Fixed net points display issue**: Resolved NaN values in net points column that were preventing proper display
+  - Recalculated and updated all 45 affected player results with correct net points based on position and tournament type
   - Net points: Based on net score positions using tournament-specific point tables (major/tour/league/supr)
   - Gross points: Based on gross score positions using standard Tour points regardless of tournament type with proper tie handling
 - **2025-01-30**: Fixed critical server startup issue
