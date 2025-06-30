@@ -4,6 +4,11 @@
 A professional golf league management platform that provides comprehensive tournament tracking, advanced score processing, and detailed performance analytics with enhanced precision in scoring calculations.
 
 ## Recent Changes
+- **2025-01-30**: Fixed critical server startup issue
+  - Resolved invalid import path in `server/storage-db.ts` that was trying to access client-side code
+  - Server was attempting to import `calculatePoints` from `../client/src/lib/points-calculator`
+  - Fixed by importing from proper server-side `./utils` module instead
+  - Application now starts successfully and all backend services are operational
 - **2025-01-30**: Completely refactored leaderboard calculations into separate module
   - Created `server/leaderboard-calculator.ts` for all scoring logic
   - Implemented StrokeNet scoring system: Net Score = "total" column, Gross Score = Net + Handicap
