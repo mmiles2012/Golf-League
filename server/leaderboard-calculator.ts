@@ -65,6 +65,9 @@ export class LeaderboardCalculator {
         scoreCount++;
       }
 
+      // Use appropriate points based on score type
+      const pointsToUse = scoreType === 'gross' ? (result.grossPoints || 0) : (result.points || 0);
+
       const tournamentDetail = {
         id: result.id,
         tournamentId: tournament.id,
@@ -75,26 +78,25 @@ export class LeaderboardCalculator {
         netScore: netScore,
         grossScore: grossScore,
         handicap: result.handicap,
-        points: result.points || 0
+        points: pointsToUse
       };
 
       tournamentDetails.push(tournamentDetail);
-      totalPoints += result.points || 0;
+      totalPoints += pointsToUse;
 
       // Add points to category totals
-      const points = result.points || 0;
       switch (tournament.type) {
         case 'major':
-          majorPoints += points;
+          majorPoints += pointsToUse;
           break;
         case 'tour':
-          tourPoints += points;
+          tourPoints += pointsToUse;
           break;
         case 'league':
-          leaguePoints += points;
+          leaguePoints += pointsToUse;
           break;
         case 'supr':
-          suprPoints += points;
+          suprPoints += pointsToUse;
           break;
       }
     }

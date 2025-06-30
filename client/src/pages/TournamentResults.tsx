@@ -429,8 +429,8 @@ export default function TournamentResults() {
                   </TableHeader>
                   <TableBody>
                     {grossLeaderboardWithPositions.map((result, index) => {
-                      // Use actual points from database (includes tie averaging)
-                      const grossPoints = result.points || 0;
+                      // Use gross points for gross leaderboard
+                      const grossPoints = result.grossPoints || 0;
                         
                       return (
                         <TableRow key={result.id}>
