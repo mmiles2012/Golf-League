@@ -41,7 +41,8 @@ export const playerResults = pgTable("player_results", {
   grossScore: real("gross_score"),
   netScore: real("net_score"),
   handicap: real("handicap"),
-  points: real("points").notNull(),
+  points: real("points").notNull(), // Net points
+  grossPoints: real("gross_points"), // Gross points (initially nullable for migration)
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => {
   return {
@@ -77,7 +78,9 @@ export const insertPlayerResultSchema = createInsertSchema(playerResults)
     // Ensure these fields can be properly null
     grossScore: z.number().nullable(),
     netScore: z.number().nullable(),
-    handicap: z.number().nullable()
+    handicap: z.number().nullable(),
+    points: z.number(), // Net points
+    grossPoints: z.number().nullable() // Gross points (nullable for migration)
   });
 
 // Define types using schema inference
