@@ -16,6 +16,7 @@ A professional golf league management platform that provides comprehensive tourn
   - Updated tournament upload processing to use tie detection and position assignment
   - Enhanced frontend display to show "T2" format for tied positions with orange highlighting
   - Points are now properly distributed: tied players get average of all tied position points
+  - **Successfully migrated existing tournament data**: Fixed Birdie Fest tournament where multiple ties were incorrectly scored, now showing proper point distribution (e.g., 3-way tie for 1st gets 330 points each instead of 500/300/300)
 
 ## Project Architecture
 
