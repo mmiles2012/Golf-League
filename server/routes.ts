@@ -655,52 +655,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
                                    validData.name.toLowerCase().includes("pres"));
       const scoreTypeForTies = isStrokeNetTournament ? 'net' : 'gross';
       
-      // Process results with tie handling for existing players
-      const existingPlayerData = playerData.filter(p => p.playerId !== null) as Array<{
-        playerId: number;
-        playerName: string;
-        grossScore: number | null;
-        netScore: number | null;
-        handicap: number | null;
-      }>;
-      
-      const processedTieResults = existingPlayerData.length > 0 ? 
-        tieHandler.processResultsWithTies(existingPlayerData, validData.type, scoreTypeForTies) : [];
-
-      // Format preview data for existing players
-      const previewResults = processedTieResults.map(result => ({
-        playerName: result.playerName,
-        playerId: result.playerId,
-        position: result.position,
-        displayPosition: result.displayPosition,
-        tiedPosition: result.tiedPosition,
-        grossScore: result.grossScore,
-        netScore: result.netScore,
-        handicap: result.handicap,
-        points: result.points,
-        isNewPlayer: false
+      // Process ALL players with tie handling (both existing and new)
+      const allPlayerDataForTies = playerData.map((p, index) => ({
+        playerId: p.playerId || -(index + 1), // Use negative IDs for new players
+        playerName: p.playerName,
+        grossScore: p.grossScore,
+        netScore: p.netScore,
+        handicap: p.handicap
       }));
+      
+      const processedTieResults = tieHandler.processResultsWithTies(allPlayerDataForTies, validData.type, scoreTypeForTies);
 
-      // Add new players with calculated points
-      const newPlayerData = playerData.filter(p => p.playerId === null);
-      const newPlayerResults = newPlayerData.map((p, index) => {
-        // Calculate points for new players based on their position
-        const position = validData.results.find(r => r.player === p.playerName)?.position || (index + 1);
-        const points = tieHandler.getPointsForPosition(position, validData.type);
-        
-        return {
-          playerName: p.playerName,
+      // Format preview data for all players
+      const previewResults = processedTieResults
+        .filter(result => result.playerId > 0) // Existing players
+        .map(result => ({
+          playerName: result.playerName,
+          playerId: result.playerId,
+          position: result.position,
+          displayPosition: result.displayPosition,
+          tiedPosition: result.tiedPosition,
+          grossScore: result.grossScore,
+          netScore: result.netScore,
+          handicap: result.handicap,
+          points: result.points,
+          isNewPlayer: false
+        }));
+
+      // Add new players with proper tie-handled points
+      const newPlayerResults = processedTieResults
+        .filter(result => result.playerId < 0) // New players (negative IDs)
+        .map(result => ({
+          playerName: result.playerName,
           playerId: null,
-          position: position,
-          displayPosition: `${position}`,
-          tiedPosition: false,
-          grossScore: p.grossScore,
-          netScore: p.netScore,
-          handicap: p.handicap,
-          points: points,
+          position: result.position,
+          displayPosition: result.displayPosition,
+          tiedPosition: result.tiedPosition,
+          grossScore: result.grossScore,
+          netScore: result.netScore,
+          handicap: result.handicap,
+          points: result.points,
           isNewPlayer: true
-        };
-      });
+        }));
 
       const allPreviewResults = [...previewResults, ...newPlayerResults]
         .sort((a, b) => a.position - b.position);
