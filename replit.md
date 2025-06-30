@@ -4,6 +4,15 @@
 A professional golf league management platform that provides comprehensive tournament tracking, advanced score processing, and detailed performance analytics with enhanced precision in scoring calculations.
 
 ## Recent Changes
+- **2025-06-30**: Implemented separate net and gross points tracking system
+  - Added `grossPoints` column to database schema for proper dual-scoring system
+  - Migrated existing tournament data with calculated gross points using Tour points table
+  - Updated tournament upload processing to calculate both net and gross points simultaneously
+  - Created `calculateGrossPoints()` function using standard Tour points distribution (500, 300, 190, etc.)
+  - Fixed leaderboard calculator to use appropriate points based on score type (net vs gross)
+  - Updated frontend tournament results page to display gross points correctly
+  - Net points: Based on net score positions using tournament-specific point tables (major/tour/league/supr)
+  - Gross points: Based on gross score positions using standard Tour points regardless of tournament type
 - **2025-01-30**: Fixed critical server startup issue
   - Resolved invalid import path in `server/storage-db.ts` that was trying to access client-side code
   - Server was attempting to import `calculatePoints` from `../client/src/lib/points-calculator`
