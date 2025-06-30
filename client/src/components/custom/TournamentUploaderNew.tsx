@@ -194,7 +194,9 @@ export default function TournamentUploaderNew() {
       });
 
       if (previewResponse) {
-        setTournamentPreview(previewResponse as TournamentPreview);
+        // Extract the JSON data from the response
+        const previewData = await previewResponse.json() as TournamentPreview;
+        setTournamentPreview(previewData);
         setShowPreview(true);
         setUploadProgress(100);
         setUploadStatus("Preview generated successfully! Review the results below.");
