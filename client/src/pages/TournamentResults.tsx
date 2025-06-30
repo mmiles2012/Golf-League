@@ -61,152 +61,60 @@ export default function TournamentResults() {
   
   const isLoading = tournamentLoading || resultsLoading;
   
-  // Check if this is a stroke tournament
-  const isStrokeTournament = tournament && 
-    (tournament.scoringType === "Stroke" || tournament.name.includes("Stroke"));
-  
-  // Function to get point value based on position and tournament type
-  const getPointsByPosition = (position: number, tournamentType: string): number => {
-    if (tournamentType === 'major') {
-      const majorPoints = [750, 400, 350, 325, 300, 275, 225, 200, 175, 150];
-      return position <= 10 ? majorPoints[position - 1] : 100;
-    } else if (tournamentType === 'tour') {
-      // Tour points distribution based on updated values
-      const tourPoints = [
-        500, 300, 190, 135, 110, 100, 90, 85, 80, 75,      // 1-10
-        70, 65, 60, 55, 53, 51, 49, 47, 45, 43,            // 11-20
-        41, 39, 37, 35.5, 34, 32.5, 31, 29.5, 28, 26.5,    // 21-30
-        25, 23.5, 22, 21, 20, 19, 18, 17, 16, 15,          // 31-40
-        14, 13, 12, 11, 10.5, 10, 9.5, 9, 8.5, 8,          // 41-50
-      ];
-      return position <= 50 ? tourPoints[position - 1] : 
-             position <= 51 ? 7.5 :
-             position <= 52 ? 7 :
-             position <= 53 ? 6.5 :
-             position <= 54 ? 6 :
-             position <= 55 ? 5.8 :
-             position <= 56 ? 5.6 :
-             position <= 57 ? 5.4 :
-             position <= 58 ? 5.2 :
-             position <= 59 ? 5 :
-             position <= 60 ? 4.8 :
-             position <= 61 ? 4.6 :
-             position <= 62 ? 4.4 :
-             position <= 63 ? 4.2 :
-             position <= 64 ? 4 : 3.8;
-    } else {
-      const leaguePoints = [93.75, 50, 43.75, 40.625, 37.5, 34.375, 28.125, 25, 21.875, 18.75];
-      return position <= 10 ? leaguePoints[position - 1] : 15;
-    }
-  };
-  
-  // Sort results for NET leaderboard - sorted by net score
-  const sortedNetResults = results
+  // For NET leaderboard: use stored positions from database and detect ties by comparing net scores
+  const netLeaderboardWithPositions = results
     ? [...results]
         .filter(result => result.netScore !== null)
-        .sort((a, b) => {
-          // Sort by net score (lower is better)
-          if (a.netScore === null && b.netScore === null) {
-            return a.player.name.localeCompare(b.player.name);
-          }
-          if (a.netScore === null) return 1;
-          if (b.netScore === null) return -1;
-          return a.netScore - b.netScore;
+        .sort((a, b) => a.position - b.position) // Sort by stored position from database
+        .map((result, index, sortedResults) => {
+          // Detect if this position is tied by checking adjacent players with same net score
+          const isTied = (
+            (index > 0 && sortedResults[index - 1].netScore === result.netScore) ||
+            (index < sortedResults.length - 1 && sortedResults[index + 1].netScore === result.netScore)
+          );
+          
+          return {
+            ...result,
+            displayPosition: formatPosition(result.position, isTied),
+            actualPosition: result.position,
+            isTied
+          };
         })
     : [];
     
-  // Add null net score players at the end, sorted alphabetically
-  const nullNetScorePlayers = results
-    ? [...results]
-        .filter(result => result.netScore === null)
-        .sort((a, b) => a.player.name.localeCompare(b.player.name))
-    : [];
-    
-  // Final net leaderboard with position assignment
-  const finalNetLeaderboard = [...sortedNetResults, ...nullNetScorePlayers];
-  
-  // Add display positions to net leaderboard (handle ties)
-  const netLeaderboardWithPositions = finalNetLeaderboard.map((result, index) => {
-    let position = index + 1;
-    let isTied = false;
-    
-    // Check for ties by comparing scores
-    if (index > 0 && result.netScore !== null && 
-        finalNetLeaderboard[index - 1].netScore === result.netScore) {
-      // Find the position of the first player with this score
-      let firstTieIndex = index - 1;
-      while (firstTieIndex > 0 && 
-             finalNetLeaderboard[firstTieIndex - 1].netScore === result.netScore) {
-        firstTieIndex--;
-      }
-      position = firstTieIndex + 1;
-      isTied = true;
-    } else if (index < finalNetLeaderboard.length - 1 && result.netScore !== null &&
-               finalNetLeaderboard[index + 1].netScore === result.netScore) {
-      isTied = true;
-    }
-    
-    return {
-      ...result,
-      displayPosition: formatPosition(position, isTied),
-      actualPosition: position,
-      isTied
-    };
-  });
-    
-  // For gross results, sort by gross score (lower is better)
-  const sortedGrossResults = results
+  // For GROSS leaderboard: sort by gross score and detect ties
+  const grossLeaderboardWithPositions = results
     ? [...results]
         .filter(result => result.grossScore !== null)
-        .sort((a, b) => {
-          // Sort by gross score
-          if (a.grossScore === null && b.grossScore === null) {
-            return a.player.name.localeCompare(b.player.name);
+        .sort((a, b) => a.grossScore! - b.grossScore!) // Sort by gross score (lower is better)
+        .map((result, index, sortedResults) => {
+          // Calculate position based on gross score order (not stored database position)
+          let grossPosition = index + 1;
+          
+          // Check if previous players have same gross score (tied for previous position)
+          if (index > 0 && sortedResults[index - 1].grossScore === result.grossScore) {
+            // Find the first player with this gross score
+            let firstTieIndex = index - 1;
+            while (firstTieIndex > 0 && sortedResults[firstTieIndex - 1].grossScore === result.grossScore) {
+              firstTieIndex--;
+            }
+            grossPosition = firstTieIndex + 1;
           }
-          if (a.grossScore === null) return 1;
-          if (b.grossScore === null) return -1;
-          return a.grossScore - b.grossScore;
+          
+          // Detect if this position is tied
+          const isTied = (
+            (index > 0 && sortedResults[index - 1].grossScore === result.grossScore) ||
+            (index < sortedResults.length - 1 && sortedResults[index + 1].grossScore === result.grossScore)
+          );
+          
+          return {
+            ...result,
+            displayPosition: formatPosition(grossPosition, isTied),
+            actualPosition: grossPosition,
+            isTied
+          };
         })
     : [];
-    
-  // Add null gross score players at the end, sorted alphabetically
-  const nullGrossScorePlayers = results
-    ? [...results]
-        .filter(result => result.grossScore === null)
-        .sort((a, b) => a.player.name.localeCompare(b.player.name))
-    : [];
-    
-  // Final gross leaderboard with position assignment
-  const finalGrossLeaderboard = [...sortedGrossResults, ...nullGrossScorePlayers];
-  
-  // Add display positions to gross leaderboard (handle ties)
-  const grossLeaderboardWithPositions = finalGrossLeaderboard.map((result, index) => {
-    let position = index + 1;
-    let isTied = false;
-    
-    // Check for ties by comparing scores
-    if (index > 0 && result.grossScore !== null && 
-        finalGrossLeaderboard[index - 1].grossScore === result.grossScore) {
-      // Find the position of the first player with this score
-      let firstTieIndex = index - 1;
-      while (firstTieIndex > 0 && 
-             finalGrossLeaderboard[firstTieIndex - 1].grossScore === result.grossScore) {
-        firstTieIndex--;
-      }
-      position = firstTieIndex + 1;
-      isTied = true;
-    } else if (index < finalGrossLeaderboard.length - 1 && result.grossScore !== null &&
-               finalGrossLeaderboard[index + 1].grossScore === result.grossScore) {
-      isTied = true;
-    }
-    
-    return {
-      ...result,
-      displayPosition: formatPosition(position, isTied),
-      actualPosition: position,
-      isTied
-    };
-  });
   
   // Add ordinal suffix to position
   const getOrdinalSuffix = (num: number): string => {
