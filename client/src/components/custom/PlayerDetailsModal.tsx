@@ -15,7 +15,7 @@ import { Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { PlayerWithHistory } from "@shared/schema";
 import { formatDate } from "@/lib/utils";
-import { calculatePoints } from "@/lib/points-calculator";
+
 
 interface PlayerDetailsModalProps {
   playerId: number | null;

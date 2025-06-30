@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft } from "lucide-react";
 import { formatDate } from "@/lib/utils";
-import { calculatePoints } from "@/lib/points-calculator";
+
 import type { PlayerWithHistory } from "@shared/schema";
 
 interface PlayerProfileProps {

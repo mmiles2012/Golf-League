@@ -21,7 +21,10 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Tournament } from "@shared/schema";
 import { formatDate } from "@/lib/utils";
-import { formatPosition, detectTies } from "@/lib/points-calculator";
+// Simple helper function for formatting positions
+function formatPosition(position: number, isTied: boolean): string {
+  return isTied ? `T${position}` : `${position}`;
+}
 
 // Function to get tournament type label
 function getTournamentTypeLabel(type: string): string {
