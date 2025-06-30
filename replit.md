@@ -9,6 +9,13 @@ A professional golf league management platform that provides comprehensive tourn
   - Implemented StrokeNet scoring system: Net Score = "total" column, Gross Score = Net + Handicap
   - Removed complex legacy scoring algorithms for cleaner codebase
   - Both net and gross leaderboards now reference each other consistently
+- **2025-01-30**: Implemented comprehensive tie handling system
+  - Created `server/tie-handler.ts` for proper golf tournament tie processing
+  - Added proper position sharing for tied players (e.g., three players tie for 2nd place)
+  - Implemented point averaging across tied positions according to golf standards
+  - Updated tournament upload processing to use tie detection and position assignment
+  - Enhanced frontend display to show "T2" format for tied positions with orange highlighting
+  - Points are now properly distributed: tied players get average of all tied position points
 
 ## Project Architecture
 
