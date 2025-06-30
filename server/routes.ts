@@ -510,37 +510,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const processedData = [];
       for (let index = 0; index < data.length; index++) {
         const row: any = data[index];
-        // Extract email (optional for preview system)
-        const email = (row["Email"] || row["email"] || "").toLowerCase().trim();
+        // Extract email (required for player matching)
+        const email = (row["Email"] || row["email"] || row["Player Email"] || row["player email"] || "").toLowerCase().trim();
         let player = null;
         let playerName = "";
         
         if (email) {
-          // Email-based processing (legacy)
+          // Email-based processing (primary method)
           player = emailToPlayer.get(email);
           if (!player) {
             // Create new player with display name as name
-            const displayName = row["Player"] || row["Name"] || row["Display Name"] || email.split("@")[0];
+            const displayName = row["Player"] || row["Name"] || row["Display Name"] || row["Player Name"] || email.split("@")[0];
             player = await storage.createPlayer({ name: displayName, email });
             // Update the map for subsequent lookups
             emailToPlayer.set(email, player);
           }
           playerName = player.name;
         } else {
-          // Name-based processing (for preview system)
-          playerName = row["Player"] || row["Name"] || row["Display Name"] || `Player ${index + 1}`;
+          // Fallback to name-based processing for preview system
+          playerName = row["Player"] || row["Name"] || row["Display Name"] || row["Player Name"] || `Player ${index + 1}`;
         }
 
         // Extract and validate net score (from 'Total')
-        const netScore = Number(row["Total"]);
+        const totalValue = row["Total"] || row["total"];
+        
+        // Skip rows with DNF, N/A, or invalid scores
+        if (!totalValue || totalValue === "N/A" || totalValue === "DNF" || totalValue === "-" || totalValue === "") {
+          console.log(`Skipping row ${index + 1} (${playerName}): Total = '${totalValue}'`);
+          continue;
+        }
+        
+        const netScore = Number(totalValue);
         if (isNaN(netScore)) {
-          throw new Error(`Invalid or missing 'Total' (net score) for row ${index + 1}`);
+          throw new Error(`Invalid 'Total' score for row ${index + 1} (${playerName}): '${totalValue}'`);
         }
 
-        // Extract and validate course handicap
-        const courseHandicap = Number(row["Course Handicap"]);
-        if (isNaN(courseHandicap)) {
-          throw new Error(`Invalid or missing 'Course Handicap' for row ${index + 1}`);
+        // Extract course handicap with robust handling
+        let courseHandicap = 0;
+        const handicapValue = row["Course Handicap"] || row["course handicap"] || row["Playing Handicap"] || row["playing handicap"] || row["Handicap"] || row["handicap"];
+        
+        if (handicapValue && handicapValue !== "N/A" && handicapValue !== "-" && handicapValue !== "") {
+          courseHandicap = Number(handicapValue);
+          if (isNaN(courseHandicap)) {
+            console.warn(`Invalid handicap for ${playerName} (row ${index + 1}): '${handicapValue}', using 0`);
+            courseHandicap = 0;
+          }
         }
 
         // Calculate gross score
