@@ -350,10 +350,8 @@ export default function TournamentResults() {
                   </TableHeader>
                   <TableBody>
                     {netLeaderboardWithPositions.map((result, index) => {
-                      // Calculate proper points for net leaderboard position
-                      const netPoints = tournament && result.netScore !== null 
-                        ? getPointsByPosition(result.actualPosition, tournament.type) 
-                        : 0;
+                      // Use actual points from database (includes tie averaging)
+                      const netPoints = result.points || 0;
                         
                       return (
                         <TableRow key={result.id}>
@@ -431,10 +429,8 @@ export default function TournamentResults() {
                   </TableHeader>
                   <TableBody>
                     {grossLeaderboardWithPositions.map((result, index) => {
-                      // Calculate gross points based on gross leaderboard position
-                      const grossPoints = tournament && result.grossScore !== null 
-                        ? getPointsByPosition(result.actualPosition, tournament.type) 
-                        : 0;
+                      // Use actual points from database (includes tie averaging)
+                      const grossPoints = result.points || 0;
                         
                       return (
                         <TableRow key={result.id}>
