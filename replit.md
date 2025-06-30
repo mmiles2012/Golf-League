@@ -4,6 +4,12 @@
 A professional golf league management platform that provides comprehensive tournament tracking, advanced score processing, and detailed performance analytics with enhanced precision in scoring calculations.
 
 ## Recent Changes
+- **2025-06-30**: Verified and completed tournament upload point calculation system
+  - **Verified tournament upload tie handling**: All point calculations work correctly for tied positions
+  - **Fixed tournament preview logic**: Preview now properly handles ties for both new and existing players
+  - **Enhanced manual entry**: Made position optional to allow automatic tie detection based on scores
+  - **Confirmed database storage**: All net points, gross points, and tie-averaged points save correctly
+  - **Comprehensive testing completed**: Verified Tour (300+190÷2=245pts), League (50+43.75÷2=46.9pts) calculations
 - **2025-06-30**: Implemented separate net and gross points tracking system
   - Added `grossPoints` column to database schema for proper dual-scoring system
   - Migrated existing tournament data with calculated gross points using Tour points table
