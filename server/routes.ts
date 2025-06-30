@@ -965,41 +965,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   return httpServer;
 }
 
-// Helper function to calculate points based on position and tournament type
-function calculatePoints(position: number, tournamentType: string): number {
-  // Points system based on the provided PDFs
-  if (tournamentType === 'major') {
-    const majorPoints = [
-      750, 400, 350, 325, 300, 275, 225, 200, 175, 150,  // 1-10
-      130, 120, 110, 90, 80, 70, 65, 60, 55, 50,         // 11-20
-      48, 46, 44, 42, 40, 38, 36, 34, 32.5, 31,          // 21-30
-      29.5, 28, 26.5, 25, 24, 23, 22, 21, 20.25, 19.5,   // 31-40
-      18.75, 18, 17.25, 16.5, 15.75, 15, 14.25, 13.5, 13, 12.5, // 41-50
-      12, 11.5, 11, 10.5, 10, 9.5, 9, 8.5, 8, 7.75,      // 51-60
-      7.5, 7.25, 7                                       // 61-63
-    ];
-    return position <= majorPoints.length ? majorPoints[position - 1] : 0;
-  } 
-  else if (tournamentType === 'tour') {
-    // Updated tour points distribution based on the PDF
-    const tourPoints = [
-      500, 300, 190, 135, 110, 100, 90, 85, 80, 75,      // 1-10
-      70, 65, 60, 55, 53, 51, 49, 47, 45, 43,            // 11-20
-      41, 39, 37, 35.5, 34, 32.5, 31, 29.5, 28, 26.5,    // 21-30
-      25, 23.5, 22, 21, 20, 19, 18, 17, 16, 15,          // 31-40
-      14, 13, 12, 11, 10.5, 10, 9.5, 9, 8.5, 8,          // 41-50
-      7.5, 7, 6.5, 6, 5.8, 5.6, 5.4, 5.2, 5, 4.8,        // 51-60
-      4.6, 4.4, 4.2, 4, 3.8                              // 61-65
-    ];
-    return position <= tourPoints.length ? tourPoints[position - 1] : 0;
-  } 
-  else if (tournamentType === 'league' || tournamentType === 'supr') {
-    const leagueAndSuprPoints = [
-      93.75, 50, 43.75, 40.625, 37.5, 34.375, 28.125, 25, 21.875, 18.75,  // 1-10
-      16.25, 15, 13.75, 11.25, 10, 8.75, 8.125, 7.5, 6.875, 6             // 11-20
-    ];
-    return position <= leagueAndSuprPoints.length ? leagueAndSuprPoints[position - 1] : 0;
-  }
-  
-  return 0; // Default if no valid tournament type
-}
+// Deprecated: Legacy helper function to calculate points based on position and tournament type
+// function calculatePoints(position: number, tournamentType: string): number {
+//   // Points system based on the provided PDFs
+//   if (tournamentType === 'major') {
+//     const majorPoints = [
+//       750, 400, 350, 325, 300, 275, 225, 200, 175, 150,  // 1-10
+//       130, 120, 110, 90, 80, 70, 65, 60, 55, 50,         // 11-20
+//       48, 46, 44, 42, 40, 38, 36, 34, 32.5, 31,          // 21-30
+//       29.5, 28, 26.5, 25, 24, 23, 22, 21, 20.25, 19.5,   // 31-40
+//       18.75, 18, 17.25, 16.5, 15.75, 15, 14.25, 13.5, 13, 12.5, // 41-50
+//       12, 11.5, 11, 10.5, 10, 9.5, 9, 8.5, 8, 7.75,      // 51-60
+//       7.5, 7.25, 7                                       // 61-63
+//     ];
+//     return position <= majorPoints.length ? majorPoints[position - 1] : 0;
+//   } 
+//   else if (tournamentType === 'tour') {
+//     // Updated tour points distribution based on the PDF
+//     const tourPoints = [
+//       500, 300, 190, 135, 110, 100, 90, 85, 80, 75,      // 1-10
+//       70, 65, 60, 55, 53, 51, 49, 47, 45, 43,            // 11-20
+//       41, 39, 37, 35.5, 34, 32.5, 31, 29.5, 28, 26.5,    // 21-30
+//       25, 23.5, 22, 21, 20, 19, 18, 17, 16, 15,          // 31-40
+//       14, 13, 12, 11, 10.5, 10, 9.5, 9, 8.5, 8,          // 41-50
+//       7.5, 7, 6.5, 6, 5.8, 5.6, 5.4, 5.2, 5, 4.8,        // 51-60
+//       4.6, 4.4, 4.2, 4, 3.8                              // 61-65
+//     ];
+//     return position <= tourPoints.length ? tourPoints[position - 1] : 0;
+//   } 
+//   else if (tournamentType === 'league' || tournamentType === 'supr') {
+//     const leagueAndSuprPoints = [
+//       93.75, 50, 43.75, 40.625, 37.5, 34.375, 28.125, 25, 21.875, 18.75,  // 1-10
+//       16.25, 15, 13.75, 11.25, 10, 8.75, 8.125, 7.5, 6.875, 6             // 11-20
+//     ];
+//     return position <= leagueAndSuprPoints.length ? leagueAndSuprPoints[position - 1] : 0;
+//   }
+//   
+//   return 0; // Default if no valid tournament type
+// }
