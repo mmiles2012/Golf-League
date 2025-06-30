@@ -247,3 +247,70 @@ PUT /api/points-config
 
 ## License
 This project is for internal league use. Contact the maintainer for permissions or contributions.
+
+---
+
+## Spreadsheet Upload Requirements (Admin)
+
+### Endpoint: `POST /api/upload`
+Uploads an Excel (.xlsx) file containing tournament results. The file is parsed and validated before processing.
+
+#### **Required Columns**
+- `Email` (or `email`): Player's email address (used for matching/creating players, case-insensitive)
+- `Total`: Net score (numeric, required)
+- `Course Handicap`: Player's course handicap (numeric, required)
+- `Player`, `Name`, or `Display Name`: Player's display name (optional, used if creating a new player)
+- `Pos`, `Position`, or `position`: Player's finishing position (optional; defaults to row order if missing)
+
+#### **Processing Logic**
+- **Player Matching:**
+  - Players are matched by email (case-insensitive).
+  - If no player is found for the email, a new player is created using the display name (or the email prefix if no name is provided).
+- **Score Calculation:**
+  - **Net Score:** Taken from the `Total` column.
+  - **Gross Score:** Calculated as `Net Score + Course Handicap`.
+- **Validation:**
+  - Each row must have a valid email, net score (`Total`), and course handicap.
+  - If any required field is missing or invalid, the upload is rejected with a clear error message indicating the row and issue.
+
+#### **Error Handling**
+- Missing or invalid `Email`, `Total`, or `Course Handicap` will cause the upload to fail.
+- The response will include a message describing the error and the row number.
+
+#### **Example Upload File**
+| Email              | Player      | Total | Course Handicap | Pos |
+|--------------------|-------------|-------|----------------|-----|
+| alice@email.com    | Alice Smith | 72    | 10             | 1   |
+| bob@email.com      | Bob Jones   | 75    | 12             | 2   |
+
+#### **Example Response**
+```json
+{
+  "message": "File uploaded successfully",
+  "rows": 2,
+  "preview": [
+    {
+      "Player": "Alice Smith",
+      "Email": "alice@email.com",
+      "Position": 1,
+      "Gross Score": 82,
+      "Net Score": 72,
+      "Course Handicap": 10
+    },
+    ...
+  ]
+}
+```
+
+#### **Example Error Response**
+```json
+{
+  "message": "Invalid or missing 'Total' (net score) for row 2"
+}
+```
+
+#### **Notes**
+- The upload endpoint only accepts Excel files (`.xlsx`).
+- All emails are normalized to lowercase for matching.
+- New players are created automatically if the email does not exist in the system.
+- The preview in the response shows how the data was parsed and calculated.

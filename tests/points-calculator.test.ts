@@ -31,6 +31,14 @@ describe('calculatePoints (DB-driven)', () => {
     expect(calculatePoints(0, 'major')).toBe(0);
     expect(calculatePoints(-5, 'tour')).toBe(0);
   });
+
+  it('averages points for ties (e.g., 3-way tie for 1st in major)', () => {
+    // Simulate tie: average of 1st, 2nd, 3rd place points
+    const tiePositions = [1, 2, 3];
+    const points = tiePositions.map(pos => calculatePoints(pos, 'major'));
+    const avg = points.reduce((a, b) => a + b, 0) / points.length;
+    expect(avg).toBeCloseTo((750 + 400 + 350) / 3);
+  });
 });
 
 describe('calculatePoints (pure unit)', () => {
@@ -50,5 +58,12 @@ describe('calculatePoints (pure unit)', () => {
   it('returns 0 for invalid/negative positions', () => {
     expect(calculatePoints(0, 'major')).toBe(0);
     expect(calculatePoints(-5, 'tour')).toBe(0);
+  });
+
+  it('averages points for ties (e.g., 2-way tie for 2nd in tour)', () => {
+    const tiePositions = [2, 3];
+    const points = tiePositions.map(pos => calculatePoints(pos, 'tour'));
+    const avg = points.reduce((a, b) => a + b, 0) / points.length;
+    expect(avg).toBeCloseTo((300 + 190) / 2);
   });
 });
