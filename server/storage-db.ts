@@ -20,8 +20,7 @@ import {
 import { db } from "./db";
 import { IStorage } from "./storage";
 import { LeaderboardCalculator } from "./leaderboard-calculator";
-// Use points calculator from client lib for consistency 
-import { calculatePoints } from "../client/src/lib/points-calculator";
+import { calculatePoints } from "./utils";
 
 // Default points configurations based on provided PDFs
 const DEFAULT_POINTS_CONFIG = {
