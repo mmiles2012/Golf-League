@@ -127,17 +127,28 @@ export class LeaderboardCalculator {
       averageScore: scoreType === 'net' ? averageNetScore : averageGrossScore
     };
 
-    // Add gross-specific fields when in gross mode
+    // Calculate top 8 events points
+    const top8Results = this.calculateTop8Points(tournamentDetails, scoreType);
+
+    // Add type-specific fields when in gross mode
     if (scoreType === 'gross') {
       return {
         ...result,
         grossTotalPoints: totalPoints,
         grossTourPoints: tourPoints,
-        grossMajorPoints: majorPoints
+        grossTop8TotalPoints: top8Results.totalPoints,
+        grossTop8TourPoints: top8Results.tourPoints,
+        grossTop8MajorPoints: top8Results.majorPoints
       };
     }
 
-    return result;
+    // Add top 8 fields for net mode
+    return {
+      ...result,
+      top8TotalPoints: top8Results.totalPoints,
+      top8TourPoints: top8Results.tourPoints,
+      top8MajorPoints: top8Results.majorPoints
+    };
   }
 
   /**
@@ -154,12 +165,15 @@ export class LeaderboardCalculator {
       }
     }
     
-    // Sort by total points (descending), then by average net score (ascending - lower is better)
+    // Sort by total points (descending), then by player handicap (ascending - lower handicap wins ties)
     leaderboard.sort((a, b) => {
       if (b.totalPoints !== a.totalPoints) {
         return b.totalPoints - a.totalPoints;
       }
-      return (a.averageNetScore || 999) - (b.averageNetScore || 999);
+      // Use player default handicap for tie-breaking (lower handicap wins)
+      const handicapA = a.player.defaultHandicap || 999;
+      const handicapB = b.player.defaultHandicap || 999;
+      return handicapA - handicapB;
     });
     
     // Assign ranks
@@ -184,12 +198,15 @@ export class LeaderboardCalculator {
       }
     }
     
-    // Sort by total points (descending), then by average gross score (ascending - lower is better)
+    // Sort by total points (descending), then by player handicap (ascending - lower handicap wins ties)
     leaderboard.sort((a, b) => {
       if (b.totalPoints !== a.totalPoints) {
         return b.totalPoints - a.totalPoints;
       }
-      return (a.averageGrossScore || 999) - (b.averageGrossScore || 999);
+      // Use player default handicap for tie-breaking (lower handicap wins)
+      const handicapA = a.player.defaultHandicap || 999;
+      const handicapB = b.player.defaultHandicap || 999;
+      return handicapA - handicapB;
     });
     
     // Assign ranks
@@ -198,6 +215,50 @@ export class LeaderboardCalculator {
     });
     
     return leaderboard;
+  }
+
+  /**
+   * Calculate top 8 events points from tournament details
+   */
+  private calculateTop8Points(tournamentDetails: any[], scoreType: 'net' | 'gross'): {
+    totalPoints: number;
+    majorPoints: number;
+    tourPoints: number;
+  } {
+    // Sort tournaments by points (descending) to get the highest scoring events
+    const pointsField = scoreType === 'gross' ? 'grossPoints' : 'points';
+    const sortedTournaments = [...tournamentDetails]
+      .filter(t => t[pointsField] > 0) // Only include events with points
+      .sort((a, b) => b[pointsField] - a[pointsField]);
+
+    // Take top 8 events
+    const top8Events = sortedTournaments.slice(0, 8);
+
+    // Calculate totals from top 8 events
+    let totalPoints = 0;
+    let majorPoints = 0;
+    let tourPoints = 0;
+
+    for (const tournament of top8Events) {
+      const points = tournament[pointsField];
+      totalPoints += points;
+
+      switch (tournament.tournamentType) {
+        case 'major':
+          majorPoints += points;
+          break;
+        case 'tour':
+          tourPoints += points;
+          break;
+        // Note: league and supr points are included in totalPoints but not tracked separately for top 8
+      }
+    }
+
+    return {
+      totalPoints,
+      majorPoints,
+      tourPoints
+    };
   }
 
   /**

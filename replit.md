@@ -4,6 +4,11 @@
 A professional golf league management platform that provides comprehensive tournament tracking, advanced score processing, and detailed performance analytics with enhanced precision in scoring calculations.
 
 ## Recent Changes
+- **2025-07-01**: Completed gross points data flow architecture
+  - **Fixed gross leaderboard calculation**: Modified `calculatePlayerHistory` to include `grossTotalPoints`, `grossTourPoints`, and `grossMajorPoints` fields when in 'gross' mode
+  - **Enhanced player history API**: Added `grossPoints`, `netPoints`, and `grossPosition` fields to tournament details in player history responses
+  - **Verified complete data architecture**: All components (leaderboards, player modals, tournament results, player profiles) now correctly display both net and gross points from backend APIs
+  - **Confirmed frontend-backend data integrity**: All components act as pure displays showing exact database values without recalculation
 - **2025-06-30**: Verified and completed tournament upload point calculation system
   - **Verified tournament upload tie handling**: All point calculations work correctly for tied positions
   - **Fixed tournament preview logic**: Preview now properly handles ties for both new and existing players

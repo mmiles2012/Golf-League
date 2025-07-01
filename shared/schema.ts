@@ -184,6 +184,13 @@ export const playerWithHistorySchema = z.object({
   averageScore: z.number().optional(),
   grossTourPoints: z.number().optional(),
   grossTotalPoints: z.number().optional(),
+  // Top 8 events calculation fields
+  top8TotalPoints: z.number().optional(),
+  top8TourPoints: z.number().optional(),
+  top8MajorPoints: z.number().optional(),
+  grossTop8TotalPoints: z.number().optional(),
+  grossTop8TourPoints: z.number().optional(),
+  grossTop8MajorPoints: z.number().optional(),
 });
 
 export type PlayerWithHistory = z.infer<typeof playerWithHistorySchema>;
