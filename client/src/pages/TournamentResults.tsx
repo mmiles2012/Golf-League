@@ -91,6 +91,20 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
     );
   }
 
+  // Sort results for NET leaderboard by net score (lower is better)
+  const netResults = [...tournamentResults].sort((a, b) => {
+    const scoreA = a?.netScore !== null && a?.netScore !== undefined ? a.netScore : 999;
+    const scoreB = b?.netScore !== null && b?.netScore !== undefined ? b.netScore : 999;
+    return scoreA - scoreB;
+  });
+
+  // Sort results for GROSS leaderboard by gross score (lower is better)
+  const grossResults = [...tournamentResults].sort((a, b) => {
+    const scoreA = a?.grossScore !== null && a?.grossScore !== undefined ? a.grossScore : 999;
+    const scoreB = b?.grossScore !== null && b?.grossScore !== undefined ? b.grossScore : 999;
+    return scoreA - scoreB;
+  });
+
   return (
     <div className="space-y-6 pb-20">
       <div className="flex justify-between items-center">
@@ -154,10 +168,19 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {tournamentResults.map((result) => (
+                {netResults.map((result, index) => {
+                  // Check if this net score is tied by looking for other players with the same net score
+                  const isTied = netResults.filter(r => r?.netScore === result?.netScore).length > 1;
+                  // Calculate position based on sorted order
+                  const position = index + 1;
+                  
+                  return (
                   <TableRow key={result?.id || 'unknown'}>
                     <TableCell className="font-semibold">
-                      {result?.position || ''}
+                      <span className={isTied ? "text-orange-600" : ""}>
+                        {formatPosition(position, isTied)}
+                        {!isTied && <sup>{getOrdinalSuffix(position)}</sup>}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <a 
@@ -186,7 +209,8 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                       {result?.points || 0}
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           </CardContent>
