@@ -196,15 +196,18 @@ export class LeaderboardCalculator {
     
     for (const player of allPlayers) {
       const playerHistory = await this.calculatePlayerHistory(player.id, 'gross');
-      if (playerHistory && playerHistory.totalPoints > 0) {
+      if (playerHistory && (playerHistory.grossTop8TotalPoints || 0) > 0) {
         leaderboard.push(playerHistory);
       }
     }
     
-    // Sort by total points (descending), then by player handicap (ascending - lower handicap wins ties)
+    // Sort by gross top 8 points (descending), then by player handicap (ascending - lower handicap wins ties)
     leaderboard.sort((a, b) => {
-      if (b.totalPoints !== a.totalPoints) {
-        return b.totalPoints - a.totalPoints;
+      const grossTop8PointsA = a.grossTop8TotalPoints || 0;
+      const grossTop8PointsB = b.grossTop8TotalPoints || 0;
+      
+      if (grossTop8PointsB !== grossTop8PointsA) {
+        return grossTop8PointsB - grossTop8PointsA;
       }
       // Use player default handicap for tie-breaking (lower handicap wins)
       const handicapA = a.player.defaultHandicap || 999;
