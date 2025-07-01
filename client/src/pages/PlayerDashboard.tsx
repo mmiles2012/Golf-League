@@ -52,39 +52,15 @@ export default function PlayerDashboard() {
   });
 
   // Get player history if linked to a player
-  const { data: playerHistory, isLoading: historyLoading } = useQuery({
+  const { data: playerHistory, isLoading: historyLoading, error: historyError } = useQuery({
     queryKey: ["/api/players", linkedPlayerId, "history"],
     enabled: !!linkedPlayerId,
-    onError: (error: Error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Session Expired",
-          description: "Please log in again to continue.",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 1000);
-      }
-    },
   });
 
   // Get friends leaderboard
   const { data: friendsLeaderboard = [] } = useQuery({
     queryKey: ["/api/auth/friends-leaderboard", selectedScoreType],
     enabled: isAuthenticated && user?.friendsList && user.friendsList.length > 0,
-    onError: (error: Error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Session Expired",
-          description: "Please log in again to continue.",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 1000);
-      }
-    },
   });
 
   // Update profile mutation
