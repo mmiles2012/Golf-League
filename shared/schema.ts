@@ -304,7 +304,7 @@ export const upsertUserSchema = createInsertSchema(users).omit({
 export const updateUserProfileSchema = z.object({
   displayName: z.string().min(1, "Display name is required"),
   homeClub: z.string().optional(),
-  friendsList: z.array(z.string()).default([]),
+  friendsList: z.array(z.string()).optional().default([]),
 });
 
 export const playerProfileLinkSchema = createInsertSchema(playerProfiles).omit({

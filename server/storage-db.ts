@@ -426,15 +426,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserProfile(userId: string, profileData: UpdateUserProfile): Promise<User | undefined> {
-    const [user] = await db
-      .update(users)
-      .set({
-        ...profileData,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, userId))
-      .returning();
-    return user;
+    try {
+      console.log("Updating user profile:", { userId, profileData });
+      
+      const [user] = await db
+        .update(users)
+        .set({
+          displayName: profileData.displayName,
+          homeClub: profileData.homeClub || null,
+          friendsList: profileData.friendsList || [],
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      console.log("Updated user:", user);
+      return user;
+    } catch (error) {
+      console.error("Database error in updateUserProfile:", error);
+      throw error;
+    }
   }
 
   async getUserPlayerProfile(userId: string): Promise<{ user: User, player?: Player, linkedPlayerId?: number }> {
