@@ -111,13 +111,19 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
     );
   }
 
-  // Debug logging
-  console.log("Tournament ID:", tournamentId);
-  console.log("Tournament data:", tournament);
-  console.log("Tournament results data:", tournamentResults);
-  
-  // NO FILTERING - Just sort by position for display
-  const allResults = [...tournamentResults].sort((a, b) => (a?.position || 999) - (b?.position || 999));
+  // Sort results for NET leaderboard by net score (lower is better)
+  const netResults = [...tournamentResults].sort((a, b) => {
+    const scoreA = a?.netScore !== null && a?.netScore !== undefined ? a.netScore : 999;
+    const scoreB = b?.netScore !== null && b?.netScore !== undefined ? b.netScore : 999;
+    return scoreA - scoreB;
+  });
+
+  // Sort results for GROSS leaderboard by gross score (lower is better)
+  const grossResults = [...tournamentResults].sort((a, b) => {
+    const scoreA = a?.grossScore !== null && a?.grossScore !== undefined ? a.grossScore : 999;
+    const scoreB = b?.grossScore !== null && b?.grossScore !== undefined ? b.grossScore : 999;
+    return scoreA - scoreB;
+  });
   
   return (
     <div className="space-y-6 pb-20">
@@ -180,16 +186,18 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {allResults.map((result) => {
-                  // Check if this position is tied by looking for other players with the same position
-                  const isTied = allResults.filter(r => r?.position === result?.position).length > 1;
+                {netResults.map((result, index) => {
+                  // Check if this net score is tied by looking for other players with the same net score
+                  const isTied = netResults.filter(r => r?.netScore === result?.netScore).length > 1;
+                  // Calculate position based on sorted order
+                  const position = index + 1;
                   
                   return (
                     <TableRow key={result?.id || 'unknown'}>
                       <TableCell className="font-semibold">
                         <span className={isTied ? "text-orange-600" : ""}>
-                          {result?.position ? formatPosition(result.position, isTied) : 'N/A'}
-                          {result?.position && !isTied && <sup>{getOrdinalSuffix(result.position)}</sup>}
+                          {formatPosition(position, isTied)}
+                          {!isTied && <sup>{getOrdinalSuffix(position)}</sup>}
                         </span>
                       </TableCell>
                       <TableCell>
@@ -249,16 +257,18 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {allResults.map((result) => {
-                  // Check if this position is tied
-                  const isTied = allResults.filter(r => r?.position === result?.position).length > 1;
+                {grossResults.map((result, index) => {
+                  // Check if this gross score is tied by looking for other players with the same gross score
+                  const isTied = grossResults.filter(r => r?.grossScore === result?.grossScore).length > 1;
+                  // Calculate position based on sorted order
+                  const position = index + 1;
                   
                   return (
                     <TableRow key={result?.id || 'unknown'}>
                       <TableCell className="font-semibold">
                         <span className={isTied ? "text-orange-600" : ""}>
-                          {result?.position ? formatPosition(result.position, isTied) : 'N/A'}
-                          {result?.position && !isTied && <sup>{getOrdinalSuffix(result.position)}</sup>}
+                          {formatPosition(position, isTied)}
+                          {!isTied && <sup>{getOrdinalSuffix(position)}</sup>}
                         </span>
                       </TableCell>
                       <TableCell>
