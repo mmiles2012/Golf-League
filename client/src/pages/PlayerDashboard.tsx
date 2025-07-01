@@ -66,9 +66,11 @@ export default function PlayerDashboard() {
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (data: any) => {
+      console.log("Frontend: Sending profile update request:", data);
       return await apiRequest("/api/auth/profile", "PUT", data);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Frontend: Profile update successful:", data);
       toast({
         title: "Profile Updated",
         description: "Your profile has been updated successfully.",
@@ -78,6 +80,8 @@ export default function PlayerDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/friends-leaderboard", selectedScoreType] });
     },
     onError: (error: Error) => {
+      console.error("Frontend: Profile update error:", error);
+      console.error("Frontend: Error message:", error.message);
       if (isUnauthorizedError(error)) {
         toast({
           title: "Session Expired",
@@ -91,7 +95,7 @@ export default function PlayerDashboard() {
       }
       toast({
         title: "Update Failed",
-        description: "Failed to update profile. Please try again.",
+        description: `Failed to update profile: ${error.message}`,
         variant: "destructive",
       });
     },
