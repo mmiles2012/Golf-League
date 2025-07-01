@@ -1,0 +1,43 @@
+Player Profile & Dashboard Feature Requirements (with Replit Auth & Admin Controls)
+1. Authentication & Access
+Use Replit’s built-in authentication system
+Rely on OAuth-like external verification for all logins (players and admins).
+No custom password management; authentication is handled by Replit’s system.
+Player Logins:
+Any verified user can log in and access their own profile/dashboard.
+Admin Logins:
+Only users with emails/accounts from the specified domain (e.g., @hideoutgolf.club) can be admins.
+Enforce domain-name requirement for admin privileges at login and when appointing new admins.
+Super-Admin:
+There is a super-admin role.
+Only the super-admin can appoint or remove other admins.
+Super-admin can upload data and manage all admin privileges.
+2. Player Profile Page (After Login)
+Features to Implement:
+Editable display name and home club.
+Sorted tournament/match history.
+Highlighted top 8 scores (used for standings) and dropped scores.
+Friends selection and filtered leaderboard view.
+3. Data Sources & Backend
+All profile, tournament, and leaderboard data must come from backend APIs.
+Backend must enforce:
+Only super-admin can manage admin roles.
+Only domain-verified accounts can be admins.
+Players can only edit their own data.
+4. Frontend Logic
+No calculation of points, positions, or tie logic in the frontend.
+Frontend may sort, highlight, and filter as needed for display.
+5. Security & Permissions
+Players can only update their own profile and friends list.
+Admins (with correct domain) can upload/manage tournaments.
+Super-admin can appoint/remove admins.
+Role-based access control must be enforced in both frontend and backend.
+Summary:
+
+Use Replit’s OAuth-like authentication for all users.
+Only allow admin privileges for users with the specified domain.
+Only the super-admin can manage admin roles.
+All profile and leaderboard data comes from backend APIs.
+Frontend is display-only for points/ties; all calculations are backend-driven.
+Enforce all permissions and roles as described.
+Following these directions will ensure secure, role-based access and a robust player/admin experience.

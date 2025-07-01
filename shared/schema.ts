@@ -1,9 +1,48 @@
-import { pgTable, text, serial, integer, boolean, timestamp, real, date, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, real, date, unique, varchar, jsonb, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const tournamentTypes = ['major', 'tour', 'league', 'supr'] as const;
 export type TournamentType = typeof tournamentTypes[number];
+
+// Session storage table for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// User storage table for Replit Auth
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().notNull(),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  role: varchar("role").default("player").notNull(), // player, admin, super_admin
+  displayName: varchar("display_name"),
+  homeClub: varchar("home_club"),
+  friendsList: text("friends_list").array().default([]),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Player profiles linked to authenticated users
+export const playerProfiles = pgTable("player_profiles", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").references(() => players.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    userPlayerUnique: unique().on(table.userId, table.playerId),
+  };
+});
 
 // League table to store multiple leagues
 export const leagues = pgTable("leagues", {
@@ -227,3 +266,37 @@ export const appSettingsSchema = z.object({
 });
 
 export type AppSettings = z.infer<typeof appSettingsSchema>;
+
+// User schemas for Replit Auth
+export const upsertUserSchema = createInsertSchema(users).omit({
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  id: z.string(),
+  email: z.string().email().optional().nullable(),
+  firstName: z.string().optional().nullable(),
+  lastName: z.string().optional().nullable(),
+  profileImageUrl: z.string().url().optional().nullable(),
+  role: z.enum(['player', 'admin', 'super_admin']).default('player'),
+  displayName: z.string().optional().nullable(),
+  homeClub: z.string().optional().nullable(),
+  friendsList: z.array(z.string()).default([]),
+  isActive: z.boolean().default(true),
+});
+
+export const updateUserProfileSchema = z.object({
+  displayName: z.string().min(1, "Display name is required"),
+  homeClub: z.string().optional(),
+  friendsList: z.array(z.string()).default([]),
+});
+
+export const playerProfileLinkSchema = createInsertSchema(playerProfiles).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type UpsertUser = z.infer<typeof upsertUserSchema>;
+export type User = typeof users.$inferSelect;
+export type UpdateUserProfile = z.infer<typeof updateUserProfileSchema>;
+export type PlayerProfileLink = z.infer<typeof playerProfileLinkSchema>;
+export type PlayerProfile = typeof playerProfiles.$inferSelect;

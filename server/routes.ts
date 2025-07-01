@@ -1,11 +1,12 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage } from "./storage-db";
 import multer from "multer";
 import * as XLSX from "xlsx";
-import { tournamentUploadSchema, manualEntrySchema, editTournamentSchema, insertLeagueSchema } from "@shared/schema";
+import { tournamentUploadSchema, manualEntrySchema, editTournamentSchema, insertLeagueSchema, updateUserProfileSchema } from "@shared/schema";
 import { TieHandler } from "./tie-handler";
 import { calculatePoints, calculateGrossPoints } from "./utils";
+import { setupAuth, isAuthenticated, requireRole } from "./replitAuth";
 
 // Set up multer for file uploads
 const upload = multer({
@@ -27,6 +28,106 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication first
+  await setupAuth(app);
+
+  // Authentication routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const userProfile = await storage.getUserPlayerProfile(userId);
+      res.json(userProfile);
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      res.status(500).json({ message: "Failed to fetch user profile" });
+    }
+  });
+
+  app.put('/api/auth/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validatedData = updateUserProfileSchema.parse(req.body);
+      
+      const updatedUser = await storage.updateUserProfile(userId, validatedData);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  app.post('/api/auth/link-player/:playerId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const playerId = parseInt(req.params.playerId);
+      
+      const link = await storage.linkUserToPlayer(userId, playerId);
+      res.json(link);
+    } catch (error) {
+      console.error("Error linking user to player:", error);
+      res.status(500).json({ message: "Failed to link player" });
+    }
+  });
+
+  app.delete('/api/auth/unlink-player', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const success = await storage.unlinkUserFromPlayer(userId);
+      
+      if (success) {
+        res.json({ message: "Player unlinked successfully" });
+      } else {
+        res.status(404).json({ message: "No linked player found" });
+      }
+    } catch (error) {
+      console.error("Error unlinking player:", error);
+      res.status(500).json({ message: "Failed to unlink player" });
+    }
+  });
+
+  app.get('/api/auth/friends-leaderboard/:scoreType', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const scoreType = req.params.scoreType as 'net' | 'gross';
+      
+      if (!['net', 'gross'].includes(scoreType)) {
+        return res.status(400).json({ message: "Invalid score type" });
+      }
+      
+      const friendsLeaderboard = await storage.getFriendsLeaderboard(userId, scoreType);
+      res.json(friendsLeaderboard);
+    } catch (error) {
+      console.error("Error fetching friends leaderboard:", error);
+      res.status(500).json({ message: "Failed to fetch friends leaderboard" });
+    }
+  });
+
+  // Admin routes (require admin role)
+  app.put('/api/admin/user/:userId/role', requireRole('super_admin'), async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { role } = req.body;
+      
+      if (!['player', 'admin', 'super_admin'].includes(role)) {
+        return res.status(400).json({ message: "Invalid role" });
+      }
+      
+      const updatedUser = await storage.updateUserRole(userId, role);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      res.status(500).json({ message: "Failed to update user role" });
+    }
+  });
+
   // API Routes - All prefixed with /api
   
   // Leagues endpoints

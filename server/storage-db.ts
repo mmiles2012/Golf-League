@@ -13,9 +13,16 @@ import {
   type PlayerWithHistory,
   type PointsConfig,
   type AppSettings,
+  type User,
+  type UpsertUser,
+  type UpdateUserProfile,
+  type PlayerProfile,
+  type PlayerProfileLink,
   players,
   tournaments,
-  playerResults
+  playerResults,
+  users,
+  playerProfiles
 } from "@shared/schema";
 import { db } from "./db";
 import { IStorage } from "./storage";
@@ -387,4 +394,122 @@ export class DatabaseStorage implements IStorage {
     appSettings = { ...settings };
     return appSettings;
   }
+
+  // User operations for Replit Auth
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
+  async updateUserProfile(userId: string, profileData: UpdateUserProfile): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({
+        ...profileData,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async getUserPlayerProfile(userId: string): Promise<{ user: User, player?: Player, linkedPlayerId?: number }> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Check if user is linked to a player
+    const [profile] = await db
+      .select()
+      .from(playerProfiles)
+      .where(eq(playerProfiles.userId, userId));
+
+    let player: Player | undefined;
+    if (profile) {
+      player = await this.getPlayer(profile.playerId!);
+    }
+
+    return { 
+      user, 
+      player, 
+      linkedPlayerId: profile?.playerId 
+    };
+  }
+
+  async linkUserToPlayer(userId: string, playerId: number): Promise<PlayerProfile> {
+    // Check if link already exists
+    const [existing] = await db
+      .select()
+      .from(playerProfiles)
+      .where(and(
+        eq(playerProfiles.userId, userId),
+        eq(playerProfiles.playerId, playerId)
+      ));
+
+    if (existing) {
+      return existing;
+    }
+
+    const [link] = await db
+      .insert(playerProfiles)
+      .values({ userId, playerId })
+      .returning();
+    return link;
+  }
+
+  async unlinkUserFromPlayer(userId: string): Promise<boolean> {
+    const result = await db
+      .delete(playerProfiles)
+      .where(eq(playerProfiles.userId, userId));
+    return result && result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async updateUserRole(userId: string, role: 'player' | 'admin' | 'super_admin'): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ 
+        role, 
+        updatedAt: new Date() 
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  // Get leaderboard filtered by friends
+  async getFriendsLeaderboard(userId: string, scoreType: 'net' | 'gross'): Promise<PlayerWithHistory[]> {
+    const user = await this.getUser(userId);
+    if (!user || !user.friendsList || user.friendsList.length === 0) {
+      return [];
+    }
+
+    // Get full leaderboard first
+    const allPlayers = scoreType === 'net' 
+      ? await this.getNetLeaderboard()
+      : await this.getGrossLeaderboard();
+
+    // Filter by friends (assuming friend names match player names)
+    return allPlayers.filter(player => 
+      user.friendsList?.includes(player.player.name) || 
+      player.player.name === user.displayName
+    );
+  }
 }
+
+export const storage = new DatabaseStorage();
