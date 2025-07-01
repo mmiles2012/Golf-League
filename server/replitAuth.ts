@@ -13,7 +13,11 @@ if (!process.env.REPLIT_DOMAINS) {
 
 // Domain whitelist for admin access
 const ADMIN_DOMAINS = ['@hideoutgolf.club'];
-const SUPER_ADMIN_EMAIL = 'admin@hideoutgolf.club'; // Configure this as needed
+const SUPER_ADMIN_EMAILS = [
+  'admin@hideoutgolf.club',
+  'jake@hideoutgolf.club',
+  'e@hideoutgolf.club'
+]; // Configure these as needed
 
 const getOidcConfig = memoize(
   async () => {
@@ -60,7 +64,7 @@ function updateUserSession(
 function determineUserRole(email: string | null): 'player' | 'admin' | 'super_admin' {
   if (!email) return 'player';
   
-  if (email === SUPER_ADMIN_EMAIL) {
+  if (SUPER_ADMIN_EMAILS.includes(email)) {
     return 'super_admin';
   }
   
