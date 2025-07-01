@@ -255,7 +255,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                     <TableCell className="text-right font-semibold">
                       {result?.grossPoints || 0}
                     </TableCell>
-                  </TableRow>
+                    </TableRow>
                   );
                 })}
               </TableBody>
