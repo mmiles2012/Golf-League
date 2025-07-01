@@ -176,6 +176,9 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
                     <td className="px-2 py-3 whitespace-nowrap text-center">
                       <Skeleton className="h-5 w-12 mx-auto" />
                     </td>
+                    <td className="px-2 py-3 whitespace-nowrap text-center">
+                      <Skeleton className="h-5 w-12 mx-auto" />
+                    </td>
                   </tr>
                 ))
               ) : playerHistory && playerHistory.tournaments.length > 0 ? (
@@ -208,19 +211,14 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
                         {tournament.netScore || "N/A"}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
-                        {tournament.handicap !== null ? 
-                          (tournament.originalHandicap ? 
-                            tournament.originalHandicap : 
-                            (tournament.handicap > 0 && 
-                             tournament.grossScore < tournament.netScore ? 
-                              `+${tournament.handicap}` : 
-                              tournament.handicap)) : 
-                          "N/A"}
+                        {tournament.handicap !== undefined && tournament.handicap !== null
+                          ? (tournament.handicap > 0 && tournament.grossScore != null && tournament.netScore != null && tournament.grossScore < tournament.netScore
+                              ? `+${tournament.handicap}`
+                              : tournament.handicap)
+                          : "N/A"}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
-                        {tournament.grossPosition 
-                          ? (tournament.points || "0")
-                          : "0"}
+                        {tournament.grossPoints || "0"}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
                         {tournament.points || "0"}

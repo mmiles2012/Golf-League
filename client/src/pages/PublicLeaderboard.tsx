@@ -65,7 +65,33 @@ export default function PublicLeaderboard({ type }: PublicLeaderboardProps) {
     leaderboardData.slice(0, numRows) : [];
   
   // Define columns for DataTable
-  const columns: ColumnDef<PlayerWithHistory>[] = [
+  const columns: ColumnDef<PlayerWithHistory>[] = type === 'gross' ? [
+    {
+      accessorKey: "rank",
+      header: "Pos",
+      cell: ({ row }) => <div className="font-medium">{row.original.rank}</div>,
+    },
+    {
+      accessorKey: "player.name",
+      header: "Player",
+      cell: ({ row }) => <div className="font-medium">{row.original.player.name}</div>,
+    },
+    {
+      accessorKey: "totalEvents",
+      header: "Events",
+      cell: ({ row }) => <div className="text-center">{row.original.totalEvents}</div>,
+    },
+    {
+      accessorKey: "grossTotalPoints",
+      header: "Gross Points",
+      cell: ({ row }) => <div className="font-bold text-right">{(row.original.grossTotalPoints || 0).toLocaleString()}</div>,
+    },
+    {
+      accessorKey: "grossTourPoints",
+      header: "Gross Tour Points",
+      cell: ({ row }) => <div className="text-right">{(row.original.grossTourPoints || 0).toLocaleString()}</div>,
+    },
+  ] : [
     {
       accessorKey: "rank",
       header: "Pos",

@@ -47,18 +47,32 @@ export default function Leaderboards() {
     if (!leaderboardData) return;
     
     // Create CSV content
-    const headers = ['Rank', 'Player', 'Major Points', 'Tour Points', 'League Points', 'SUPR Points', 'Events', 'Total Points'];
+    const isGross = activeTab === "gross";
+    const headers = isGross
+      ? ['Rank', 'Player', 'Gross Points', 'Gross Tour Points', 'League Points', 'SUPR Points', 'Events']
+      : ['Rank', 'Player', 'Major Points', 'Tour Points', 'League Points', 'SUPR Points', 'Events', 'Total Points'];
     
-    const rows = leaderboardData.map(player => [
-      player.rank,
-      player.player.name,
-      player.majorPoints,
-      player.tourPoints,
-      player.leaguePoints,
-      player.suprPoints,
-      player.totalEvents,
-      player.totalPoints
-    ]);
+    const rows = leaderboardData.map(player => isGross
+      ? [
+          player.rank,
+          player.player.name,
+          player.grossTotalPoints || 0,
+          player.grossTourPoints || 0,
+          player.leaguePoints || 0,
+          player.suprPoints || 0,
+          player.totalEvents || 0
+        ]
+      : [
+          player.rank,
+          player.player.name,
+          player.majorPoints || 0,
+          player.tourPoints || 0,
+          player.leaguePoints || 0,
+          player.suprPoints || 0,
+          player.totalEvents || 0,
+          player.totalPoints || 0
+        ]
+    );
     
     const csvContent = [
       headers.join(','),
@@ -515,7 +529,7 @@ export default function Leaderboards() {
       {/* Leaderboard info section */}
       <div className="flex items-center text-sm text-neutral-700 mb-4 bg-neutral-50 p-3 rounded-md">
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-primary" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-4 5a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
         </svg>
         <span>Click on any player to view their tournament history</span>
       </div>
