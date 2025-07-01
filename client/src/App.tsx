@@ -79,7 +79,7 @@ function Router() {
       
       {/* Tournament Routes */}
       <Route path="/tournament/:id">
-        {params => <TournamentResults />}
+        {params => <TournamentResults id={params.id} />}
       </Route>
       
       <Route path="/tournament/edit/:id">

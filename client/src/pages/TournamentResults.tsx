@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { 
   Card, 
@@ -43,24 +42,62 @@ function getTournamentTypeLabel(type: string): string {
   }
 }
 
-export default function TournamentResults() {
-  const { id } = useParams();
-  const tournamentId = id ? parseInt(id) : 0;
+interface TournamentResultsProps {
+  id?: string;
+}
+
+export default function TournamentResults({ id }: TournamentResultsProps) {
+  console.log("TournamentResults received id:", id);
+  const tournamentId = id ? parseInt(id) : null;
   const [activeTab, setActiveTab] = useState<"net" | "gross">("net");
+  
+  // Early return if no valid tournament ID
+  if (!tournamentId || tournamentId <= 0) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <p className="text-neutral-600">Invalid tournament ID</p>
+      </div>
+    );
+  }
   
   // Fetch tournament details
   const { data: tournament, isLoading: tournamentLoading } = useQuery({
     queryKey: ['/api/tournaments', tournamentId],
-    enabled: !!tournamentId,
   });
   
   // Fetch tournament results
   const { data: results, isLoading: resultsLoading } = useQuery({
     queryKey: ['/api/tournaments', tournamentId, 'results'],
-    enabled: !!tournamentId,
   });
 
   const isLoading = tournamentLoading || resultsLoading;
+  
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <p className="text-neutral-600">Loading tournament results...</p>
+      </div>
+    );
+  }
+  
+  // Show error if tournament not found
+  if (!tournament) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <p className="text-neutral-600">Tournament not found</p>
+      </div>
+    );
+  }
+  
+  // Show error if results not found
+  if (!results) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <p className="text-neutral-600">Tournament results not found</p>
+      </div>
+    );
+  }
   
   // For NET leaderboard: use stored positions from database and detect ties by comparing net scores
   const netLeaderboardWithPositions = results && Array.isArray(results)
