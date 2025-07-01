@@ -40,7 +40,7 @@ app.use((req, res, next) => {
 export { app };
 
 // Only start the server if this file is run directly
-if (require.main === module) {
+if (import.meta.url === new URL(process.argv[1], 'file://').href) {
   (async () => {
     const server = await registerRoutes(app);
 

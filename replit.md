@@ -4,6 +4,10 @@
 A professional golf league management platform that provides comprehensive tournament tracking, advanced score processing, and detailed performance analytics with enhanced precision in scoring calculations.
 
 ## Recent Changes
+- **2025-07-01**: Fixed critical ES module compatibility issue preventing server startup
+  - **Resolved CommonJS/ES module conflict**: Replaced `require.main === module` with ES module equivalent `import.meta.url === new URL(process.argv[1], 'file://').href`
+  - **Server now starts successfully**: Application properly runs on port 5000 with all API endpoints functional
+  - **Verified application functionality**: Confirmed API responses and server logging are working correctly
 - **2025-07-01**: Successfully completed user deduplication and fixed profile system
   - **Implemented user deduplication script**: Created automated system to merge duplicate player records between tournament history and user accounts
   - **Successfully merged Mike Miles records**: Combined old player record (ID 3, 2 tournament results) with linked user account (ID 142), preserving all data
