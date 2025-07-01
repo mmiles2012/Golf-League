@@ -107,7 +107,7 @@ export class LeaderboardCalculator {
     const averageNetScore = scoreCount > 0 ? totalNetScores / scoreCount : 0;
     const averageGrossScore = scoreCount > 0 ? totalGrossScores / scoreCount : 0;
 
-    return {
+    const result = {
       player: {
         id: player.id,
         name: player.name,
@@ -126,6 +126,18 @@ export class LeaderboardCalculator {
       averageGrossScore,
       averageScore: scoreType === 'net' ? averageNetScore : averageGrossScore
     };
+
+    // Add gross-specific fields when in gross mode
+    if (scoreType === 'gross') {
+      return {
+        ...result,
+        grossTotalPoints: totalPoints,
+        grossTourPoints: tourPoints,
+        grossMajorPoints: majorPoints
+      };
+    }
+
+    return result;
   }
 
   /**
