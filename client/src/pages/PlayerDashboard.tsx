@@ -67,7 +67,7 @@ export default function PlayerDashboard() {
   const updateProfileMutation = useMutation({
     mutationFn: async (data: any) => {
       console.log("Frontend: Sending profile update request:", data);
-      return await apiRequest("/api/auth/profile", "PUT", data);
+      return await apiRequest("PUT", "/api/auth/profile", data);
     },
     onSuccess: (data) => {
       console.log("Frontend: Profile update successful:", data);
