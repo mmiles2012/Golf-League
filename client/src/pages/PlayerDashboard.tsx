@@ -65,12 +65,8 @@ export default function PlayerDashboard() {
 
   // Update profile mutation
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: typeof editForm) => {
-      return await apiRequest("/api/auth/profile", {
-        method: "PUT",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      });
+    mutationFn: async (data: any) => {
+      return await apiRequest("/api/auth/profile", "PUT", data);
     },
     onSuccess: () => {
       toast({
@@ -104,9 +100,7 @@ export default function PlayerDashboard() {
   // Link player mutation
   const linkPlayerMutation = useMutation({
     mutationFn: async (playerId: number) => {
-      return await apiRequest(`/api/auth/link-player/${playerId}`, {
-        method: "POST",
-      });
+      return await apiRequest(`/api/auth/link-player/${playerId}`, "POST");
     },
     onSuccess: () => {
       toast({
@@ -138,9 +132,7 @@ export default function PlayerDashboard() {
   // Unlink player mutation
   const unlinkPlayerMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest("/api/auth/unlink-player", {
-        method: "DELETE",
-      });
+      return await apiRequest("/api/auth/unlink-player", "DELETE");
     },
     onSuccess: () => {
       toast({
