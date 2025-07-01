@@ -136,6 +136,16 @@
     @apply -translate-x-full;
   }
   
+  .mobile-sidebar {
+    height: calc(100vh - 3.5rem); /* Subtract mobile header height */
+  }
+  
+  @media (min-width: 768px) {
+    .mobile-sidebar {
+      height: 100vh;
+    }
+  }
+  
   .tournament-type-badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }

@@ -48,7 +48,7 @@ export default function AppShell({ children }: AppShellProps) {
       {/* Sidebar Navigation - Fixed on desktop, slides in/out on mobile */}
       <aside 
         style={{ backgroundColor: sidebarColor }}
-        className={`w-full md:w-64 md:flex-shrink-0 md:flex flex-col transition-transform duration-300 ease-in-out fixed top-0 left-0 h-full z-50 overflow-y-auto ${
+        className={`w-full md:w-64 md:flex-shrink-0 md:flex flex-col transition-transform duration-300 ease-in-out fixed top-14 md:top-0 left-0 z-50 overflow-y-auto mobile-sidebar ${
           isMobileMenuOpen ? "mobile-menu-open" : "mobile-menu-closed md:translate-x-0"
         }`}
       >
