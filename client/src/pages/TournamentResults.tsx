@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Tournament } from "@shared/schema";
 import { formatDate } from "@/lib/utils";
+
 // Simple helper function for formatting positions
 function formatPosition(position: number, isTied: boolean): string {
   return isTied ? `T${position}` : `${position}`;
@@ -48,17 +49,17 @@ export default function TournamentResults() {
   const [activeTab, setActiveTab] = useState<"net" | "gross">("net");
   
   // Fetch tournament details
-  const { data: tournament, isLoading: tournamentLoading } = useQuery<Tournament>({
-    queryKey: [`/api/tournaments/${tournamentId}`],
-    enabled: !isNaN(tournamentId) && tournamentId > 0,
+  const { data: tournament, isLoading: tournamentLoading } = useQuery({
+    queryKey: ['/api/tournaments', tournamentId],
+    enabled: !!tournamentId,
   });
   
   // Fetch tournament results
-  const { data: results, isLoading: resultsLoading } = useQuery<any[]>({
-    queryKey: [`/api/tournaments/${tournamentId}/results`],
-    enabled: !isNaN(tournamentId) && tournamentId > 0,
+  const { data: results, isLoading: resultsLoading } = useQuery({
+    queryKey: ['/api/tournaments', tournamentId, 'results'],
+    enabled: !!tournamentId,
   });
-  
+
   const isLoading = tournamentLoading || resultsLoading;
   
   // For NET leaderboard: use stored positions from database and detect ties by comparing net scores
@@ -120,44 +121,30 @@ export default function TournamentResults() {
   const getOrdinalSuffix = (num: number): string => {
     const j = num % 10;
     const k = num % 100;
-    
-    if (j === 1 && k !== 11) return "st";
-    if (j === 2 && k !== 12) return "nd";
-    if (j === 3 && k !== 13) return "rd";
+    if (j === 1 && k !== 11) {
+      return "st";
+    }
+    if (j === 2 && k !== 12) {
+      return "nd";
+    }
+    if (j === 3 && k !== 13) {
+      return "rd";
+    }
     return "th";
   };
 
-  // Get the original handicap string (with + sign if present)
+  // Function to get handicap index display value
   const getHandicapIndex = (result: any): string => {
-    // This function returns the original handicap value with the "+" sign if it was present
-    if (!result.originalHandicap) {
-      // If no originalHandicap field exists, we make an inference based on existing data
-      if (result.handicap !== null) {
-        const grossMinusNet = result.grossScore - result.netScore;
-        // If handicap is positive but net is higher than gross, it likely had a "+" sign
-        if (grossMinusNet < 0 && result.handicap > 0) {
-          return `+${result.handicap}`;
-        }
-      }
-      return result.handicap?.toString() || "N/A";
+    if (result.player.handicapIndex !== null && result.player.handicapIndex !== undefined) {
+      return result.player.handicapIndex.toString();
     }
-    return result.originalHandicap;
+    return "N/A";
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-  
-  if (!tournament || !results) {
-    return (
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold mb-2">Tournament Not Found</h2>
-        <p className="text-neutral-600 mb-6">The tournament you're looking for does not exist or has been removed.</p>
-        <Button onClick={() => window.history.back()}>Go Back</Button>
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
@@ -209,7 +196,7 @@ export default function TournamentResults() {
           <div className="flex space-x-2">
             <button
               onClick={() => setActiveTab("net")}
-              className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 activeTab === "net" 
                   ? "bg-primary text-white" 
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -219,7 +206,7 @@ export default function TournamentResults() {
             </button>
             <button
               onClick={() => setActiveTab("gross")}
-              className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 activeTab === "gross" 
                   ? "bg-primary text-white" 
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -230,168 +217,149 @@ export default function TournamentResults() {
           </div>
         </div>
       </div>
-      
-      {/* Content area based on selected tab */}
-      <div className="content-area">
-        {activeTab === "net" ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Net Scores</CardTitle>
-              <CardDescription>
-                Players ranked by net score (with handicap adjustments)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-16">Position</TableHead>
-                      <TableHead>Player</TableHead>
-                      <TableHead className="text-center">Gross Score</TableHead>
-                      <TableHead className="text-center">Net Score</TableHead>
-                      {isStrokeTournament && (
-                        <>
-                          <TableHead className="text-center">Playing Handicap</TableHead>
-                          <TableHead className="text-center">HDCP Index</TableHead>
-                        </>
-                      )}
-                      <TableHead className="text-right">Points</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {netLeaderboardWithPositions.map((result, index) => {
-                      // Use actual points from database (includes tie averaging)
-                      const netPoints = result.points || 0;
-                        
-                      return (
-                        <TableRow key={result.id}>
-                          <TableCell className="font-semibold">
-                            <span className={result.isTied ? "text-orange-600" : ""}>
-                              {result.displayPosition}
-                              {!result.isTied && <sup>{getOrdinalSuffix(result.actualPosition)}</sup>}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <a 
-                              href={`/player/${result.player.id}`}
-                              className="text-primary hover:text-primary-dark hover:underline cursor-pointer"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                window.location.href = `/player/${result.player.id}`;
-                              }}
-                            >
-                              {result.player.name}
-                            </a>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {result.grossScore ?? "N/A"}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {result.netScore ?? "N/A"}
-                          </TableCell>
-                          {isStrokeTournament && (
-                            <>
-                              <TableCell className="text-center">
-                                {result.handicap !== null ? result.handicap : "N/A"}
-                              </TableCell>
-                              <TableCell className="text-center">
-                                {getHandicapIndex(result)}
-                              </TableCell>
-                            </>
-                          )}
-                          <TableCell className="text-right font-semibold">
-                            {/* Use calculated net points based on current net leaderboard position */}
-                            {netPoints}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Gross Scores</CardTitle>
-              <CardDescription>
-                Players ranked by gross score without handicap adjustments
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-16">Position</TableHead>
-                      <TableHead>Player</TableHead>
-                      <TableHead className="text-center">Gross Score</TableHead>
-                      <TableHead className="text-center">Net Score</TableHead>
-                      {isStrokeTournament && (
-                        <>
-                          <TableHead className="text-center">Playing Handicap</TableHead>
-                          <TableHead className="text-center">HDCP Index</TableHead>
-                        </>
-                      )}
-                      <TableHead className="text-right">Points</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {grossLeaderboardWithPositions.map((result, index) => {
-                      // Use gross points for gross leaderboard
-                      const grossPoints = result.grossPoints || 0;
-                        
-                      return (
-                        <TableRow key={result.id}>
-                          <TableCell className="font-semibold">
-                            <span className={result.isTied ? "text-orange-600" : ""}>
-                              {result.displayPosition}
-                              {!result.isTied && <sup>{getOrdinalSuffix(result.actualPosition)}</sup>}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <a 
-                              href={`/player/${result.player.id}`}
-                              className="text-primary hover:text-primary-dark hover:underline cursor-pointer"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                window.location.href = `/player/${result.player.id}`;
-                              }}
-                            >
-                              {result.player.name}
-                            </a>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {result.grossScore ?? "N/A"}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {result.netScore ?? "N/A"}
-                          </TableCell>
-                          {isStrokeTournament && (
-                            <>
-                              <TableCell className="text-center">
-                                {result.handicap !== null ? result.handicap : "N/A"}
-                              </TableCell>
-                              <TableCell className="text-center">
-                                {getHandicapIndex(result)}
-                              </TableCell>
-                            </>
-                          )}
-                          <TableCell className="text-right font-semibold">
-                            {grossPoints}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+
+      {/* Net Leaderboard */}
+      {activeTab === "net" ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Net Scores</CardTitle>
+            <CardDescription>
+              Players ranked by net score (gross score - playing handicap)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Position</TableHead>
+                    <TableHead>Player</TableHead>
+                    <TableHead className="text-center">Gross Score</TableHead>
+                    <TableHead className="text-center">Net Score</TableHead>
+                    <TableHead className="text-center">Playing Handicap</TableHead>
+                    <TableHead className="text-center">HDCP Index</TableHead>
+                    <TableHead className="text-right">Points</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {netLeaderboardWithPositions.map((result, index) => {
+                    // Use actual points from database (includes tie averaging)
+                    const netPoints = result.points || 0;
+                      
+                    return (
+                      <TableRow key={result.id}>
+                        <TableCell className="font-semibold">
+                          <span className={result.isTied ? "text-orange-600" : ""}>
+                            {result.displayPosition}
+                            {!result.isTied && <sup>{getOrdinalSuffix(result.actualPosition)}</sup>}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <a 
+                            href={`/player/${result.player.id}`}
+                            className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              window.location.href = `/player/${result.player.id}`;
+                            }}
+                          >
+                            {result.player.name}
+                          </a>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {result.grossScore ?? "N/A"}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {result.netScore ?? "N/A"}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {result.handicap !== null ? result.handicap : "N/A"}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {getHandicapIndex(result)}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold">
+                          {netPoints}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Gross Scores</CardTitle>
+            <CardDescription>
+              Players ranked by gross score without handicap adjustments
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Position</TableHead>
+                    <TableHead>Player</TableHead>
+                    <TableHead className="text-center">Gross Score</TableHead>
+                    <TableHead className="text-center">Net Score</TableHead>
+                    <TableHead className="text-center">Playing Handicap</TableHead>
+                    <TableHead className="text-center">HDCP Index</TableHead>
+                    <TableHead className="text-right">Points</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {grossLeaderboardWithPositions.map((result, index) => {
+                    // Use gross points for gross leaderboard
+                    const grossPoints = result.grossPoints || 0;
+                      
+                    return (
+                      <TableRow key={result.id}>
+                        <TableCell className="font-semibold">
+                          <span className={result.isTied ? "text-orange-600" : ""}>
+                            {result.displayPosition}
+                            {!result.isTied && <sup>{getOrdinalSuffix(result.actualPosition)}</sup>}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <a 
+                            href={`/player/${result.player.id}`}
+                            className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              window.location.href = `/player/${result.player.id}`;
+                            }}
+                          >
+                            {result.player.name}
+                          </a>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {result.grossScore ?? "N/A"}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {result.netScore ?? "N/A"}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {result.handicap !== null ? result.handicap : "N/A"}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {getHandicapIndex(result)}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold">
+                          {grossPoints}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
