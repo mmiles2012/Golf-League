@@ -1,7 +1,6 @@
 import { db } from './server/db';
 import { playerResults, tournaments } from './shared/schema';
 import { eq, and, isNotNull } from 'drizzle-orm';
-import { TieHandler } from './server/tie-handler';
 import { calculateGrossPoints } from './server/utils';
 
 interface PlayerResult {
@@ -74,9 +73,36 @@ async function fixGrossPointsZero() {
         handicap: result.handicap
       }));
       
-      // Calculate gross positions with tie handling
-      const tieHandler = new TieHandler();
-      const grossPositions = tieHandler.processResults(playerData, 'grossScore');
+      // Sort players by gross score to determine positions
+      const sortedByGross = playerData
+        .filter(p => p.grossScore !== null)
+        .sort((a, b) => a.grossScore! - b.grossScore!);
+      
+      // Calculate positions with tie handling
+      const grossPositions: Array<{id: number, playerId: number, position: number}> = [];
+      let currentPosition = 1;
+      
+      for (let i = 0; i < sortedByGross.length; i++) {
+        const player = sortedByGross[i];
+        
+        // Check if tied with previous player
+        if (i > 0 && player.grossScore === sortedByGross[i - 1].grossScore) {
+          // Use same position as previous player
+          grossPositions.push({
+            id: player.id,
+            playerId: player.playerId,
+            position: grossPositions[grossPositions.length - 1].position
+          });
+        } else {
+          // New position (skip positions if there were ties)
+          currentPosition = i + 1;
+          grossPositions.push({
+            id: player.id,
+            playerId: player.playerId,
+            position: currentPosition
+          });
+        }
+      }
       
       console.log(`   🔢 Calculated gross positions for ${grossPositions.length} players`);
       
@@ -118,14 +144,10 @@ async function fixGrossPointsZero() {
     
   } catch (error) {
     console.error('❌ Error during gross points fix:', error);
-  } finally {
-    await client.end();
   }
 }
 
-// Run the migration if this file is executed directly
-if (require.main === module) {
-  fixGrossPointsZero();
-}
+// Run the migration
+fixGrossPointsZero();
 
 export { fixGrossPointsZero };
