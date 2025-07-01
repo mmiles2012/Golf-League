@@ -46,7 +46,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/auth/profile', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      console.log("Profile update request:", { userId, body: req.body });
+      
       const validatedData = updateUserProfileSchema.parse(req.body);
+      console.log("Validated data:", validatedData);
       
       const updatedUser = await storage.updateUserProfile(userId, validatedData);
       if (!updatedUser) {
@@ -56,7 +59,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedUser);
     } catch (error) {
       console.error("Error updating user profile:", error);
-      res.status(500).json({ message: "Failed to update profile" });
+      if (error instanceof Error) {
+        console.error("Error details:", error.message);
+        console.error("Error stack:", error.stack);
+      }
+      res.status(500).json({ message: "Failed to update profile", error: error instanceof Error ? error.message : String(error) });
     }
   });
 

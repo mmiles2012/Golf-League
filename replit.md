@@ -4,6 +4,13 @@
 A professional golf league management platform that provides comprehensive tournament tracking, advanced score processing, and detailed performance analytics with enhanced precision in scoring calculations.
 
 ## Recent Changes
+- **2025-07-01**: Successfully implemented automatic email matching and player link request system
+  - **Verified automatic email matching**: When users log in, the system automatically checks for players with matching email addresses and creates links instantly
+  - **Tested with real user login**: Confirmed automatic linking works - user mmmsmiles@... was automatically linked to player ID 142
+  - **Added player link request database schema**: Created `playerLinkRequests` table for manual linking when email matching fails
+  - **Implemented admin approval system**: Added API endpoints for admins to approve/reject player link requests
+  - **Enhanced authentication flow**: Users get automatic linking first, then manual request option if no email match found
+  - **Fixed PlayerDashboard runtime errors**: Added proper null safety for handling players without tournament history
 - **2025-07-01**: Completed gross points data flow architecture
   - **Fixed gross leaderboard calculation**: Modified `calculatePlayerHistory` to include `grossTotalPoints`, `grossTourPoints`, and `grossMajorPoints` fields when in 'gross' mode
   - **Enhanced player history API**: Added `grossPoints`, `netPoints`, and `grossPosition` fields to tournament details in player history responses
