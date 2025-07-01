@@ -18,11 +18,13 @@ import {
   type UpdateUserProfile,
   type PlayerProfile,
   type PlayerProfileLink,
+  type PlayerLinkRequest,
   players,
   tournaments,
   playerResults,
   users,
-  playerProfiles
+  playerProfiles,
+  playerLinkRequests
 } from "@shared/schema";
 import { db } from "./db";
 import { IStorage } from "./storage";
@@ -524,6 +526,79 @@ export class DatabaseStorage implements IStorage {
       user.friendsList?.includes(player.player.name) || 
       player.player.name === user.displayName
     );
+  }
+
+  // Player link request methods
+  async createPlayerLinkRequest(userId: string, playerId: number, requestMessage?: string): Promise<PlayerLinkRequest> {
+    const [request] = await db
+      .insert(playerLinkRequests)
+      .values({ 
+        userId, 
+        playerId, 
+        requestMessage 
+      })
+      .returning();
+    return request;
+  }
+
+  async getPlayerLinkRequests(status?: 'pending' | 'approved' | 'rejected'): Promise<PlayerLinkRequest[]> {
+    const query = db.select().from(playerLinkRequests);
+    
+    if (status) {
+      query.where(eq(playerLinkRequests.status, status));
+    }
+    
+    return query.orderBy(desc(playerLinkRequests.requestedAt));
+  }
+
+  async getUserPlayerLinkRequest(userId: string): Promise<PlayerLinkRequest | undefined> {
+    const [request] = await db
+      .select()
+      .from(playerLinkRequests)
+      .where(eq(playerLinkRequests.userId, userId))
+      .orderBy(desc(playerLinkRequests.requestedAt));
+    return request;
+  }
+
+  async approvePlayerLinkRequest(requestId: number, reviewedBy: string): Promise<PlayerLinkRequest | undefined> {
+    // Get the request first
+    const [request] = await db
+      .select()
+      .from(playerLinkRequests)
+      .where(eq(playerLinkRequests.id, requestId));
+    
+    if (!request) return undefined;
+
+    // Create the actual link
+    await this.linkUserToPlayer(request.userId, request.playerId);
+    
+    // Update the request status
+    const [updatedRequest] = await db
+      .update(playerLinkRequests)
+      .set({
+        status: 'approved',
+        reviewedAt: new Date(),
+        reviewedBy
+      })
+      .where(eq(playerLinkRequests.id, requestId))
+      .returning();
+    
+    return updatedRequest;
+  }
+
+  async rejectPlayerLinkRequest(requestId: number, reviewedBy: string, reviewMessage?: string): Promise<PlayerLinkRequest | undefined> {
+    const [updatedRequest] = await db
+      .update(playerLinkRequests)
+      .set({
+        status: 'rejected',
+        reviewedAt: new Date(),
+        reviewedBy,
+        reviewMessage
+      })
+      .where(eq(playerLinkRequests.id, requestId))
+      .returning();
+    
+    return updatedRequest;
   }
 }
 

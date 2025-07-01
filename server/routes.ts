@@ -106,6 +106,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Player link request routes
+  app.post('/api/auth/request-player-link', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { playerId, requestMessage } = req.body;
+      
+      if (!playerId) {
+        return res.status(400).json({ message: "Player ID is required" });
+      }
+
+      // Check if user already has a linked player
+      const userProfile = await storage.getUserPlayerProfile(userId);
+      if (userProfile.player) {
+        return res.status(400).json({ message: "You are already linked to a player" });
+      }
+
+      // Check if there's already a pending request
+      const existingRequest = await storage.getUserPlayerLinkRequest(userId);
+      if (existingRequest && existingRequest.status === 'pending') {
+        return res.status(400).json({ message: "You already have a pending link request" });
+      }
+
+      const request = await storage.createPlayerLinkRequest(userId, playerId, requestMessage);
+      res.json(request);
+    } catch (error) {
+      console.error("Error creating player link request:", error);
+      res.status(500).json({ message: "Failed to create player link request" });
+    }
+  });
+
+  app.get('/api/auth/player-link-request', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const request = await storage.getUserPlayerLinkRequest(userId);
+      res.json(request);
+    } catch (error) {
+      console.error("Error fetching player link request:", error);
+      res.status(500).json({ message: "Failed to fetch player link request" });
+    }
+  });
+
   // Admin routes (require admin role)
   app.put('/api/admin/user/:userId/role', requireRole('super_admin'), async (req, res) => {
     try {
@@ -125,6 +166,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating user role:", error);
       res.status(500).json({ message: "Failed to update user role" });
+    }
+  });
+
+  // Player link request management routes (admin only)
+  app.get('/api/admin/player-link-requests', requireRole('admin'), async (req, res) => {
+    try {
+      const status = req.query.status as 'pending' | 'approved' | 'rejected' | undefined;
+      const requests = await storage.getPlayerLinkRequests(status);
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching player link requests:", error);
+      res.status(500).json({ message: "Failed to fetch player link requests" });
+    }
+  });
+
+  app.put('/api/admin/player-link-requests/:requestId/approve', requireRole('admin'), async (req: any, res) => {
+    try {
+      const requestId = parseInt(req.params.requestId);
+      const reviewedBy = req.user.claims.sub;
+      
+      const updatedRequest = await storage.approvePlayerLinkRequest(requestId, reviewedBy);
+      if (!updatedRequest) {
+        return res.status(404).json({ message: "Request not found" });
+      }
+      
+      res.json(updatedRequest);
+    } catch (error) {
+      console.error("Error approving player link request:", error);
+      res.status(500).json({ message: "Failed to approve player link request" });
+    }
+  });
+
+  app.put('/api/admin/player-link-requests/:requestId/reject', requireRole('admin'), async (req: any, res) => {
+    try {
+      const requestId = parseInt(req.params.requestId);
+      const reviewedBy = req.user.claims.sub;
+      const { reviewMessage } = req.body;
+      
+      const updatedRequest = await storage.rejectPlayerLinkRequest(requestId, reviewedBy, reviewMessage);
+      if (!updatedRequest) {
+        return res.status(404).json({ message: "Request not found" });
+      }
+      
+      res.json(updatedRequest);
+    } catch (error) {
+      console.error("Error rejecting player link request:", error);
+      res.status(500).json({ message: "Failed to reject player link request" });
     }
   });
 

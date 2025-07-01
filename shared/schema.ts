@@ -312,8 +312,19 @@ export const playerProfileLinkSchema = createInsertSchema(playerProfiles).omit({
   createdAt: true,
 });
 
+export const playerLinkRequestSchema = createInsertSchema(playerLinkRequests).omit({
+  id: true,
+  requestedAt: true,
+  reviewedAt: true,
+  reviewedBy: true,
+}).extend({
+  requestMessage: z.string().optional(),
+});
+
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type UpdateUserProfile = z.infer<typeof updateUserProfileSchema>;
 export type PlayerProfileLink = z.infer<typeof playerProfileLinkSchema>;
 export type PlayerProfile = typeof playerProfiles.$inferSelect;
+export type PlayerLinkRequest = typeof playerLinkRequests.$inferSelect;
+export type InsertPlayerLinkRequest = z.infer<typeof playerLinkRequestSchema>;
