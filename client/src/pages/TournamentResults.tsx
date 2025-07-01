@@ -113,12 +113,13 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
 
   // Sort results by position for NET leaderboard (use stored position from database)
   const netResults = [...results]
-    .filter(result => result?.netScore !== null)
+    .filter(result => result?.netScore !== null && result?.netScore !== undefined)
     .sort((a, b) => (a?.position || 0) - (b?.position || 0));
 
   // Sort results by gross score for GROSS leaderboard (calculate gross position)
   const grossResults = [...results]
-    .filter(result => result?.netScore !== null && result?.handicap !== null)
+    .filter(result => result?.netScore !== null && result?.netScore !== undefined && 
+                      result?.handicap !== null && result?.handicap !== undefined)
     .map(result => ({
       ...result,
       grossScore: (result?.netScore || 0) + (result?.handicap || 0)
@@ -128,6 +129,11 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
       ...result,
       grossPosition: index + 1
     }));
+
+  // Debug logging
+  console.log("Tournament results data:", results);
+  console.log("Filtered net results:", netResults);
+  console.log("Filtered gross results:", grossResults);
   
   return (
     <div className="space-y-6 pb-20">
