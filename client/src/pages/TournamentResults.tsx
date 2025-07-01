@@ -36,6 +36,10 @@ function getOrdinalSuffix(num: number): string {
   }
 }
 
+function formatPosition(position: number, isTied: boolean): string {
+  return isTied ? `T${position}` : position.toString();
+}
+
 function getTournamentTypeLabel(type: string): string {
   switch (type.toLowerCase()) {
     case 'major':
@@ -56,7 +60,6 @@ interface TournamentResultsProps {
 }
 
 export default function TournamentResults({ id }: TournamentResultsProps) {
-  console.log("TournamentResults received id:", id);
   const tournamentId = id ? parseInt(id) : null;
   const [activeTab, setActiveTab] = useState<"net" | "gross">("net");
   
@@ -100,63 +103,31 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
   }
   
   // Show error if results not found
-  if (!results) {
+  if (!results || !Array.isArray(results)) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <p className="text-neutral-600">Tournament results not found</p>
+        <p className="text-neutral-600">No tournament results found</p>
       </div>
     );
   }
-  
-  // For NET leaderboard: use stored positions from database and detect ties by comparing net scores
-  const netLeaderboardWithPositions = results && Array.isArray(results)
-    ? [...results]
-        .filter(result => result?.netScore !== null)
-        .sort((a, b) => (a?.position || 0) - (b?.position || 0)) // Sort by stored position from database
-        .map((result, index, sortedResults) => {
-          // Detect if this position is tied by checking adjacent players with same net score
-          const isTied = (
-            (index > 0 && sortedResults[index - 1]?.netScore === result?.netScore) ||
-            (index < sortedResults.length - 1 && sortedResults[index + 1]?.netScore === result?.netScore)
-          );
-          
-          const actualPosition = result?.position || 0;
-          
-          return {
-            ...result,
-            actualPosition,
-            displayPosition: isTied ? `T${actualPosition}` : actualPosition.toString(),
-            isTied
-          };
-        })
-    : [];
-  
-  // For GROSS leaderboard: calculate gross scores and positions from net scores
-  const grossLeaderboardWithPositions = results && Array.isArray(results)
-    ? [...results]
-        .filter(result => result?.netScore !== null && result?.handicap !== null)
-        .map(result => ({
-          ...result,
-          grossScore: (result?.netScore || 0) + (result?.handicap || 0)
-        }))
-        .sort((a, b) => (a?.grossScore || 0) - (b?.grossScore || 0))
-        .map((result, index, sortedResults) => {
-          // Detect if this position is tied by checking adjacent players with same gross score
-          const isTied = (
-            (index > 0 && sortedResults[index - 1]?.grossScore === result?.grossScore) ||
-            (index < sortedResults.length - 1 && sortedResults[index + 1]?.grossScore === result?.grossScore)
-          );
-          
-          const actualPosition = index + 1;
-          
-          return {
-            ...result,
-            actualPosition,
-            displayPosition: isTied ? `T${actualPosition}` : actualPosition.toString(),
-            isTied
-          };
-        })
-    : [];
+
+  // Sort results by position for NET leaderboard (use stored position from database)
+  const netResults = [...results]
+    .filter(result => result?.netScore !== null)
+    .sort((a, b) => (a?.position || 0) - (b?.position || 0));
+
+  // Sort results by gross score for GROSS leaderboard (calculate gross position)
+  const grossResults = [...results]
+    .filter(result => result?.netScore !== null && result?.handicap !== null)
+    .map(result => ({
+      ...result,
+      grossScore: (result?.netScore || 0) + (result?.handicap || 0)
+    }))
+    .sort((a, b) => (a?.grossScore || 0) - (b?.grossScore || 0))
+    .map((result, index) => ({
+      ...result,
+      grossPosition: index + 1
+    }));
   
   return (
     <div className="space-y-6 pb-20">
@@ -171,7 +142,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
         <Button variant="outline" onClick={() => window.history.back()}>Back</Button>
       </div>
       
-      {/* Tab navigation at the top */}
+      {/* Tab navigation */}
       <div className="flex space-x-1 p-1 bg-gray-100 rounded-lg max-w-fit">
         <button
           onClick={() => setActiveTab("net")}
@@ -219,16 +190,16 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {netLeaderboardWithPositions.map((result, index) => {
-                  // Use actual points from database (includes tie averaging)
-                  const netPoints = result?.points || 0;
-                    
+                {netResults.map((result) => {
+                  // Check if this position is tied by looking for other players with the same position
+                  const isTied = netResults.filter(r => r?.position === result?.position).length > 1;
+                  
                   return (
-                    <TableRow key={result?.id || index}>
+                    <TableRow key={result?.id}>
                       <TableCell className="font-semibold">
-                        <span className={result?.isTied ? "text-orange-600" : ""}>
-                          {result?.displayPosition}
-                          {!result?.isTied && <sup>{getOrdinalSuffix(result?.actualPosition || 0)}</sup>}
+                        <span className={isTied ? "text-orange-600" : ""}>
+                          {formatPosition(result?.position || 0, isTied)}
+                          {!isTied && <sup>{getOrdinalSuffix(result?.position || 0)}</sup>}
                         </span>
                       </TableCell>
                       <TableCell>
@@ -246,7 +217,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                         </a>
                       </TableCell>
                       <TableCell className="text-center">
-                        {result?.grossScore ?? "N/A"}
+                        {(result?.netScore || 0) + (result?.handicap || 0)}
                       </TableCell>
                       <TableCell className="text-center">
                         {result?.netScore ?? "N/A"}
@@ -255,7 +226,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                         {result?.handicap !== null ? result?.handicap : "N/A"}
                       </TableCell>
                       <TableCell className="text-right font-semibold">
-                        {netPoints}
+                        {result?.points || 0}
                       </TableCell>
                     </TableRow>
                   );
@@ -288,16 +259,16 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {grossLeaderboardWithPositions.map((result, index) => {
-                  // Use gross points for gross leaderboard
-                  const grossPoints = result?.grossPoints || 0;
-                    
+                {grossResults.map((result) => {
+                  // Check if this gross position is tied
+                  const isTied = grossResults.filter(r => r?.grossScore === result?.grossScore).length > 1;
+                  
                   return (
-                    <TableRow key={result?.id || index}>
+                    <TableRow key={result?.id}>
                       <TableCell className="font-semibold">
-                        <span className={result?.isTied ? "text-orange-600" : ""}>
-                          {result?.displayPosition}
-                          {!result?.isTied && <sup>{getOrdinalSuffix(result?.actualPosition || 0)}</sup>}
+                        <span className={isTied ? "text-orange-600" : ""}>
+                          {formatPosition(result?.grossPosition || 0, isTied)}
+                          {!isTied && <sup>{getOrdinalSuffix(result?.grossPosition || 0)}</sup>}
                         </span>
                       </TableCell>
                       <TableCell>
@@ -324,7 +295,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                         {result?.handicap !== null ? result?.handicap : "N/A"}
                       </TableCell>
                       <TableCell className="text-right font-semibold">
-                        {grossPoints}
+                        {result?.grossPoints || 0}
                       </TableCell>
                     </TableRow>
                   );
