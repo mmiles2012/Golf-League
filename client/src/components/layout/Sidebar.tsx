@@ -157,21 +157,7 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
             </>
           )}
           
-          {/* Public view - show message about admin functions */}
-          {!isAuthenticated && (
-            <li className="px-4 py-3 text-sm text-white/70 italic">
-              <div className="border border-white/20 rounded-md p-3 bg-white/5">
-                <p>Sign in as an administrator to access tournament management functions</p>
-                <button 
-                  onClick={handleLogin}
-                  className="mt-2 text-white bg-primary/70 hover:bg-primary w-full py-1 px-3 rounded-md text-sm flex items-center justify-center"
-                >
-                  <LogIn className="h-3 w-3 mr-1" />
-                  Sign In
-                </button>
-              </div>
-            </li>
-          )}
+
         </ul>
       </nav>
       
