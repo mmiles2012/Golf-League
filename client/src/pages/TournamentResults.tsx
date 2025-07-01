@@ -35,6 +35,26 @@ function getTournamentTypeLabel(type: string): string {
   }
 }
 
+// Helper function to format position with tie prefix
+function formatPosition(position: number, isTied: boolean): string {
+  return isTied ? `T${position}` : position.toString();
+}
+
+// Helper function to get ordinal suffix (1st, 2nd, 3rd, etc.)
+function getOrdinalSuffix(num: number): string {
+  const j = num % 10;
+  const k = num % 100;
+  if (k >= 11 && k <= 13) {
+    return 'th';
+  }
+  switch (j) {
+    case 1: return 'st';
+    case 2: return 'nd';
+    case 3: return 'rd';
+    default: return 'th';
+  }
+}
+
 interface TournamentResultsProps {
   id?: string;
 }
