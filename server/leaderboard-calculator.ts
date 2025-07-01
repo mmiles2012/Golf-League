@@ -75,10 +75,13 @@ export class LeaderboardCalculator {
         tournamentDate: tournament.date,
         tournamentType: tournament.type,
         position: result.position,
+        grossPosition: result.position, // For now, use same position - this could be calculated separately
         netScore: netScore,
         grossScore: grossScore,
         handicap: result.handicap,
-        points: pointsToUse
+        points: pointsToUse,
+        grossPoints: result.grossPoints || 0,
+        netPoints: result.points || 0
       };
 
       tournamentDetails.push(tournamentDetail);
