@@ -289,23 +289,25 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                 <TableBody>
                   {netLeaderboardWithPositions.map((result, index) => {
                     // Use actual points from database (includes tie averaging)
-                    const netPoints = result.points || 0;
+                    const netPoints = result?.points || 0;
                       
                     return (
-                      <TableRow key={result.id}>
+                      <TableRow key={result?.id || index}>
                         <TableCell className="font-semibold">
-                          <span className={result.isTied ? "text-orange-600" : ""}>
-                            {result.displayPosition}
-                            {!result.isTied && <sup>{getOrdinalSuffix(result.actualPosition)}</sup>}
+                          <span className={result?.isTied ? "text-orange-600" : ""}>
+                            {result?.displayPosition}
+                            {!result?.isTied && <sup>{getOrdinalSuffix(result?.actualPosition || 0)}</sup>}
                           </span>
                         </TableCell>
                         <TableCell>
                           <a 
-                            href={`/player/${result.player.id}`}
+                            href={`/player/${result?.player?.id || '#'}`}
                             className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
                             onClick={(e) => {
                               e.preventDefault();
-                              window.location.href = `/player/${result.player.id}`;
+                              if (result?.player?.id) {
+                                window.location.href = `/player/${result.player.id}`;
+                              }
                             }}
                           >
                             {result.player.name}
@@ -359,23 +361,25 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                 <TableBody>
                   {grossLeaderboardWithPositions.map((result, index) => {
                     // Use gross points for gross leaderboard
-                    const grossPoints = result.grossPoints || 0;
+                    const grossPoints = result?.grossPoints || 0;
                       
                     return (
-                      <TableRow key={result.id}>
+                      <TableRow key={result?.id || index}>
                         <TableCell className="font-semibold">
-                          <span className={result.isTied ? "text-orange-600" : ""}>
-                            {result.displayPosition}
-                            {!result.isTied && <sup>{getOrdinalSuffix(result.actualPosition)}</sup>}
+                          <span className={result?.isTied ? "text-orange-600" : ""}>
+                            {result?.displayPosition}
+                            {!result?.isTied && <sup>{getOrdinalSuffix(result?.actualPosition || 0)}</sup>}
                           </span>
                         </TableCell>
                         <TableCell>
                           <a 
-                            href={`/player/${result.player.id}`}
+                            href={`/player/${result?.player?.id || '#'}`}
                             className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
                             onClick={(e) => {
                               e.preventDefault();
-                              window.location.href = `/player/${result.player.id}`;
+                              if (result?.player?.id) {
+                                window.location.href = `/player/${result.player.id}`;
+                              }
                             }}
                           >
                             {result.player.name}
