@@ -191,16 +191,17 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                 {netResults.map((result, index) => {
                   // Check if this net score is tied by looking for other players with the same net score
                   const isTied = netResults.filter(r => r?.netScore === result?.netScore).length > 1;
-                  // Calculate position based on sorted order
-                  const position = index + 1;
+                  
+                  // Calculate proper tied position - find the first occurrence of this score
+                  let position = index + 1;
+                  if (isTied) {
+                    position = netResults.findIndex(r => r?.netScore === result?.netScore) + 1;
+                  }
                   
                   return (
                   <TableRow key={result?.id || 'unknown'}>
                     <TableCell className="font-semibold">
-                      <span className={isTied ? "text-orange-600" : ""}>
-                        {formatPosition(position, isTied)}
-                        {!isTied && <sup>{getOrdinalSuffix(position)}</sup>}
-                      </span>
+                      {isTied ? `T${position}` : position.toString()}
                     </TableCell>
                     <TableCell>
                       <a 
@@ -262,16 +263,17 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                 {grossResults.map((result, index) => {
                   // Check if this gross score is tied by looking for other players with the same gross score
                   const isTied = grossResults.filter(r => r?.grossScore === result?.grossScore).length > 1;
-                  // Calculate position based on sorted order
-                  const position = index + 1;
+                  
+                  // Calculate proper tied position - find the first occurrence of this score
+                  let position = index + 1;
+                  if (isTied) {
+                    position = grossResults.findIndex(r => r?.grossScore === result?.grossScore) + 1;
+                  }
                   
                   return (
                     <TableRow key={result?.id || 'unknown'}>
                       <TableCell className="font-semibold">
-                        <span className={isTied ? "text-orange-600" : ""}>
-                          {formatPosition(position, isTied)}
-                          {!isTied && <sup>{getOrdinalSuffix(position)}</sup>}
-                        </span>
+                        {isTied ? `T${position}` : position.toString()}
                       </TableCell>
                     <TableCell>
                       <a 
