@@ -333,7 +333,7 @@ export default function Leaderboards() {
                 className="flex items-center justify-center cursor-pointer select-none"
                 onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
               >
-                Gross Tour
+                Tour
                 {column.getIsSorted() === "asc" ? (
                   <span className="ml-1">▲</span>
                 ) : column.getIsSorted() === "desc" ? (
