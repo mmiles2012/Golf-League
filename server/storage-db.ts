@@ -117,8 +117,8 @@ let pointsConfig: PointsConfig = formatPointsConfig();
 
 // Default app settings
 let appSettings: AppSettings = {
-  appName: "Hideout Golf League",
-  pageTitle: "Leaderboards",
+  appName: "Hideout Founders' Series 2025",
+  pageTitle: "Overall Leaderboard",
   scoringType: "both",
   sidebarColor: "#0f172a",
   logoUrl: "/images/hideout-logo.png"

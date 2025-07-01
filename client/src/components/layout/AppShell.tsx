@@ -21,7 +21,7 @@ export default function AppShell({ children }: AppShellProps) {
   });
 
   // Default app settings if none are found
-  const appName = settings?.appName || "Hideout Golf League";
+  const appName = settings?.appName || "Hideout Founders' Series 2025";
   const logoUrl = settings?.logoUrl || "/images/hideout-logo.png";
   const sidebarColor = settings?.sidebarColor || "#0f172a";
 
