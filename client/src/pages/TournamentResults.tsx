@@ -35,6 +35,26 @@ function getTournamentTypeLabel(type: string): string {
   }
 }
 
+// Helper function to format position with tie prefix
+function formatPosition(position: number, isTied: boolean): string {
+  return isTied ? `T${position}` : position.toString();
+}
+
+// Helper function to get ordinal suffix (1st, 2nd, 3rd, etc.)
+function getOrdinalSuffix(num: number): string {
+  const j = num % 10;
+  const k = num % 100;
+  if (k >= 11 && k <= 13) {
+    return 'th';
+  }
+  switch (j) {
+    case 1: return 'st';
+    case 2: return 'nd';
+    case 3: return 'rd';
+    default: return 'th';
+  }
+}
+
 interface TournamentResultsProps {
   id?: string;
 }
@@ -90,6 +110,38 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
       </div>
     );
   }
+
+  // Sort results for NET leaderboard by net score (lower is better), then by handicap (lower first)
+  const netResults = [...tournamentResults].sort((a, b) => {
+    const scoreA = a?.netScore !== null && a?.netScore !== undefined ? a.netScore : 999;
+    const scoreB = b?.netScore !== null && b?.netScore !== undefined ? b.netScore : 999;
+    
+    // Primary sort: by net score
+    if (scoreA !== scoreB) {
+      return scoreA - scoreB;
+    }
+    
+    // Secondary sort: by handicap (lower handicap first for tied scores)
+    const handicapA = a?.handicap !== null && a?.handicap !== undefined ? a.handicap : 999;
+    const handicapB = b?.handicap !== null && b?.handicap !== undefined ? b.handicap : 999;
+    return handicapA - handicapB;
+  });
+
+  // Sort results for GROSS leaderboard by gross score (lower is better), then by handicap (lower first)
+  const grossResults = [...tournamentResults].sort((a, b) => {
+    const scoreA = a?.grossScore !== null && a?.grossScore !== undefined ? a.grossScore : 999;
+    const scoreB = b?.grossScore !== null && b?.grossScore !== undefined ? b.grossScore : 999;
+    
+    // Primary sort: by gross score
+    if (scoreA !== scoreB) {
+      return scoreA - scoreB;
+    }
+    
+    // Secondary sort: by handicap (lower handicap first for tied scores)
+    const handicapA = a?.handicap !== null && a?.handicap !== undefined ? a.handicap : 999;
+    const handicapB = b?.handicap !== null && b?.handicap !== undefined ? b.handicap : 999;
+    return handicapA - handicapB;
+  });
 
   return (
     <div className="space-y-6 pb-20">
@@ -154,10 +206,20 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {tournamentResults.map((result) => (
+                {netResults.map((result, index) => {
+                  // Check if this net score is tied by looking for other players with the same net score
+                  const isTied = netResults.filter(r => r?.netScore === result?.netScore).length > 1;
+                  
+                  // Calculate proper tied position - find the first occurrence of this score
+                  let position = index + 1;
+                  if (isTied) {
+                    position = netResults.findIndex(r => r?.netScore === result?.netScore) + 1;
+                  }
+                  
+                  return (
                   <TableRow key={result?.id || 'unknown'}>
                     <TableCell className="font-semibold">
-                      {result?.position || ''}
+                      {isTied ? `T${position}` : position.toString()}
                     </TableCell>
                     <TableCell>
                       <a 
@@ -186,7 +248,8 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                       {result?.points || 0}
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           </CardContent>
@@ -215,11 +278,21 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {tournamentResults.map((result) => (
-                  <TableRow key={result?.id || 'unknown'}>
-                    <TableCell className="font-semibold">
-                      {result?.grossPosition || ''}
-                    </TableCell>
+                {grossResults.map((result, index) => {
+                  // Check if this gross score is tied by looking for other players with the same gross score
+                  const isTied = grossResults.filter(r => r?.grossScore === result?.grossScore).length > 1;
+                  
+                  // Calculate proper tied position - find the first occurrence of this score
+                  let position = index + 1;
+                  if (isTied) {
+                    position = grossResults.findIndex(r => r?.grossScore === result?.grossScore) + 1;
+                  }
+                  
+                  return (
+                    <TableRow key={result?.id || 'unknown'}>
+                      <TableCell className="font-semibold">
+                        {isTied ? `T${position}` : position.toString()}
+                      </TableCell>
                     <TableCell>
                       <a 
                         href={`/player/${result?.player?.id || '#'}`}
@@ -246,8 +319,9 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                     <TableCell className="text-right font-semibold">
                       {result?.grossPoints || 0}
                     </TableCell>
-                  </TableRow>
-                ))}
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </CardContent>

@@ -1,11 +1,12 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage } from "./storage-db";
 import multer from "multer";
 import * as XLSX from "xlsx";
-import { tournamentUploadSchema, manualEntrySchema, editTournamentSchema, insertLeagueSchema } from "@shared/schema";
+import { tournamentUploadSchema, manualEntrySchema, editTournamentSchema, insertLeagueSchema, updateUserProfileSchema } from "@shared/schema";
 import { TieHandler } from "./tie-handler";
 import { calculatePoints, calculateGrossPoints } from "./utils";
+import { setupAuth, isAuthenticated, requireRole } from "./replitAuth";
 
 // Set up multer for file uploads
 const upload = multer({
@@ -27,6 +28,201 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication first
+  await setupAuth(app);
+
+  // Authentication routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const userProfile = await storage.getUserPlayerProfile(userId);
+      res.json(userProfile);
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      res.status(500).json({ message: "Failed to fetch user profile" });
+    }
+  });
+
+  app.put('/api/auth/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      console.log("Profile update request:", { userId, body: req.body });
+      
+      const validatedData = updateUserProfileSchema.parse(req.body);
+      console.log("Validated data:", validatedData);
+      
+      const updatedUser = await storage.updateUserProfile(userId, validatedData);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      if (error instanceof Error) {
+        console.error("Error details:", error.message);
+        console.error("Error stack:", error.stack);
+      }
+      res.status(500).json({ message: "Failed to update profile", error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.post('/api/auth/link-player/:playerId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const playerId = parseInt(req.params.playerId);
+      
+      const link = await storage.linkUserToPlayer(userId, playerId);
+      res.json(link);
+    } catch (error) {
+      console.error("Error linking user to player:", error);
+      res.status(500).json({ message: "Failed to link player" });
+    }
+  });
+
+  app.delete('/api/auth/unlink-player', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const success = await storage.unlinkUserFromPlayer(userId);
+      
+      if (success) {
+        res.json({ message: "Player unlinked successfully" });
+      } else {
+        res.status(404).json({ message: "No linked player found" });
+      }
+    } catch (error) {
+      console.error("Error unlinking player:", error);
+      res.status(500).json({ message: "Failed to unlink player" });
+    }
+  });
+
+  app.get('/api/auth/friends-leaderboard/:scoreType', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const scoreType = req.params.scoreType as 'net' | 'gross';
+      
+      if (!['net', 'gross'].includes(scoreType)) {
+        return res.status(400).json({ message: "Invalid score type" });
+      }
+      
+      const friendsLeaderboard = await storage.getFriendsLeaderboard(userId, scoreType);
+      res.json(friendsLeaderboard);
+    } catch (error) {
+      console.error("Error fetching friends leaderboard:", error);
+      res.status(500).json({ message: "Failed to fetch friends leaderboard" });
+    }
+  });
+
+  // Player link request routes
+  app.post('/api/auth/request-player-link', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { playerId, requestMessage } = req.body;
+      
+      if (!playerId) {
+        return res.status(400).json({ message: "Player ID is required" });
+      }
+
+      // Check if user already has a linked player
+      const userProfile = await storage.getUserPlayerProfile(userId);
+      if (userProfile.player) {
+        return res.status(400).json({ message: "You are already linked to a player" });
+      }
+
+      // Check if there's already a pending request
+      const existingRequest = await storage.getUserPlayerLinkRequest(userId);
+      if (existingRequest && existingRequest.status === 'pending') {
+        return res.status(400).json({ message: "You already have a pending link request" });
+      }
+
+      const request = await storage.createPlayerLinkRequest(userId, playerId, requestMessage);
+      res.json(request);
+    } catch (error) {
+      console.error("Error creating player link request:", error);
+      res.status(500).json({ message: "Failed to create player link request" });
+    }
+  });
+
+  app.get('/api/auth/player-link-request', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const request = await storage.getUserPlayerLinkRequest(userId);
+      res.json(request);
+    } catch (error) {
+      console.error("Error fetching player link request:", error);
+      res.status(500).json({ message: "Failed to fetch player link request" });
+    }
+  });
+
+  // Admin routes (require admin role)
+  app.put('/api/admin/user/:userId/role', requireRole('super_admin'), async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { role } = req.body;
+      
+      if (!['player', 'admin', 'super_admin'].includes(role)) {
+        return res.status(400).json({ message: "Invalid role" });
+      }
+      
+      const updatedUser = await storage.updateUserRole(userId, role);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      res.status(500).json({ message: "Failed to update user role" });
+    }
+  });
+
+  // Player link request management routes (admin only)
+  app.get('/api/admin/player-link-requests', requireRole('admin'), async (req, res) => {
+    try {
+      const status = req.query.status as 'pending' | 'approved' | 'rejected' | undefined;
+      const requests = await storage.getPlayerLinkRequests(status);
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching player link requests:", error);
+      res.status(500).json({ message: "Failed to fetch player link requests" });
+    }
+  });
+
+  app.put('/api/admin/player-link-requests/:requestId/approve', requireRole('admin'), async (req: any, res) => {
+    try {
+      const requestId = parseInt(req.params.requestId);
+      const reviewedBy = req.user.claims.sub;
+      
+      const updatedRequest = await storage.approvePlayerLinkRequest(requestId, reviewedBy);
+      if (!updatedRequest) {
+        return res.status(404).json({ message: "Request not found" });
+      }
+      
+      res.json(updatedRequest);
+    } catch (error) {
+      console.error("Error approving player link request:", error);
+      res.status(500).json({ message: "Failed to approve player link request" });
+    }
+  });
+
+  app.put('/api/admin/player-link-requests/:requestId/reject', requireRole('admin'), async (req: any, res) => {
+    try {
+      const requestId = parseInt(req.params.requestId);
+      const reviewedBy = req.user.claims.sub;
+      const { reviewMessage } = req.body;
+      
+      const updatedRequest = await storage.rejectPlayerLinkRequest(requestId, reviewedBy, reviewMessage);
+      if (!updatedRequest) {
+        return res.status(404).json({ message: "Request not found" });
+      }
+      
+      res.json(updatedRequest);
+    } catch (error) {
+      console.error("Error rejecting player link request:", error);
+      res.status(500).json({ message: "Failed to reject player link request" });
+    }
+  });
+
   // API Routes - All prefixed with /api
   
   // Leagues endpoints

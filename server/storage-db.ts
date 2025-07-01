@@ -13,9 +13,18 @@ import {
   type PlayerWithHistory,
   type PointsConfig,
   type AppSettings,
+  type User,
+  type UpsertUser,
+  type UpdateUserProfile,
+  type PlayerProfile,
+  type PlayerProfileLink,
+  type PlayerLinkRequest,
   players,
   tournaments,
-  playerResults
+  playerResults,
+  users,
+  playerProfiles,
+  playerLinkRequests
 } from "@shared/schema";
 import { db } from "./db";
 import { IStorage } from "./storage";
@@ -117,8 +126,8 @@ let pointsConfig: PointsConfig = formatPointsConfig();
 
 // Default app settings
 let appSettings: AppSettings = {
-  appName: "Hideout Golf League",
-  pageTitle: "Leaderboards",
+  appName: "Hideout Founders' Series 2025",
+  pageTitle: "Overall Leaderboard",
   scoringType: "both",
   sidebarColor: "#0f172a",
   logoUrl: "/images/hideout-logo.png"
@@ -181,6 +190,13 @@ export class DatabaseStorage implements IStorage {
     const [player] = await db.select()
       .from(players)
       .where(sql`lower(${players.name}) = lower(${name})`);
+    return player;
+  }
+
+  async findPlayerByEmail(email: string): Promise<Player | undefined> {
+    const [player] = await db.select()
+      .from(players)
+      .where(eq(players.email, email));
     return player;
   }
 
@@ -387,4 +403,234 @@ export class DatabaseStorage implements IStorage {
     appSettings = { ...settings };
     return appSettings;
   }
+
+  // User operations for Replit Auth
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    // Check if user already exists
+    const existingUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userData.id))
+      .limit(1);
+
+    if (existingUser.length > 0) {
+      // User exists - only update authentication-related fields, preserve custom profile data
+      const [user] = await db
+        .update(users)
+        .set({
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profileImageUrl: userData.profileImageUrl,
+          role: userData.role,
+          isActive: userData.isActive,
+          updatedAt: new Date(),
+          // Preserve existing displayName, homeClub, and friendsList if they exist
+        })
+        .where(eq(users.id, userData.id))
+        .returning();
+      return user;
+    } else {
+      // New user - insert with all provided data
+      const [user] = await db
+        .insert(users)
+        .values(userData)
+        .returning();
+      return user;
+    }
+  }
+
+  async updateUserProfile(userId: string, profileData: UpdateUserProfile): Promise<User | undefined> {
+    try {
+      console.log("Updating user profile:", { userId, profileData });
+      
+      const [user] = await db
+        .update(users)
+        .set({
+          displayName: profileData.displayName,
+          homeClub: profileData.homeClub || null,
+          friendsList: profileData.friendsList || [],
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      console.log("Updated user:", user);
+      return user;
+    } catch (error) {
+      console.error("Database error in updateUserProfile:", error);
+      throw error;
+    }
+  }
+
+  async getUserPlayerProfile(userId: string): Promise<{ user: User, player?: Player, linkedPlayerId?: number }> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Check if user is linked to a player
+    const [profile] = await db
+      .select()
+      .from(playerProfiles)
+      .where(eq(playerProfiles.userId, userId));
+
+    let player: Player | undefined;
+    if (profile) {
+      player = await this.getPlayer(profile.playerId!);
+    } else if (user.email) {
+      // Try automatic email matching if no manual link exists
+      const autoLinkedPlayer = await this.findPlayerByEmail(user.email);
+      if (autoLinkedPlayer) {
+        // Automatically create the link
+        await this.linkUserToPlayer(userId, autoLinkedPlayer.id);
+        player = autoLinkedPlayer;
+      }
+    }
+
+    return { 
+      user, 
+      player, 
+      linkedPlayerId: profile?.playerId || player?.id
+    };
+  }
+
+  async linkUserToPlayer(userId: string, playerId: number): Promise<PlayerProfile> {
+    // Check if link already exists
+    const [existing] = await db
+      .select()
+      .from(playerProfiles)
+      .where(and(
+        eq(playerProfiles.userId, userId),
+        eq(playerProfiles.playerId, playerId)
+      ));
+
+    if (existing) {
+      return existing;
+    }
+
+    const [link] = await db
+      .insert(playerProfiles)
+      .values({ userId, playerId })
+      .returning();
+    return link;
+  }
+
+  async unlinkUserFromPlayer(userId: string): Promise<boolean> {
+    const result = await db
+      .delete(playerProfiles)
+      .where(eq(playerProfiles.userId, userId));
+    return result && result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async updateUserRole(userId: string, role: 'player' | 'admin' | 'super_admin'): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ 
+        role, 
+        updatedAt: new Date() 
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  // Get leaderboard filtered by friends
+  async getFriendsLeaderboard(userId: string, scoreType: 'net' | 'gross'): Promise<PlayerWithHistory[]> {
+    const user = await this.getUser(userId);
+    if (!user || !user.friendsList || user.friendsList.length === 0) {
+      return [];
+    }
+
+    // Get full leaderboard first
+    const allPlayers = scoreType === 'net' 
+      ? await this.getNetLeaderboard()
+      : await this.getGrossLeaderboard();
+
+    // Filter by friends (assuming friend names match player names)
+    return allPlayers.filter(player => 
+      user.friendsList?.includes(player.player.name) || 
+      player.player.name === user.displayName
+    );
+  }
+
+  // Player link request methods
+  async createPlayerLinkRequest(userId: string, playerId: number, requestMessage?: string): Promise<PlayerLinkRequest> {
+    const [request] = await db
+      .insert(playerLinkRequests)
+      .values({ 
+        userId, 
+        playerId, 
+        requestMessage 
+      })
+      .returning();
+    return request;
+  }
+
+  async getPlayerLinkRequests(status?: 'pending' | 'approved' | 'rejected'): Promise<PlayerLinkRequest[]> {
+    const query = db.select().from(playerLinkRequests);
+    
+    if (status) {
+      query.where(eq(playerLinkRequests.status, status));
+    }
+    
+    return query.orderBy(desc(playerLinkRequests.requestedAt));
+  }
+
+  async getUserPlayerLinkRequest(userId: string): Promise<PlayerLinkRequest | undefined> {
+    const [request] = await db
+      .select()
+      .from(playerLinkRequests)
+      .where(eq(playerLinkRequests.userId, userId))
+      .orderBy(desc(playerLinkRequests.requestedAt));
+    return request;
+  }
+
+  async approvePlayerLinkRequest(requestId: number, reviewedBy: string): Promise<PlayerLinkRequest | undefined> {
+    // Get the request first
+    const [request] = await db
+      .select()
+      .from(playerLinkRequests)
+      .where(eq(playerLinkRequests.id, requestId));
+    
+    if (!request) return undefined;
+
+    // Create the actual link
+    await this.linkUserToPlayer(request.userId, request.playerId);
+    
+    // Update the request status
+    const [updatedRequest] = await db
+      .update(playerLinkRequests)
+      .set({
+        status: 'approved',
+        reviewedAt: new Date(),
+        reviewedBy
+      })
+      .where(eq(playerLinkRequests.id, requestId))
+      .returning();
+    
+    return updatedRequest;
+  }
+
+  async rejectPlayerLinkRequest(requestId: number, reviewedBy: string, reviewMessage?: string): Promise<PlayerLinkRequest | undefined> {
+    const [updatedRequest] = await db
+      .update(playerLinkRequests)
+      .set({
+        status: 'rejected',
+        reviewedAt: new Date(),
+        reviewedBy,
+        reviewMessage
+      })
+      .where(eq(playerLinkRequests.id, requestId))
+      .returning();
+    
+    return updatedRequest;
+  }
 }
+
+export const storage = new DatabaseStorage();

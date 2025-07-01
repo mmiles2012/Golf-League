@@ -156,16 +156,16 @@ export default function Leaderboards() {
       // Create a new array with "Total Points" column right after player name
       const rankAndPlayerColumns = baseColumns.slice(0, 2); // Take rank and player columns
       
-      // Total Points column
-      const totalPointsColumn: ColumnDef<PlayerWithHistory> = {
-        accessorKey: "totalPoints",
+      // Overall Points column (using top 8 points)
+      const overallPointsColumn: ColumnDef<PlayerWithHistory> = {
+        accessorKey: "top8TotalPoints",
         header: ({ column }) => {
           return (
             <div 
               className="flex items-center justify-end cursor-pointer select-none"
               onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             >
-              Total Points
+              Overall Points
               {column.getIsSorted() === "asc" ? (
                 <span className="ml-1">▲</span>
               ) : column.getIsSorted() === "desc" ? (
@@ -174,7 +174,7 @@ export default function Leaderboards() {
             </div>
           )
         },
-        cell: ({ row }) => <div className="font-bold text-right">{row.original.totalPoints.toLocaleString()}</div>,
+        cell: ({ row }) => <div className="font-bold text-right">{(row.original.top8TotalPoints || 0).toLocaleString()}</div>,
         enableSorting: true,
       };
       
@@ -202,10 +202,11 @@ export default function Leaderboards() {
       
       const remainingColumns = baseColumns.slice(2); // Get the remaining columns (Major Points)
       
+
       return [
         ...rankAndPlayerColumns, // Rank, Player Name
-        totalPointsColumn, // Total Points right after player name
-        eventsColumn, // Events right after Total Points
+        overallPointsColumn, // Overall Points (top 8) right after player name
+        eventsColumn, // Events right after Overall Points
         ...remainingColumns, // Major Points
         {
           accessorKey: "tourPoints",
@@ -274,16 +275,16 @@ export default function Leaderboards() {
       // Create a new array with "Gross Points" column right after player name
       const rankAndPlayerColumns = baseColumns.slice(0, 2); // Take rank and player columns
       
-      // Gross Total Points column
-      const grossTotalPointsColumn: ColumnDef<PlayerWithHistory> = {
-        accessorKey: "grossTotalPoints",
+      // Overall Points column (using gross top 8 points)
+      const overallPointsColumn: ColumnDef<PlayerWithHistory> = {
+        accessorKey: "grossTop8TotalPoints",
         header: ({ column }) => {
           return (
             <div 
               className="flex items-center justify-end cursor-pointer select-none"
               onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             >
-              Gross Points
+              Overall Points
               {column.getIsSorted() === "asc" ? (
                 <span className="ml-1">▲</span>
               ) : column.getIsSorted() === "desc" ? (
@@ -292,7 +293,7 @@ export default function Leaderboards() {
             </div>
           )
         },
-        cell: ({ row }) => <div className="font-bold text-right">{(row.original.grossTotalPoints || 0).toLocaleString()}</div>,
+        cell: ({ row }) => <div className="font-bold text-right">{(row.original.grossTop8TotalPoints || 0).toLocaleString()}</div>,
         enableSorting: true,
       };
       
@@ -320,10 +321,11 @@ export default function Leaderboards() {
       
       const remainingColumns = baseColumns.slice(2); // Get the remaining columns (Major Points)
       
+
       return [
         ...rankAndPlayerColumns, // Rank, Player Name
-        grossTotalPointsColumn, // Gross Points right after player name
-        eventsColumn, // Events right after Gross Points
+        overallPointsColumn, // Overall Points (gross top 8) right after player name
+        eventsColumn, // Events right after Overall Points
         ...remainingColumns, // Major Points
         {
           accessorKey: "grossTourPoints",
@@ -333,7 +335,7 @@ export default function Leaderboards() {
                 className="flex items-center justify-center cursor-pointer select-none"
                 onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
               >
-                Gross Tour
+                Tour
                 {column.getIsSorted() === "asc" ? (
                   <span className="ml-1">▲</span>
                 ) : column.getIsSorted() === "desc" ? (
@@ -513,7 +515,7 @@ export default function Leaderboards() {
     <section className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-heading font-bold text-neutral-800">{appSettings?.pageTitle || "Leaderboards"}</h1>
+          <h1 className="text-2xl md:text-3xl font-heading font-bold text-neutral-800">{appSettings?.pageTitle || "Overall Leaderboard"}</h1>
           <p className="text-neutral-600">Season standings and player performance</p>
         </div>
         

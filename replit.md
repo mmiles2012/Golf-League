@@ -4,6 +4,28 @@
 A professional golf league management platform that provides comprehensive tournament tracking, advanced score processing, and detailed performance analytics with enhanced precision in scoring calculations.
 
 ## Recent Changes
+- **2025-07-01**: Successfully completed user deduplication and fixed profile system
+  - **Implemented user deduplication script**: Created automated system to merge duplicate player records between tournament history and user accounts
+  - **Successfully merged Mike Miles records**: Combined old player record (ID 3, 2 tournament results) with linked user account (ID 142), preserving all data
+  - **Data preservation verified**: Tournament history, handicap information, and user linking all maintained correctly during merge
+  - **Database cleanup completed**: Removed duplicate player records while maintaining referential integrity
+- **2025-07-01**: Fixed profile update functionality and completed player authentication system
+  - **Fixed profile update bug**: Corrected API request parameter order issue - `apiRequest` function was being called with (url, method, data) instead of (method, url, data)
+  - **Verified profile updates working**: User can now successfully update display name and other profile fields
+  - **Added comprehensive error logging**: Enhanced both frontend and backend logging for better debugging of API issues
+  - **Tested with real user**: Confirmed profile update saves correctly to database and refreshes user data automatically
+- **2025-07-01**: Successfully implemented automatic email matching and player link request system
+  - **Verified automatic email matching**: When users log in, the system automatically checks for players with matching email addresses and creates links instantly
+  - **Tested with real user login**: Confirmed automatic linking works - user mmmsmiles@... was automatically linked to player ID 142
+  - **Added player link request database schema**: Created `playerLinkRequests` table for manual linking when email matching fails
+  - **Implemented admin approval system**: Added API endpoints for admins to approve/reject player link requests
+  - **Enhanced authentication flow**: Users get automatic linking first, then manual request option if no email match found
+  - **Fixed PlayerDashboard runtime errors**: Added proper null safety for handling players without tournament history
+- **2025-07-01**: Completed gross points data flow architecture
+  - **Fixed gross leaderboard calculation**: Modified `calculatePlayerHistory` to include `grossTotalPoints`, `grossTourPoints`, and `grossMajorPoints` fields when in 'gross' mode
+  - **Enhanced player history API**: Added `grossPoints`, `netPoints`, and `grossPosition` fields to tournament details in player history responses
+  - **Verified complete data architecture**: All components (leaderboards, player modals, tournament results, player profiles) now correctly display both net and gross points from backend APIs
+  - **Confirmed frontend-backend data integrity**: All components act as pure displays showing exact database values without recalculation
 - **2025-06-30**: Verified and completed tournament upload point calculation system
   - **Verified tournament upload tie handling**: All point calculations work correctly for tied positions
   - **Fixed tournament preview logic**: Preview now properly handles ties for both new and existing players

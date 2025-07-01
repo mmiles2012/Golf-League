@@ -14,7 +14,7 @@ import {
   Award,
   ListOrdered
 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 interface SidebarProps {
   onNavigation?: () => void;
@@ -22,29 +22,20 @@ interface SidebarProps {
 
 export default function Sidebar({ onNavigation }: SidebarProps) {
   const [location, navigate] = useLocation();
-  const { logout, isAuthenticated, isPublicView } = useAuth();
+  const { user, isAuthenticated, isAdmin, isLoading } = useAuth();
   
   const isActive = (path: string) => {
     if (path === "/") return location === "/";
     return location.startsWith(path);
   };
   
-  const handleLogout = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // First log out using the context function
-    logout();
-    
-    // Force a full page reload to ensure clean state 
-    // This is a reliable approach that works on all pages
-    window.location.href = '/';
-    
+  const handleLogout = () => {
+    window.location.href = '/api/logout';
     if (onNavigation) onNavigation();
   };
   
   const handleLogin = () => {
-    navigate("/login");
+    window.location.href = '/api/login';
     if (onNavigation) onNavigation();
   };
   
@@ -90,8 +81,23 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
           {/* Divider */}
           <li className="my-4 border-t border-primary-light/20"></li>
           
-          {/* Admin-only functions - Only visible when authenticated */}
+          {/* Player Dashboard - Available to authenticated users */}
           {isAuthenticated && (
+            <li>
+              <Link href="/dashboard">
+                <div 
+                  className={`sidebar-link ${isActive("/dashboard") ? "active" : ""}`}
+                  onClick={onNavigation}
+                >
+                  <LayoutDashboard className="sidebar-icon mr-2" />
+                  <span>My Dashboard</span>
+                </div>
+              </Link>
+            </li>
+          )}
+
+          {/* Admin-only functions - Only visible to admins */}
+          {isAdmin && (
             <>
               <li>
                 <Link href="/tournaments">
@@ -172,11 +178,21 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
       <div className="p-4 border-t border-primary-light">
         {isAuthenticated ? (
           <div className="flex items-center space-x-3">
-            <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center text-primary">
-              <User size={16} />
-            </div>
+            {user?.profileImageUrl ? (
+              <img 
+                src={user.profileImageUrl} 
+                alt="Profile" 
+                className="h-8 w-8 rounded-full object-cover"
+              />
+            ) : (
+              <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center text-primary">
+                <User size={16} />
+              </div>
+            )}
             <div>
-              <p className="text-white font-medium">Admin User</p>
+              <p className="text-white font-medium">
+                {user?.firstName || user?.email || 'User'}
+              </p>
               <button 
                 type="button"
                 className="text-xs text-white opacity-75 hover:opacity-100 flex items-center cursor-pointer bg-transparent border-0"

@@ -4,7 +4,7 @@ import Sidebar from "./Sidebar";
 import PublicNavbar from "./PublicNavbar";
 import { Menu, X } from "lucide-react";
 import { AppSettings } from "@shared/schema";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -12,7 +12,7 @@ interface AppShellProps {
 
 export default function AppShell({ children }: AppShellProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isAuthenticated, isPublicView } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   
   // Fetch app settings
   const { data: settings } = useQuery<AppSettings>({
@@ -21,7 +21,7 @@ export default function AppShell({ children }: AppShellProps) {
   });
 
   // Default app settings if none are found
-  const appName = settings?.appName || "Hideout Golf League";
+  const appName = settings?.appName || "Hideout Founders' Series 2025";
   const logoUrl = settings?.logoUrl || "/images/hideout-logo.png";
   const sidebarColor = settings?.sidebarColor || "#0f172a";
 
@@ -39,12 +39,10 @@ export default function AppShell({ children }: AppShellProps) {
     };
   }, []);
 
-  // If neither authenticated nor in public view, do not render any content
-  if (!isAuthenticated && !isPublicView) {
-    return children;
-  }
-  
-  // Admin view - sidebar navigation
+  // Show minimal loading only for initial app settings load
+  // Note: Authentication loading is handled separately and shouldn't block the UI
+
+  // Always show the sidebar layout for public and authenticated users
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Sidebar Navigation - Fixed on desktop, slides in/out on mobile */}

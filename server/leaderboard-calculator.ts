@@ -75,10 +75,13 @@ export class LeaderboardCalculator {
         tournamentDate: tournament.date,
         tournamentType: tournament.type,
         position: result.position,
+        grossPosition: result.position, // For now, use same position - this could be calculated separately
         netScore: netScore,
         grossScore: grossScore,
         handicap: result.handicap,
-        points: pointsToUse
+        points: pointsToUse,
+        grossPoints: result.grossPoints || 0,
+        netPoints: result.points || 0
       };
 
       tournamentDetails.push(tournamentDetail);
@@ -104,7 +107,7 @@ export class LeaderboardCalculator {
     const averageNetScore = scoreCount > 0 ? totalNetScores / scoreCount : 0;
     const averageGrossScore = scoreCount > 0 ? totalGrossScores / scoreCount : 0;
 
-    return {
+    const result = {
       player: {
         id: player.id,
         name: player.name,
@@ -123,6 +126,29 @@ export class LeaderboardCalculator {
       averageGrossScore,
       averageScore: scoreType === 'net' ? averageNetScore : averageGrossScore
     };
+
+    // Calculate top 8 events points
+    const top8Results = this.calculateTop8Points(tournamentDetails, scoreType);
+
+    // Add type-specific fields when in gross mode
+    if (scoreType === 'gross') {
+      return {
+        ...result,
+        grossTotalPoints: totalPoints,
+        grossTourPoints: tourPoints,
+        grossTop8TotalPoints: top8Results.totalPoints,
+        grossTop8TourPoints: top8Results.tourPoints,
+        grossTop8MajorPoints: top8Results.majorPoints
+      };
+    }
+
+    // Add top 8 fields for net mode
+    return {
+      ...result,
+      top8TotalPoints: top8Results.totalPoints,
+      top8TourPoints: top8Results.tourPoints,
+      top8MajorPoints: top8Results.majorPoints
+    };
   }
 
   /**
@@ -134,17 +160,23 @@ export class LeaderboardCalculator {
     
     for (const player of allPlayers) {
       const playerHistory = await this.calculatePlayerHistory(player.id, 'net');
-      if (playerHistory && playerHistory.totalPoints > 0) {
+      if (playerHistory && (playerHistory.top8TotalPoints || 0) > 0) {
         leaderboard.push(playerHistory);
       }
     }
     
-    // Sort by total points (descending), then by average net score (ascending - lower is better)
+    // Sort by top 8 points (descending), then by player handicap (ascending - lower handicap wins ties)
     leaderboard.sort((a, b) => {
-      if (b.totalPoints !== a.totalPoints) {
-        return b.totalPoints - a.totalPoints;
+      const top8PointsA = a.top8TotalPoints || 0;
+      const top8PointsB = b.top8TotalPoints || 0;
+      
+      if (top8PointsB !== top8PointsA) {
+        return top8PointsB - top8PointsA;
       }
-      return (a.averageNetScore || 999) - (b.averageNetScore || 999);
+      // Use player default handicap for tie-breaking (lower handicap wins)
+      const handicapA = a.player.defaultHandicap || 999;
+      const handicapB = b.player.defaultHandicap || 999;
+      return handicapA - handicapB;
     });
     
     // Assign ranks
@@ -164,17 +196,23 @@ export class LeaderboardCalculator {
     
     for (const player of allPlayers) {
       const playerHistory = await this.calculatePlayerHistory(player.id, 'gross');
-      if (playerHistory && playerHistory.totalPoints > 0) {
+      if (playerHistory && (playerHistory.grossTop8TotalPoints || 0) > 0) {
         leaderboard.push(playerHistory);
       }
     }
     
-    // Sort by total points (descending), then by average gross score (ascending - lower is better)
+    // Sort by gross top 8 points (descending), then by player handicap (ascending - lower handicap wins ties)
     leaderboard.sort((a, b) => {
-      if (b.totalPoints !== a.totalPoints) {
-        return b.totalPoints - a.totalPoints;
+      const grossTop8PointsA = a.grossTop8TotalPoints || 0;
+      const grossTop8PointsB = b.grossTop8TotalPoints || 0;
+      
+      if (grossTop8PointsB !== grossTop8PointsA) {
+        return grossTop8PointsB - grossTop8PointsA;
       }
-      return (a.averageGrossScore || 999) - (b.averageGrossScore || 999);
+      // Use player default handicap for tie-breaking (lower handicap wins)
+      const handicapA = a.player.defaultHandicap || 999;
+      const handicapB = b.player.defaultHandicap || 999;
+      return handicapA - handicapB;
     });
     
     // Assign ranks
@@ -183,6 +221,50 @@ export class LeaderboardCalculator {
     });
     
     return leaderboard;
+  }
+
+  /**
+   * Calculate top 8 events points from tournament details
+   */
+  private calculateTop8Points(tournamentDetails: any[], scoreType: 'net' | 'gross'): {
+    totalPoints: number;
+    majorPoints: number;
+    tourPoints: number;
+  } {
+    // Sort tournaments by points (descending) to get the highest scoring events
+    const pointsField = scoreType === 'gross' ? 'grossPoints' : 'points';
+    const sortedTournaments = [...tournamentDetails]
+      .filter(t => t[pointsField] > 0) // Only include events with points
+      .sort((a, b) => b[pointsField] - a[pointsField]);
+
+    // Take top 8 events
+    const top8Events = sortedTournaments.slice(0, 8);
+
+    // Calculate totals from top 8 events
+    let totalPoints = 0;
+    let majorPoints = 0;
+    let tourPoints = 0;
+
+    for (const tournament of top8Events) {
+      const points = tournament[pointsField];
+      totalPoints += points;
+
+      switch (tournament.tournamentType) {
+        case 'major':
+          majorPoints += points;
+          break;
+        case 'tour':
+          tourPoints += points;
+          break;
+        // Note: league and supr points are included in totalPoints but not tracked separately for top 8
+      }
+    }
+
+    return {
+      totalPoints,
+      majorPoints,
+      tourPoints
+    };
   }
 
   /**
