@@ -215,11 +215,20 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {tournamentResults.map((result) => (
-                  <TableRow key={result?.id || 'unknown'}>
-                    <TableCell className="font-semibold">
-                      {result?.grossPosition || ''}
-                    </TableCell>
+                {grossResults.map((result, index) => {
+                  // Check if this gross score is tied by looking for other players with the same gross score
+                  const isTied = grossResults.filter(r => r?.grossScore === result?.grossScore).length > 1;
+                  // Calculate position based on sorted order
+                  const position = index + 1;
+                  
+                  return (
+                    <TableRow key={result?.id || 'unknown'}>
+                      <TableCell className="font-semibold">
+                        <span className={isTied ? "text-orange-600" : ""}>
+                          {formatPosition(position, isTied)}
+                          {!isTied && <sup>{getOrdinalSuffix(position)}</sup>}
+                        </span>
+                      </TableCell>
                     <TableCell>
                       <a 
                         href={`/player/${result?.player?.id || '#'}`}
@@ -247,7 +256,8 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                       {result?.grossPoints || 0}
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           </CardContent>
