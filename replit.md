@@ -4,6 +4,11 @@
 A professional golf league management platform that provides comprehensive tournament tracking, advanced score processing, and detailed performance analytics with enhanced precision in scoring calculations.
 
 ## Recent Changes
+- **2025-07-01**: Fixed profile update functionality and completed player authentication system
+  - **Fixed profile update bug**: Corrected API request parameter order issue - `apiRequest` function was being called with (url, method, data) instead of (method, url, data)
+  - **Verified profile updates working**: User can now successfully update display name and other profile fields
+  - **Added comprehensive error logging**: Enhanced both frontend and backend logging for better debugging of API issues
+  - **Tested with real user**: Confirmed profile update saves correctly to database and refreshes user data automatically
 - **2025-07-01**: Successfully implemented automatic email matching and player link request system
   - **Verified automatic email matching**: When users log in, the system automatically checks for players with matching email addresses and creates links instantly
   - **Tested with real user login**: Confirmed automatic linking works - user mmmsmiles@... was automatically linked to player ID 142
