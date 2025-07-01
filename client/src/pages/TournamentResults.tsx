@@ -63,7 +63,7 @@ export default function TournamentResults() {
   const isLoading = tournamentLoading || resultsLoading;
   
   // For NET leaderboard: use stored positions from database and detect ties by comparing net scores
-  const netLeaderboardWithPositions = results
+  const netLeaderboardWithPositions = results && Array.isArray(results)
     ? [...results]
         .filter(result => result.netScore !== null)
         .sort((a, b) => a.position - b.position) // Sort by stored position from database
@@ -84,7 +84,7 @@ export default function TournamentResults() {
     : [];
     
   // For GROSS leaderboard: sort by gross score and detect ties
-  const grossLeaderboardWithPositions = results
+  const grossLeaderboardWithPositions = results && Array.isArray(results)
     ? [...results]
         .filter(result => result.grossScore !== null)
         .sort((a, b) => a.grossScore! - b.grossScore!) // Sort by gross score (lower is better)
