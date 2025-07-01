@@ -314,3 +314,23 @@ Uploads an Excel (.xlsx) file containing tournament results. The file is parsed 
 - All emails are normalized to lowercase for matching.
 - New players are created automatically if the email does not exist in the system.
 - The preview in the response shows how the data was parsed and calculated.
+
+---
+
+## Leaderboard Points, Positions, and Tie Logic
+
+All leaderboard points, player positions, and tie logic (for both net and gross leaderboards) are calculated exclusively on the backend. The frontend does not perform any calculation or adjustment of these values. All leaderboard and player results pages, including CSV exports and modals, display only the data provided by the backend API endpoints:
+
+- `/api/leaderboard/net`
+- `/api/leaderboard/gross`
+- Player/tournament results endpoints
+
+**Frontend is display-only for these values.**
+
+If you are developing or testing, ensure that any changes to points, positions, or tie logic are made in the backend codebase. The frontend will always reflect the backend as the source of truth.
+
+---
+
+## Deprecated: Frontend Points/Tie Calculation
+
+Previous versions of this project included frontend logic for calculating points, positions, and tie-breaking. This logic has been fully removed. All related helpers and tests have been deprecated or deleted. If you find references to frontend calculation, they are no longer in use.
