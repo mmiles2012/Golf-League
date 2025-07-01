@@ -202,10 +202,33 @@ export default function Leaderboards() {
       
       const remainingColumns = baseColumns.slice(2); // Get the remaining columns (Major Points)
       
+      // Top 8 Points column
+      const top8PointsColumn: ColumnDef<PlayerWithHistory> = {
+        accessorKey: "top8TotalPoints",
+        header: ({ column }) => {
+          return (
+            <div 
+              className="flex items-center justify-end cursor-pointer select-none"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              Top 8 Points
+              {column.getIsSorted() === "asc" ? (
+                <span className="ml-1">▲</span>
+              ) : column.getIsSorted() === "desc" ? (
+                <span className="ml-1">▼</span>
+              ) : null}
+            </div>
+          )
+        },
+        cell: ({ row }) => <div className="font-medium text-right text-blue-600">{(row.original.top8TotalPoints || 0).toLocaleString()}</div>,
+        enableSorting: true,
+      };
+      
       return [
         ...rankAndPlayerColumns, // Rank, Player Name
         totalPointsColumn, // Total Points right after player name
-        eventsColumn, // Events right after Total Points
+        top8PointsColumn, // Top 8 Points after Total Points
+        eventsColumn, // Events right after Top 8 Points
         ...remainingColumns, // Major Points
         {
           accessorKey: "tourPoints",
@@ -320,10 +343,33 @@ export default function Leaderboards() {
       
       const remainingColumns = baseColumns.slice(2); // Get the remaining columns (Major Points)
       
+      // Gross Top 8 Points column
+      const grossTop8PointsColumn: ColumnDef<PlayerWithHistory> = {
+        accessorKey: "grossTop8TotalPoints",
+        header: ({ column }) => {
+          return (
+            <div 
+              className="flex items-center justify-end cursor-pointer select-none"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              Top 8 Gross
+              {column.getIsSorted() === "asc" ? (
+                <span className="ml-1">▲</span>
+              ) : column.getIsSorted() === "desc" ? (
+                <span className="ml-1">▼</span>
+              ) : null}
+            </div>
+          )
+        },
+        cell: ({ row }) => <div className="font-medium text-right text-green-600">{(row.original.grossTop8TotalPoints || 0).toLocaleString()}</div>,
+        enableSorting: true,
+      };
+      
       return [
         ...rankAndPlayerColumns, // Rank, Player Name
         grossTotalPointsColumn, // Gross Points right after player name
-        eventsColumn, // Events right after Gross Points
+        grossTop8PointsColumn, // Top 8 Gross Points after Gross Points
+        eventsColumn, // Events right after Top 8 Gross Points
         ...remainingColumns, // Major Points
         {
           accessorKey: "grossTourPoints",
