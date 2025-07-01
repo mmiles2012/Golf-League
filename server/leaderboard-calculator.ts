@@ -134,7 +134,7 @@ export class LeaderboardCalculator {
     
     for (const player of allPlayers) {
       const playerHistory = await this.calculatePlayerHistory(player.id, 'net');
-      if (playerHistory) {
+      if (playerHistory && playerHistory.totalPoints > 0) {
         leaderboard.push(playerHistory);
       }
     }

@@ -161,10 +161,10 @@ export default function TournamentResults() {
     <div className="space-y-6 pb-20">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-heading font-bold">{tournament.name}</h1>
+          <h1 className="text-2xl font-heading font-bold">{tournament?.name || 'Tournament'}</h1>
           <div className="flex items-center gap-3 mt-1">
-            <p className="text-neutral-600">{formatDate(tournament.date)}</p>
-            <Badge variant={tournament.type as any}>{getTournamentTypeLabel(tournament.type)}</Badge>
+            <p className="text-neutral-600">{tournament?.date ? formatDate(tournament.date) : ''}</p>
+            {tournament?.type && <Badge variant={tournament.type as any}>{getTournamentTypeLabel(tournament.type)}</Badge>}
           </div>
         </div>
         <Button variant="outline" onClick={() => window.history.back()}>Back</Button>
