@@ -375,6 +375,122 @@ export default function Leaderboards() {
         }
       ];
     }
+    
+    // For gross leaderboard, return the base columns with totals column
+    const rankAndPlayerColumns = baseColumns.slice(0, 2); // Take rank and player columns
+    
+    // Total Points column for gross leaderboard  
+    const totalPointsColumn: ColumnDef<PlayerWithHistory> = {
+      accessorKey: "totalPoints",
+      header: ({ column }) => {
+        return (
+          <div 
+            className="flex items-center justify-end cursor-pointer select-none"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Total Points
+            {column.getIsSorted() === "asc" ? (
+              <span className="ml-1">▲</span>
+            ) : column.getIsSorted() === "desc" ? (
+              <span className="ml-1">▼</span>
+            ) : null}
+          </div>
+        )
+      },
+      cell: ({ row }) => <div className="font-bold text-right">{row.original.totalPoints.toLocaleString()}</div>,
+      enableSorting: true,
+    };
+    
+    // Events column
+    const eventsColumn: ColumnDef<PlayerWithHistory> = {
+      accessorKey: "totalEvents", 
+      header: ({ column }) => {
+        return (
+          <div 
+            className="flex items-center justify-center cursor-pointer select-none"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Events
+            {column.getIsSorted() === "asc" ? (
+              <span className="ml-1">▲</span>
+            ) : column.getIsSorted() === "desc" ? (
+              <span className="ml-1">▼</span>
+            ) : null}
+          </div>
+        )
+      },
+      cell: ({ row }) => <div className="text-center">{row.original.totalEvents}</div>,
+      enableSorting: true,
+    };
+    
+    const remainingColumns = baseColumns.slice(2); // Get remaining columns starting from Major Points
+    
+    return [
+      ...rankAndPlayerColumns, // Rank, Player Name
+      totalPointsColumn, // Total Points right after player name  
+      eventsColumn, // Events right after Total Points
+      ...remainingColumns, // Major Points
+      {
+        accessorKey: "tourPoints",
+        header: ({ column }) => {
+          return (
+            <div 
+              className="flex items-center justify-center cursor-pointer select-none"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              Tour
+              {column.getIsSorted() === "asc" ? (
+                <span className="ml-1">▲</span>
+              ) : column.getIsSorted() === "desc" ? (
+                <span className="ml-1">▼</span>
+              ) : null}
+            </div>
+          )
+        },
+        cell: ({ row }) => <div className="text-center">{row.original.tourPoints.toLocaleString()}</div>,
+        enableSorting: true,
+      },
+      {
+        accessorKey: "leaguePoints",
+        header: ({ column }) => {
+          return (
+            <div 
+              className="flex items-center justify-center cursor-pointer select-none"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              League
+              {column.getIsSorted() === "asc" ? (
+                <span className="ml-1">▲</span>
+              ) : column.getIsSorted() === "desc" ? (
+                <span className="ml-1">▼</span>
+              ) : null}
+            </div>
+          )
+        },
+        cell: ({ row }) => <div className="text-center">{row.original.leaguePoints.toLocaleString()}</div>,
+        enableSorting: true,
+      },
+      {
+        accessorKey: "suprPoints",
+        header: ({ column }) => {
+          return (
+            <div 
+              className="flex items-center justify-center cursor-pointer select-none"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              SUPR
+              {column.getIsSorted() === "asc" ? (
+                <span className="ml-1">▲</span>
+              ) : column.getIsSorted() === "desc" ? (
+                <span className="ml-1">▼</span>
+              ) : null}
+            </div>
+          )
+        },
+        cell: ({ row }) => <div className="text-center">{row.original.suprPoints.toLocaleString()}</div>,
+        enableSorting: true,
+      }
+    ];
   }
   
   const columns = getColumns();
