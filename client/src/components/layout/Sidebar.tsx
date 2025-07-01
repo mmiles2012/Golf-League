@@ -161,22 +161,22 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
         </ul>
       </nav>
       
-      <div className="p-4 border-t border-primary-light">
+      <div className="p-3 border-t border-primary-light">
         {isAuthenticated ? (
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
             {user?.profileImageUrl ? (
               <img 
                 src={user.profileImageUrl} 
                 alt="Profile" 
-                className="h-8 w-8 rounded-full object-cover"
+                className="h-6 w-6 rounded-full object-cover"
               />
             ) : (
-              <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center text-primary">
-                <User size={16} />
+              <div className="h-6 w-6 rounded-full bg-white flex items-center justify-center text-primary">
+                <User size={12} />
               </div>
             )}
-            <div>
-              <p className="text-white font-medium">
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-medium text-sm truncate">
                 {user?.firstName || user?.email || 'User'}
               </p>
               <button 
@@ -190,14 +190,13 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
             </div>
           </div>
         ) : (
-          <div className="flex items-center space-x-3">
-            <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center text-white">
-              <User size={16} />
+          <div className="flex items-center space-x-2">
+            <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center text-white">
+              <User size={12} />
             </div>
-            <div>
-              <p className="text-white font-medium">Public View</p>
+            <div className="flex-1">
               <div 
-                className="text-xs text-white opacity-75 hover:opacity-100 flex items-center cursor-pointer"
+                className="text-sm text-white opacity-75 hover:opacity-100 flex items-center cursor-pointer"
                 onClick={handleLogin}
               >
                 <span>Sign In</span>
