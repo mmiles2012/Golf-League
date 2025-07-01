@@ -18,7 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { formatDate } from "date-fns";
+import { format } from "date-fns";
 
 function getOrdinalSuffix(num: number): string {
   const lastDigit = num % 10;
@@ -77,8 +77,8 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
     queryKey: ['/api/tournaments', tournamentId],
   });
   
-  // Fetch tournament results
-  const { data: results, isLoading: resultsLoading } = useQuery({
+  // Fetch tournament results - THIS IS THE KEY FIX
+  const { data: tournamentResults, isLoading: resultsLoading } = useQuery({
     queryKey: ['/api/tournaments', tournamentId, 'results'],
   });
 
@@ -103,7 +103,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
   }
   
   // Show error if results not found
-  if (!results || !Array.isArray(results)) {
+  if (!tournamentResults || !Array.isArray(tournamentResults)) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <p className="text-neutral-600">No tournament results found</p>
@@ -111,29 +111,8 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
     );
   }
 
-  // Sort results by position for NET leaderboard (use stored position from database)
-  const netResults = [...results]
-    .filter(result => result?.netScore !== null && result?.netScore !== undefined)
-    .sort((a, b) => (a?.position || 0) - (b?.position || 0));
-
-  // Sort results by gross score for GROSS leaderboard (calculate gross position)
-  const grossResults = [...results]
-    .filter(result => result?.netScore !== null && result?.netScore !== undefined && 
-                      result?.handicap !== null && result?.handicap !== undefined)
-    .map(result => ({
-      ...result,
-      grossScore: (result?.netScore || 0) + (result?.handicap || 0)
-    }))
-    .sort((a, b) => (a?.grossScore || 0) - (b?.grossScore || 0))
-    .map((result, index) => ({
-      ...result,
-      grossPosition: index + 1
-    }));
-
-  // Debug logging
-  console.log("Tournament results data:", results);
-  console.log("Filtered net results:", netResults);
-  console.log("Filtered gross results:", grossResults);
+  // NO FILTERING - Just sort by position for display
+  const allResults = [...tournamentResults].sort((a, b) => (a?.position || 999) - (b?.position || 999));
   
   return (
     <div className="space-y-6 pb-20">
@@ -141,7 +120,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
         <div>
           <h1 className="text-2xl font-heading font-bold">{tournament?.name || 'Tournament'}</h1>
           <div className="flex items-center gap-3 mt-1">
-            <p className="text-neutral-600">{tournament?.date ? formatDate(tournament.date) : ''}</p>
+            <p className="text-neutral-600">{tournament?.date ? format(new Date(tournament.date), 'MMM d, yyyy') : ''}</p>
             {tournament?.type && <Badge variant={tournament.type as any}>{getTournamentTypeLabel(tournament.type)}</Badge>}
           </div>
         </div>
@@ -196,16 +175,16 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {netResults.map((result) => {
+                {allResults.map((result) => {
                   // Check if this position is tied by looking for other players with the same position
-                  const isTied = netResults.filter(r => r?.position === result?.position).length > 1;
+                  const isTied = allResults.filter(r => r?.position === result?.position).length > 1;
                   
                   return (
-                    <TableRow key={result?.id}>
+                    <TableRow key={result?.id || 'unknown'}>
                       <TableCell className="font-semibold">
                         <span className={isTied ? "text-orange-600" : ""}>
-                          {formatPosition(result?.position || 0, isTied)}
-                          {!isTied && <sup>{getOrdinalSuffix(result?.position || 0)}</sup>}
+                          {result?.position ? formatPosition(result.position, isTied) : 'N/A'}
+                          {result?.position && !isTied && <sup>{getOrdinalSuffix(result.position)}</sup>}
                         </span>
                       </TableCell>
                       <TableCell>
@@ -223,13 +202,13 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                         </a>
                       </TableCell>
                       <TableCell className="text-center">
-                        {(result?.netScore || 0) + (result?.handicap || 0)}
+                        {result?.grossScore !== null && result?.grossScore !== undefined ? result.grossScore : "N/A"}
                       </TableCell>
                       <TableCell className="text-center">
-                        {result?.netScore ?? "N/A"}
+                        {result?.netScore !== null && result?.netScore !== undefined ? result.netScore : "N/A"}
                       </TableCell>
                       <TableCell className="text-center">
-                        {result?.handicap !== null ? result?.handicap : "N/A"}
+                        {result?.handicap !== null && result?.handicap !== undefined ? result.handicap : "N/A"}
                       </TableCell>
                       <TableCell className="text-right font-semibold">
                         {result?.points || 0}
@@ -249,7 +228,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
           <CardHeader>
             <CardTitle>Gross Leaderboard</CardTitle>
             <CardDescription>
-              Gross score leaderboard calculated from net scores + handicaps. Points based on gross score positions using Tour points.
+              Gross score leaderboard showing stored gross points from database.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -261,20 +240,20 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                   <TableHead className="text-center">Gross</TableHead>
                   <TableHead className="text-center">Net</TableHead>
                   <TableHead className="text-center">Handicap</TableHead>
-                  <TableHead className="text-right">Points</TableHead>
+                  <TableHead className="text-right">Gross Points</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {grossResults.map((result) => {
-                  // Check if this gross position is tied
-                  const isTied = grossResults.filter(r => r?.grossScore === result?.grossScore).length > 1;
+                {allResults.map((result) => {
+                  // Check if this position is tied
+                  const isTied = allResults.filter(r => r?.position === result?.position).length > 1;
                   
                   return (
-                    <TableRow key={result?.id}>
+                    <TableRow key={result?.id || 'unknown'}>
                       <TableCell className="font-semibold">
                         <span className={isTied ? "text-orange-600" : ""}>
-                          {formatPosition(result?.grossPosition || 0, isTied)}
-                          {!isTied && <sup>{getOrdinalSuffix(result?.grossPosition || 0)}</sup>}
+                          {result?.position ? formatPosition(result.position, isTied) : 'N/A'}
+                          {result?.position && !isTied && <sup>{getOrdinalSuffix(result.position)}</sup>}
                         </span>
                       </TableCell>
                       <TableCell>
@@ -292,13 +271,13 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                         </a>
                       </TableCell>
                       <TableCell className="text-center">
-                        {result?.grossScore ?? "N/A"}
+                        {result?.grossScore !== null && result?.grossScore !== undefined ? result.grossScore : "N/A"}
                       </TableCell>
                       <TableCell className="text-center">
-                        {result?.netScore ?? "N/A"}
+                        {result?.netScore !== null && result?.netScore !== undefined ? result.netScore : "N/A"}
                       </TableCell>
                       <TableCell className="text-center">
-                        {result?.handicap !== null ? result?.handicap : "N/A"}
+                        {result?.handicap !== null && result?.handicap !== undefined ? result.handicap : "N/A"}
                       </TableCell>
                       <TableCell className="text-right font-semibold">
                         {result?.grossPoints || 0}
