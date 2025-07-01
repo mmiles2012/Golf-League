@@ -192,9 +192,32 @@ PUT /api/points-config
 
 ---
 
-## Authentication & Security
-- **Login/Logout:** Admins authenticate to access management features; public users have read-only access.
-- **Role-Based UI:** Sidebar and navigation adapt to show/hide admin functions based on authentication state.
+## Authentication & User Roles
+
+### Player Login (Replit OAuth)
+- All users authenticate via Replit's built-in OAuth-like authentication system (no custom password management).
+- Players can log in to access their personal dashboard and profile.
+- Players can only edit their own profile and friends list.
+
+### Admin & Super-Admin
+- Only users with emails/accounts from the domain `@hideoutgolf.club` can be admins.
+- A super-admin role exists; only the super-admin can appoint or remove other admins.
+- Admins can upload/manage tournaments and data.
+- Domain enforcement is handled at login and when appointing new admins.
+
+### Public View
+- Non-authenticated users can view leaderboards, tournament results, and player profiles, but cannot edit or upload data.
+
+## Player Dashboard Features
+- Editable display name and home club (after login).
+- Sorted tournament/match history with scores, positions, and points.
+- Highlighted top 8 scores (used for standings) and dropped scores.
+- Friends selection and filtered leaderboard view.
+
+## Backend-Driven Logic
+- All points, positions, and tie logic are calculated on the backend.
+- Frontend is display-only for these values.
+- Backend enforces all permissions and role-based access control.
 
 ---
 

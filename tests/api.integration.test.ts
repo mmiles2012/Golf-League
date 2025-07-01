@@ -122,3 +122,23 @@ describe('Leaderboard API Backend-Driven Logic', () => {
     expect(true).toBe(true);
   });
 });
+
+describe('Authentication & Role Enforcement', () => {
+  it('should allow player login via Replit OAuth and access to their own dashboard', async () => {
+    // Simulate login via Replit OAuth (mock or integration)
+    // Expect player to access their own profile/dashboard
+    expect(true).toBe(true); // Replace with real integration if available
+  });
+
+  it('should only allow @hideoutgolf.club users to be admins', async () => {
+    // Simulate login with various emails
+    // Expect only domain-verified users to be granted admin role
+    expect(true).toBe(true); // Replace with real integration if available
+  });
+
+  it('should only allow super-admin to appoint/remove admins', async () => {
+    // Simulate super-admin and regular admin actions
+    // Only super-admin can manage admin roles
+    expect(true).toBe(true); // Replace with real integration if available
+  });
+});

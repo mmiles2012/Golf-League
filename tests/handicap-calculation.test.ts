@@ -1,5 +1,5 @@
 // NOTE: This file tests only net score and handicap calculation logic.
-// All leaderboard points, positions, and tie logic are backend-driven and not tested here.
+// Authentication and permissions are handled by Replit OAuth and backend roles, not tested here.
 
 // Example: Handicap calculation logic test (assuming a function exists)
 // If you have a specific function for net score calculation, replace below accordingly

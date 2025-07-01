@@ -701,7 +701,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Fetch all players for email matching
       let allPlayers = await storage.getPlayers();
       let emailToPlayer = new Map(
-        allPlayers.filter(p => p.email).map(p => [p.email.toLowerCase(), p])
+        allPlayers.filter(p => p.email).map(p => [p.email!.toLowerCase(), p])
       );
 
       const processedData = [];
@@ -983,7 +983,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create tournament
       const tournament = await storage.createTournament({
         name: validData.name,
-        date: validData.date,
+        date: typeof date === 'string' ? date : new Date(date).toISOString(),
         type: validData.type,
         status: "completed"
       });
@@ -1134,7 +1134,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create tournament
       const tournament = await storage.createTournament({
         name,
-        date: new Date(date),
+        date: typeof date === 'string' ? date : new Date(date).toISOString(),
         type,
         status: "completed"
       });

@@ -374,6 +374,7 @@ export class DatabaseStorage implements IStorage {
         netScore: result.netScore || null,
         handicap: result.handicap || null,
         points: result.points || calculatePoints(result.position, type),
+        grossPoints: null, // Added to satisfy schema
       });
     }
     
