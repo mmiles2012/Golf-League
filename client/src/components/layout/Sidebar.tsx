@@ -14,7 +14,7 @@ import {
   Award,
   ListOrdered
 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 interface SidebarProps {
   onNavigation?: () => void;
