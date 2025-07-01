@@ -111,18 +111,36 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
     );
   }
 
-  // Sort results for NET leaderboard by net score (lower is better)
+  // Sort results for NET leaderboard by net score (lower is better), then by handicap (lower first)
   const netResults = [...tournamentResults].sort((a, b) => {
     const scoreA = a?.netScore !== null && a?.netScore !== undefined ? a.netScore : 999;
     const scoreB = b?.netScore !== null && b?.netScore !== undefined ? b.netScore : 999;
-    return scoreA - scoreB;
+    
+    // Primary sort: by net score
+    if (scoreA !== scoreB) {
+      return scoreA - scoreB;
+    }
+    
+    // Secondary sort: by handicap (lower handicap first for tied scores)
+    const handicapA = a?.handicap !== null && a?.handicap !== undefined ? a.handicap : 999;
+    const handicapB = b?.handicap !== null && b?.handicap !== undefined ? b.handicap : 999;
+    return handicapA - handicapB;
   });
 
-  // Sort results for GROSS leaderboard by gross score (lower is better)
+  // Sort results for GROSS leaderboard by gross score (lower is better), then by handicap (lower first)
   const grossResults = [...tournamentResults].sort((a, b) => {
     const scoreA = a?.grossScore !== null && a?.grossScore !== undefined ? a.grossScore : 999;
     const scoreB = b?.grossScore !== null && b?.grossScore !== undefined ? b.grossScore : 999;
-    return scoreA - scoreB;
+    
+    // Primary sort: by gross score
+    if (scoreA !== scoreB) {
+      return scoreA - scoreB;
+    }
+    
+    // Secondary sort: by handicap (lower handicap first for tied scores)
+    const handicapA = a?.handicap !== null && a?.handicap !== undefined ? a.handicap : 999;
+    const handicapB = b?.handicap !== null && b?.handicap !== undefined ? b.handicap : 999;
+    return handicapA - handicapB;
   });
 
   return (
