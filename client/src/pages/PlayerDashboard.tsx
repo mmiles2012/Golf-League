@@ -53,7 +53,7 @@ export default function PlayerDashboard() {
 
   // Get player history if linked to a player
   const { data: playerHistory, isLoading: historyLoading, error: historyError } = useQuery({
-    queryKey: ["/api/players", linkedPlayerId, "history"],
+    queryKey: [`/api/players/${linkedPlayerId}/history`],
     enabled: !!linkedPlayerId,
   });
 
@@ -220,8 +220,8 @@ export default function PlayerDashboard() {
     return null; // Will redirect to login via useEffect
   }
 
-  const top8Events = playerHistory ? getTop8Events(playerHistory.tournaments) : [];
-  const droppedEvents = playerHistory ? getDroppedEvents(playerHistory.tournaments) : [];
+  const top8Events = playerHistory?.tournaments ? getTop8Events(playerHistory.tournaments) : [];
+  const droppedEvents = playerHistory?.tournaments ? getDroppedEvents(playerHistory.tournaments) : [];
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6">
@@ -589,7 +589,7 @@ export default function PlayerDashboard() {
               </div>
             )}
 
-            {playerHistory.tournaments.length === 0 && (
+            {playerHistory?.tournaments && playerHistory.tournaments.length === 0 && (
               <p className="text-muted-foreground text-center py-4">
                 No tournament history available
               </p>
