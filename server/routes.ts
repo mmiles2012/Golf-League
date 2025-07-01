@@ -1174,17 +1174,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Catch-all handler for frontend routes (must be last)
-  app.get("*", (_req: Request, res: Response) => {
-    // For development, redirect to root and let the frontend router handle it
-    if (process.env.NODE_ENV === "development") {
-      res.redirect("/");
-    } else {
-      // In production, serve the built frontend
-      res.sendFile("index.html", { root: "client/dist" });
-    }
-  });
-
   const httpServer = createServer(app);
   return httpServer;
 }
