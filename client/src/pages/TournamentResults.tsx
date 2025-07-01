@@ -79,7 +79,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
   
   // Fetch tournament results - THIS IS THE KEY FIX
   const { data: tournamentResults, isLoading: resultsLoading } = useQuery({
-    queryKey: ['/api/tournaments', tournamentId, 'results'],
+    queryKey: [`/api/tournaments/${tournamentId}/results`],
   });
 
   const isLoading = tournamentLoading || resultsLoading;
@@ -111,6 +111,11 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
     );
   }
 
+  // Debug logging
+  console.log("Tournament ID:", tournamentId);
+  console.log("Tournament data:", tournament);
+  console.log("Tournament results data:", tournamentResults);
+  
   // NO FILTERING - Just sort by position for display
   const allResults = [...tournamentResults].sort((a, b) => (a?.position || 999) - (b?.position || 999));
   
