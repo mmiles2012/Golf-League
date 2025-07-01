@@ -191,6 +191,13 @@ export class DatabaseStorage implements IStorage {
     return player;
   }
 
+  async findPlayerByEmail(email: string): Promise<Player | undefined> {
+    const [player] = await db.select()
+      .from(players)
+      .where(eq(players.email, email));
+    return player;
+  }
+
   async searchPlayersByName(query: string): Promise<Player[]> {
     return db.select()
       .from(players)
@@ -443,12 +450,20 @@ export class DatabaseStorage implements IStorage {
     let player: Player | undefined;
     if (profile) {
       player = await this.getPlayer(profile.playerId!);
+    } else if (user.email) {
+      // Try automatic email matching if no manual link exists
+      const autoLinkedPlayer = await this.findPlayerByEmail(user.email);
+      if (autoLinkedPlayer) {
+        // Automatically create the link
+        await this.linkUserToPlayer(userId, autoLinkedPlayer.id);
+        player = autoLinkedPlayer;
+      }
     }
 
     return { 
       user, 
       player, 
-      linkedPlayerId: profile?.playerId 
+      linkedPlayerId: profile?.playerId || player?.id
     };
   }
 

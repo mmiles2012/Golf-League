@@ -44,6 +44,23 @@ export const playerProfiles = pgTable("player_profiles", {
   };
 });
 
+// Player link requests for manual approval when email matching fails
+export const playerLinkRequests = pgTable("player_link_requests", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  status: varchar("status", { enum: ['pending', 'approved', 'rejected'] }).default('pending').notNull(),
+  requestMessage: text("request_message"),
+  requestedAt: timestamp("requested_at").defaultNow().notNull(),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewedBy: varchar("reviewed_by").references(() => users.id),
+  reviewMessage: text("review_message"),
+}, (table) => {
+  return {
+    userPlayerRequestUnique: unique().on(table.userId, table.playerId),
+  };
+});
+
 // League table to store multiple leagues
 export const leagues = pgTable("leagues", {
   id: serial("id").primaryKey(),
