@@ -197,12 +197,12 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Position</TableHead>
+                  <TableHead className="w-20">Pos</TableHead>
                   <TableHead>Player</TableHead>
-                  <TableHead className="text-center">Gross</TableHead>
-                  <TableHead className="text-center">Net</TableHead>
-                  <TableHead className="text-center">Handicap</TableHead>
-                  <TableHead className="text-right">Points</TableHead>
+                  <TableHead className="text-center w-16">Gross</TableHead>
+                  <TableHead className="text-center w-16">Net</TableHead>
+                  <TableHead className="text-center w-20">Handicap</TableHead>
+                  <TableHead className="text-right w-20">Points</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -218,13 +218,13 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                   
                   return (
                   <TableRow key={result?.id || 'unknown'}>
-                    <TableCell className="font-semibold">
+                    <TableCell className="font-medium">
                       {isTied ? `T${position}` : position.toString()}
                     </TableCell>
                     <TableCell>
                       <a 
                         href={`/player/${result?.player?.id || '#'}`}
-                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-medium"
                         onClick={(e) => {
                           e.preventDefault();
                           if (result?.player?.id) {
@@ -244,7 +244,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                     <TableCell className="text-center">
                       {result?.handicap !== null && result?.handicap !== undefined ? result.handicap : "N/A"}
                     </TableCell>
-                    <TableCell className="text-right font-semibold">
+                    <TableCell className="text-right font-medium">
                       {result?.points || 0}
                     </TableCell>
                   </TableRow>
@@ -269,12 +269,12 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Position</TableHead>
+                  <TableHead className="w-20">Pos</TableHead>
                   <TableHead>Player</TableHead>
-                  <TableHead className="text-center">Gross</TableHead>
-                  <TableHead className="text-center">Net</TableHead>
-                  <TableHead className="text-center">Handicap</TableHead>
-                  <TableHead className="text-right">Gross Points</TableHead>
+                  <TableHead className="text-center w-16">Gross</TableHead>
+                  <TableHead className="text-center w-16">Net</TableHead>
+                  <TableHead className="text-center w-20">Handicap</TableHead>
+                  <TableHead className="text-right w-20">Points</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -290,13 +290,13 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                   
                   return (
                     <TableRow key={result?.id || 'unknown'}>
-                      <TableCell className="font-semibold">
+                      <TableCell className="font-medium">
                         {isTied ? `T${position}` : position.toString()}
                       </TableCell>
                     <TableCell>
                       <a 
                         href={`/player/${result?.player?.id || '#'}`}
-                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-medium"
                         onClick={(e) => {
                           e.preventDefault();
                           if (result?.player?.id) {
@@ -316,7 +316,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                     <TableCell className="text-center">
                       {result?.handicap !== null && result?.handicap !== undefined ? result.handicap : "N/A"}
                     </TableCell>
-                    <TableCell className="text-right font-semibold">
+                    <TableCell className="text-right font-medium">
                       {result?.grossPoints || 0}
                     </TableCell>
                     </TableRow>
