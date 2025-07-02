@@ -4,6 +4,13 @@
 A professional golf league management platform that provides comprehensive tournament tracking, advanced score processing, and detailed performance analytics with enhanced precision in scoring calculations.
 
 ## Recent Changes
+- **2025-07-02**: Fixed negative handicap handling for scratch and better players
+  - **Removed Math.abs() calls**: Fixed frontend tournament upload processing to preserve negative handicap values instead of converting them to positive
+  - **Updated TournamentUploader.tsx**: All four handicap parsing locations now correctly handle negative values for players better than scratch
+  - **Verified backend compatibility**: Backend already correctly handles negative handicaps using Number() conversion and proper gross score calculation (net + handicap)
+  - **Enhanced documentation**: Added clear examples in points-calculator.ts showing how negative handicaps work (e.g., Net 72 + Handicap -2 = Gross 70)
+  - **Created comprehensive tests**: Updated handicap calculation tests to verify both positive and negative handicap scenarios work correctly
+  - **Confirmed bidirectional conversion**: Net-to-gross and gross-to-net calculations maintain consistency for all handicap values
 - **2025-07-02**: Fixed critical gross points calculation issue for tour events
   - **Identified hardcoded values bug**: Migration scripts were calling `calculateGrossPoints()` without database `pointsConfig`, causing fallback to incorrect hardcoded values
   - **Database vs hardcoded discrepancy**: Tour events used hardcoded (1st=500, 2nd=400, 3rd=325) instead of database values (1st=500, 2nd=300, 3rd=190)

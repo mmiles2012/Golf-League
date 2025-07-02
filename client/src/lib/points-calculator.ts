@@ -62,8 +62,14 @@ export function calculatePoints(position: number, tournamentType: TournamentType
 /**
  * Calculate gross score from net score and handicap
  * @param netScore - Net score
- * @param handicap - Player handicap
- * @returns Gross score
+ * @param handicap - Player handicap (can be negative for players better than scratch)
+ * @returns Gross score (for negative handicaps, gross will be lower than net)
+ * @example
+ * // Regular player: Net 80, Handicap 10 → Gross 90
+ * calculateGrossScore(80, 10) // returns 90
+ * 
+ * // Scratch+ player: Net 72, Handicap -2 → Gross 70  
+ * calculateGrossScore(72, -2) // returns 70
  */
 export function calculateGrossScore(netScore: number, handicap: number): number {
   return netScore + handicap;

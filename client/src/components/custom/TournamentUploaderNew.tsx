@@ -141,22 +141,18 @@ export default function TournamentUploaderNew() {
         if ((row.Scoring === "StrokeNet" || row.Scoring === "Stroke") && row.Total !== undefined) {
           const isStrokeNet = row.Scoring === "StrokeNet";
           
-          // Handle handicap calculations
+          // Handle handicap calculations (including negative handicaps for players better than scratch)
           let handicapValue = 0;
           if (row["Playing Handicap"] !== undefined) {
-            const handicapStr = String(row["Playing Handicap"]);
-            if (handicapStr.includes('+')) {
-              handicapValue = parseFloat(handicapStr.replace('+', ''));
-            } else {
-              handicapValue = Math.abs(parseFloat(handicapStr));
-            }
+            const handicapStr = String(row["Playing Handicap"]).trim();
+            // Parse handicap as-is to preserve negative values for scratch or better players
+            handicapValue = parseFloat(handicapStr.replace('+', ''));
+            if (isNaN(handicapValue)) handicapValue = 0;
           } else if (row["Course Handicap"] !== undefined) {
-            const handicapStr = String(row["Course Handicap"]);
-            if (handicapStr.includes('+')) {
-              handicapValue = parseFloat(handicapStr.replace('+', ''));
-            } else {
-              handicapValue = Math.abs(parseFloat(handicapStr));
-            }
+            const handicapStr = String(row["Course Handicap"]).trim();
+            // Parse handicap as-is to preserve negative values for scratch or better players
+            handicapValue = parseFloat(handicapStr.replace('+', ''));
+            if (isNaN(handicapValue)) handicapValue = 0;
           }
           
           if (isStrokeNet) {

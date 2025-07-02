@@ -210,22 +210,18 @@ export default function TournamentUploader() {
         if ((row.Scoring === "StrokeNet" || row.Scoring === "Stroke") && row.Total !== undefined) {
           const isStrokeNet = row.Scoring === "StrokeNet";
           
-          // Handle handicap calculations
+          // Handle handicap calculations (including negative handicaps for players better than scratch)
           let handicapValue = 0;
           if (row["Playing Handicap"] !== undefined) {
-            const handicapStr = String(row["Playing Handicap"]);
-            if (handicapStr.includes('+')) {
-              handicapValue = parseFloat(handicapStr.replace('+', ''));
-            } else {
-              handicapValue = Math.abs(parseFloat(handicapStr));
-            }
+            const handicapStr = String(row["Playing Handicap"]).trim();
+            // Parse handicap as-is to preserve negative values for scratch or better players
+            handicapValue = parseFloat(handicapStr.replace('+', ''));
+            if (isNaN(handicapValue)) handicapValue = 0;
           } else if (row["Course Handicap"] !== undefined) {
-            const handicapStr = String(row["Course Handicap"]);
-            if (handicapStr.includes('+')) {
-              handicapValue = parseFloat(handicapStr.replace('+', ''));
-            } else {
-              handicapValue = Math.abs(parseFloat(handicapStr));
-            }
+            const handicapStr = String(row["Course Handicap"]).trim();
+            // Parse handicap as-is to preserve negative values for scratch or better players
+            handicapValue = parseFloat(handicapStr.replace('+', ''));
+            if (isNaN(handicapValue)) handicapValue = 0;
           }
           
           if (isStrokeNet) {
@@ -348,28 +344,18 @@ export default function TournamentUploader() {
             // Convert to string to handle all types of inputs
             const handicapStr = String(row["Playing Handicap"]);
 
-            // Check if the playing handicap has a "+" sign
-            if (handicapStr.includes('+')) {
-              // If it has a "+" sign, add the handicap to the total (for plus handicap players)
-              handicapValue = parseFloat(handicapStr.replace('+', ''));
-            } else {
-              // If it doesn't have a "+" sign, subtract the handicap from the total
-              handicapValue = Math.abs(parseFloat(handicapStr));
-            }
+            // Parse handicap as-is to preserve negative values for scratch or better players
+            handicapValue = parseFloat(handicapStr.replace('+', ''));
+            if (isNaN(handicapValue)) handicapValue = 0;
           } 
           // Fall back to Course Handicap if Playing Handicap isn't available
           else if (row["Course Handicap"] !== undefined) {
             // Convert to string to handle all types of inputs
             const handicapStr = String(row["Course Handicap"]);
 
-            // Apply the same logic to Course Handicap
-            if (handicapStr.includes('+')) {
-              // If it has a "+" sign, add the handicap to the total (for plus handicap players)
-              handicapValue = parseFloat(handicapStr.replace('+', ''));
-            } else {
-              // If it doesn't have a "+" sign, subtract the handicap from the total
-              handicapValue = Math.abs(parseFloat(handicapStr));
-            }
+            // Parse handicap as-is to preserve negative values for scratch or better players
+            handicapValue = parseFloat(handicapStr.replace('+', ''));
+            if (isNaN(handicapValue)) handicapValue = 0;
           }
 
           if (isStrokeNet) {
@@ -385,13 +371,9 @@ export default function TournamentUploader() {
               const handicapStr = String(row["Course Handicap"]);
 
               // Apply the same logic to Course Handicap
-              if (handicapStr.includes('+')) {
-                // If it has a "+" sign, add the handicap to the total (for plus handicap players)
-                courseHandicapValue = parseFloat(handicapStr.replace('+', ''));
-              } else {
-                // If it doesn't have a "+" sign, subtract the handicap from the total
-                courseHandicapValue = Math.abs(parseFloat(handicapStr));
-              }
+              // Parse handicap as-is to preserve negative values for scratch or better players
+              courseHandicapValue = parseFloat(handicapStr.replace('+', ''));
+              if (isNaN(courseHandicapValue)) courseHandicapValue = 0;
             }
 
             // Calculate gross score using Course Handicap specifically
