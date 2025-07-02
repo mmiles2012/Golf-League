@@ -11,6 +11,8 @@ A professional golf league management platform that provides comprehensive tourn
   - **Enhanced documentation**: Added clear examples in points-calculator.ts showing how negative handicaps work (e.g., Net 72 + Handicap -2 = Gross 70)
   - **Created comprehensive tests**: Updated handicap calculation tests to verify both positive and negative handicap scenarios work correctly
   - **Confirmed bidirectional conversion**: Net-to-gross and gross-to-net calculations maintain consistency for all handicap values
+  - **Fixed historical data**: Identified and corrected 5 tournament results in "Tour Event #2 - Lofoten Links" where negative handicap players had incorrect gross scores
+  - **Database verification**: Confirmed zero remaining gross score calculation mismatches across all tournaments - all negative handicap calculations now work correctly
 - **2025-07-02**: Fixed critical gross points calculation issue for tour events
   - **Identified hardcoded values bug**: Migration scripts were calling `calculateGrossPoints()` without database `pointsConfig`, causing fallback to incorrect hardcoded values
   - **Database vs hardcoded discrepancy**: Tour events used hardcoded (1st=500, 2nd=400, 3rd=325) instead of database values (1st=500, 2nd=300, 3rd=190)
