@@ -1055,18 +1055,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Processed ${processedTieResults.length} results with tie handling`);
 
-      // Calculate gross positions and points with proper tie handling
+      // Calculate gross positions and points with proper tie handling using tournament-specific points
       const grossTieHandler = new TieHandler({
         ...pointsConfig,
-        tour: pointsConfig.tour.map(entry => ({ 
+        [validData.type]: pointsConfig[validData.type].map(entry => ({ 
           position: entry.position, 
-          points: calculateGrossPoints(entry.position) 
+          points: calculateGrossPoints(entry.position, validData.type) 
         }))
       });
       
       const processedGrossResults = grossTieHandler.processResultsWithTies(
         playerData,
-        'tour', // Always use tour points for gross regardless of tournament type
+        validData.type, // Use tournament-specific points for gross scoring
         'gross'
       );
       
@@ -1087,6 +1087,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           playerId: result.playerId,
           tournamentId: tournament.id,
           position: result.position,
+          grossPosition: grossData.position,
           grossScore: result.grossScore,
           netScore: result.netScore,
           handicap: result.handicap,
@@ -1188,18 +1189,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'net'
       );
 
-      // Calculate gross positions and points with proper tie handling for manual entry
+      // Calculate gross positions and points with proper tie handling for manual entry using tournament-specific points
       const grossTieHandler = new TieHandler({
         ...pointsConfig,
-        tour: pointsConfig.tour.map(entry => ({ 
+        [type]: pointsConfig[type].map(entry => ({ 
           position: entry.position, 
-          points: calculateGrossPoints(entry.position) 
+          points: calculateGrossPoints(entry.position, type) 
         }))
       });
       
       const processedGrossResults = grossTieHandler.processResultsWithTies(
         playerData,
-        'tour', // Always use tour points for gross regardless of tournament type
+        type, // Use tournament-specific points for gross scoring
         'gross'
       );
       
@@ -1220,6 +1221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           playerId: result.playerId,
           tournamentId: tournament.id,
           position: result.position,
+          grossPosition: grossData.position,
           grossScore: result.grossScore,
           netScore: result.netScore,
           handicap: result.handicap,

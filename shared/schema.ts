@@ -94,6 +94,7 @@ export const playerResults = pgTable("player_results", {
   playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
   tournamentId: integer("tournament_id").notNull().references(() => tournaments.id, { onDelete: "cascade" }),
   position: integer("position").notNull(),
+  grossPosition: integer("gross_position"), // Gross position for separate tracking
   grossScore: real("gross_score"),
   netScore: real("net_score"),
   handicap: real("handicap"),
@@ -132,6 +133,7 @@ export const insertPlayerResultSchema = createInsertSchema(playerResults)
   })
   .extend({
     // Ensure these fields can be properly null
+    grossPosition: z.number().nullable(), // Gross position (nullable for migration)
     grossScore: z.number().nullable(),
     netScore: z.number().nullable(),
     handicap: z.number().nullable(),

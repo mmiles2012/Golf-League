@@ -63,12 +63,26 @@ export function calculatePoints(position: number, tournamentType: TournamentType
 }
 
 /**
- * Calculate gross points based on gross position (used for gross leaderboard)
- * This uses the standard Tour points table regardless of tournament type
+ * Calculate gross points based on gross position and tournament type
+ * For gross scoring, use the tournament-specific points table based on tournament type
  * @param position - Gross finishing position (1-based)
+ * @param tournamentType - Type of tournament ('major', 'tour', 'league', or 'supr')
  * @returns Gross points awarded for the position
  */
-export function calculateGrossPoints(position: number): number {
+export function calculateGrossPoints(position: number, tournamentType: TournamentType = 'tour'): number {
+  if (position <= 0) return 0;
+  
+  // Use the same points table as net scoring for gross positions
+  return calculatePoints(position, tournamentType);
+}
+
+/**
+ * Legacy function for backward compatibility - uses Tour points table
+ * @deprecated Use calculateGrossPoints(position, tournamentType) instead
+ * @param position - Gross finishing position (1-based)
+ * @returns Gross points awarded for the position using Tour table
+ */
+export function calculateGrossPointsLegacy(position: number): number {
   const tourPoints = [
     500, 300, 190, 135, 110, 100, 90, 85, 80, 75,    // 1-10
     70, 65, 60, 55, 53, 51, 49, 47, 45, 43,          // 11-20

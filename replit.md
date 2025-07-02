@@ -4,6 +4,13 @@
 A professional golf league management platform that provides comprehensive tournament tracking, advanced score processing, and detailed performance analytics with enhanced precision in scoring calculations.
 
 ## Recent Changes
+- **2025-07-01**: Fixed gross points calculations for major tournaments and improved gross position tracking
+  - **Fixed major tournament gross points**: Major tournaments now correctly use major points table (1000, 800, 650, 520, 400...) instead of tour points for gross scoring
+  - **Added gross position database field**: Added `grossPosition` column to player_results table for proper tracking of gross positions separately from net positions
+  - **Enhanced tournament processing**: Updated tournament upload and manual entry to calculate and store gross positions using tournament-specific points tables
+  - **Updated player history API**: Player modal now correctly displays gross position from database instead of using net position
+  - **Improved gross points calculation**: Created `calculateGrossPoints(position, tournamentType)` function that uses tournament-specific points tables
+  - **Database migrations completed**: All existing tournament results now have proper gross positions and corrected major tournament gross points
 - **2025-07-01**: Fixed critical ES module compatibility issue preventing server startup
   - **Resolved CommonJS/ES module conflict**: Replaced `require.main === module` with ES module equivalent `import.meta.url === new URL(process.argv[1], 'file://').href`
   - **Server now starts successfully**: Application properly runs on port 5000 with all API endpoints functional

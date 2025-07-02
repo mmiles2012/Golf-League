@@ -75,7 +75,7 @@ export class LeaderboardCalculator {
         tournamentDate: tournament.date,
         tournamentType: tournament.type,
         position: result.position,
-        grossPosition: result.position, // For now, use same position - this could be calculated separately
+        grossPosition: result.grossPosition || result.position, // Use actual gross position from database
         netScore: netScore,
         grossScore: grossScore,
         handicap: result.handicap,
@@ -300,7 +300,19 @@ export class LeaderboardCalculator {
   }
 
   private async getPlayerResults(playerId: number): Promise<PlayerResult[]> {
-    return db.select()
+    return db.select({
+      id: playerResults.id,
+      playerId: playerResults.playerId,
+      tournamentId: playerResults.tournamentId,
+      position: playerResults.position,
+      grossPosition: playerResults.grossPosition,
+      grossScore: playerResults.grossScore,
+      netScore: playerResults.netScore,
+      handicap: playerResults.handicap,
+      points: playerResults.points,
+      grossPoints: playerResults.grossPoints,
+      createdAt: playerResults.createdAt,
+    })
       .from(playerResults)
       .where(eq(playerResults.playerId, playerId));
   }
