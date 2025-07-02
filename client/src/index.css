@@ -205,28 +205,66 @@
     @apply table-fixed w-full;
   }
   
-  .tournament-results-table th:nth-child(1),
-  .tournament-results-table td:nth-child(1) {
-    @apply w-16;
+  /* Desktop column widths */
+  @media (min-width: 768px) {
+    .tournament-results-table th:nth-child(1),
+    .tournament-results-table td:nth-child(1) {
+      @apply w-16;
+    }
+    
+    .tournament-results-table th:nth-child(3),
+    .tournament-results-table td:nth-child(3) {
+      @apply w-20;
+    }
+    
+    .tournament-results-table th:nth-child(4),
+    .tournament-results-table td:nth-child(4) {
+      @apply w-20;
+    }
+    
+    .tournament-results-table th:nth-child(5),
+    .tournament-results-table td:nth-child(5) {
+      @apply w-24;
+    }
+    
+    .tournament-results-table th:nth-child(6),
+    .tournament-results-table td:nth-child(6) {
+      @apply w-28;
+    }
   }
   
-  .tournament-results-table th:nth-child(3),
-  .tournament-results-table td:nth-child(3) {
-    @apply w-20;
-  }
-  
-  .tournament-results-table th:nth-child(4),
-  .tournament-results-table td:nth-child(4) {
-    @apply w-20;
-  }
-  
-  .tournament-results-table th:nth-child(5),
-  .tournament-results-table td:nth-child(5) {
-    @apply w-24;
-  }
-  
-  .tournament-results-table th:nth-child(6),
-  .tournament-results-table td:nth-child(6) {
-    @apply w-28;
+  /* Mobile responsive adjustments */
+  @media (max-width: 767px) {
+    .tournament-results-table {
+      @apply table-auto min-w-full;
+    }
+    
+    .tournament-results-table th:nth-child(1),
+    .tournament-results-table td:nth-child(1) {
+      width: 40px !important;
+      @apply text-xs;
+    }
+    
+    .tournament-results-table th:nth-child(3),
+    .tournament-results-table td:nth-child(3),
+    .tournament-results-table th:nth-child(4),
+    .tournament-results-table td:nth-child(4),
+    .tournament-results-table th:nth-child(5),
+    .tournament-results-table td:nth-child(5) {
+      width: 50px !important;
+      @apply text-xs;
+    }
+    
+    .tournament-results-table th:nth-child(6),
+    .tournament-results-table td:nth-child(6) {
+      width: 60px !important;
+      @apply text-xs;
+    }
+    
+    .tournament-results-table th:nth-child(2),
+    .tournament-results-table td:nth-child(2) {
+      @apply text-sm;
+      min-width: 120px;
+    }
   }
 }
