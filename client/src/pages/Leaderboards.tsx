@@ -108,6 +108,7 @@ export default function Leaderboards() {
         accessorKey: "rank",
         header: "Pos",
         cell: ({ row }) => <div className="font-medium">{row.original.rank}</div>,
+        size: 60,
       },
       {
         accessorKey: "player.name",
@@ -148,6 +149,7 @@ export default function Leaderboards() {
         },
         cell: ({ row }) => <div className="text-center">{row.original.majorPoints.toLocaleString()}</div>,
         enableSorting: true,
+        size: 80,
       },
     ];
     
@@ -198,6 +200,7 @@ export default function Leaderboards() {
         },
         cell: ({ row }) => <div className="text-center">{row.original.totalEvents}</div>,
         enableSorting: true,
+        size: 80,
       };
       
       const remainingColumns = baseColumns.slice(2); // Get the remaining columns (Major Points)
@@ -227,6 +230,7 @@ export default function Leaderboards() {
           },
           cell: ({ row }) => <div className="text-center">{row.original.tourPoints.toLocaleString()}</div>,
           enableSorting: true,
+          size: 80,
         },
         {
           accessorKey: "leaguePoints",
@@ -267,6 +271,7 @@ export default function Leaderboards() {
           },
           cell: ({ row }) => <div className="text-center">{row.original.suprPoints.toLocaleString()}</div>,
           enableSorting: true,
+          size: 80,
         },
       ];
     } 
