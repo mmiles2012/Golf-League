@@ -2,6 +2,7 @@ import { db } from './server/db';
 import { playerResults, tournaments } from './shared/schema';
 import { eq, and, isNotNull } from 'drizzle-orm';
 import { calculateGrossPoints } from './server/utils';
+import { storage } from './server/storage-db';
 
 interface PlayerResult {
   id: number;
@@ -16,6 +17,10 @@ async function fixGrossPointsZero() {
   console.log('🔧 Starting gross points fix for zero values...');
   
   try {
+    // Get the points configuration from database
+    const pointsConfig = await storage.getPointsConfig();
+    console.log('📊 Retrieved points configuration from database');
+    
     // Get all tournaments
     const allTournaments = await db.select().from(tournaments);
     console.log(`Found ${allTournaments.length} tournaments to process`);
@@ -113,8 +118,8 @@ async function fixGrossPointsZero() {
         const hasZeroGrossPoints = results.some(r => r.id === player.id);
         if (!hasZeroGrossPoints) continue;
         
-        // Calculate gross points using Tour points table
-        const grossPoints = calculateGrossPoints(player.position);
+        // Calculate gross points using tournament-specific points table from database
+        const grossPoints = calculateGrossPoints(player.position, tournament.type, pointsConfig);
         
         // Update the database
         await db
