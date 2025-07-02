@@ -194,7 +194,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
+            <Table className="tournament-results-table">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-16">Pos</TableHead>
@@ -202,7 +202,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                   <TableHead className="text-center w-20">Gross</TableHead>
                   <TableHead className="text-center w-20">Net</TableHead>
                   <TableHead className="text-center w-24">Handicap</TableHead>
-                  <TableHead className="text-right w-24">Net Points</TableHead>
+                  <TableHead className="text-right w-28">Points</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -244,7 +244,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                     <TableCell className="text-center w-24">
                       {result?.handicap !== null && result?.handicap !== undefined ? result.handicap : "N/A"}
                     </TableCell>
-                    <TableCell className="text-right font-semibold w-24">
+                    <TableCell className="text-right font-semibold w-28">
                       {result?.points || 0}
                     </TableCell>
                   </TableRow>
@@ -266,7 +266,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
+            <Table className="tournament-results-table">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-16">Pos</TableHead>
@@ -274,7 +274,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                   <TableHead className="text-center w-20">Gross</TableHead>
                   <TableHead className="text-center w-20">Net</TableHead>
                   <TableHead className="text-center w-24">Handicap</TableHead>
-                  <TableHead className="text-right w-24">Gross Points</TableHead>
+                  <TableHead className="text-right w-28">Points</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -316,7 +316,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                     <TableCell className="text-center w-24">
                       {result?.handicap !== null && result?.handicap !== undefined ? result.handicap : "N/A"}
                     </TableCell>
-                    <TableCell className="text-right font-semibold w-24">
+                    <TableCell className="text-right font-semibold w-28">
                       {result?.grossPoints || 0}
                     </TableCell>
                     </TableRow>

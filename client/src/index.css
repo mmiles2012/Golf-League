@@ -199,4 +199,34 @@
   .leaderboard-table th {
     @apply sticky top-0 z-10;
   }
+  
+  /* Tournament Results table consistency */
+  .tournament-results-table {
+    @apply table-fixed w-full;
+  }
+  
+  .tournament-results-table th:nth-child(1),
+  .tournament-results-table td:nth-child(1) {
+    @apply w-16;
+  }
+  
+  .tournament-results-table th:nth-child(3),
+  .tournament-results-table td:nth-child(3) {
+    @apply w-20;
+  }
+  
+  .tournament-results-table th:nth-child(4),
+  .tournament-results-table td:nth-child(4) {
+    @apply w-20;
+  }
+  
+  .tournament-results-table th:nth-child(5),
+  .tournament-results-table td:nth-child(5) {
+    @apply w-24;
+  }
+  
+  .tournament-results-table th:nth-child(6),
+  .tournament-results-table td:nth-child(6) {
+    @apply w-28;
+  }
 }
