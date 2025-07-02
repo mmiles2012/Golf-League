@@ -12,7 +12,7 @@ A professional golf league management platform that provides comprehensive tourn
   - **Created comprehensive tests**: Updated handicap calculation tests to verify both positive and negative handicap scenarios work correctly
   - **Confirmed bidirectional conversion**: Net-to-gross and gross-to-net calculations maintain consistency for all handicap values
   - **Fixed historical data**: Identified and corrected 5 tournament results in "Tour Event #2 - Lofoten Links" where negative handicap players had incorrect gross scores
-  - **Recalculated gross points**: Completely recalculated all gross positions and points for Lofoten tournament with proper tie handling (e.g., 5-way tie at gross 70 gets 89.4 points each)
+  - **Recalculated gross points**: Completely recalculated all gross positions and points for Lofoten tournament using actual database tour points values (e.g., 5-way tie at gross 70 gets 93 points each: (110+100+90+85+80)÷5=93)
   - **Applied proper tie averaging**: Used correct tour points table with tie averaging - tied players now get averaged points across all tied positions
   - **Database verification**: Confirmed zero remaining gross score calculation mismatches across all tournaments - all negative handicap calculations now work correctly
 - **2025-07-02**: Fixed critical gross points calculation issue for tour events
