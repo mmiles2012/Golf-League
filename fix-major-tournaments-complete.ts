@@ -2,11 +2,16 @@ import { db } from "./server/db";
 import { playerResults, tournaments } from "./shared/schema";
 import { eq, and, isNotNull } from "drizzle-orm";
 import { calculateGrossPoints } from "./server/utils";
+import { storage } from "./server/storage-db";
 
 async function fixMajorTournamentsComplete() {
   console.log('🔧 Starting complete major tournament fix (gross positions + gross points)...');
   
   try {
+    // Get the points configuration from database
+    const pointsConfig = await storage.getPointsConfig();
+    console.log('📊 Retrieved points configuration from database');
+    
     // Get all major tournaments
     const majorTournaments = await db
       .select()
@@ -75,8 +80,8 @@ async function fixMajorTournamentsComplete() {
       // Update both gross position and gross points using major points table
       let updatedCount = 0;
       for (const player of grossPositions) {
-        // Calculate correct gross points using major points table
-        const correctGrossPoints = calculateGrossPoints(player.position, 'major');
+        // Calculate correct gross points using major points table from database
+        const correctGrossPoints = calculateGrossPoints(player.position, 'major', pointsConfig);
         
         // Update both gross position and gross points
         await db

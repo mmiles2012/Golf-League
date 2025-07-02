@@ -1060,7 +1060,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...pointsConfig,
         [validData.type]: pointsConfig[validData.type].map(entry => ({ 
           position: entry.position, 
-          points: calculateGrossPoints(entry.position, validData.type) 
+          points: calculateGrossPoints(entry.position, validData.type, pointsConfig) 
         }))
       });
       
@@ -1194,7 +1194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...pointsConfig,
         [type]: pointsConfig[type].map(entry => ({ 
           position: entry.position, 
-          points: calculateGrossPoints(entry.position, type) 
+          points: calculateGrossPoints(entry.position, type, pointsConfig) 
         }))
       });
       
