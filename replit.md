@@ -10,6 +10,7 @@ A professional golf league management platform that provides comprehensive tourn
   - **Fixed 8 player results**: Updated tour tournament gross points to use correct database values (e.g., 3rd place: 145→190 points, 6th place: 95→100 points)
   - **Updated migration scripts**: Added proper database points configuration to `fix-gross-points-zero.ts` and `fix-major-gross-points.ts`
   - **Created tour-specific fix**: Built `fix-tour-gross-points.ts` to identify and correct tour event gross points using database values
+  - **Verified tournament upload system**: Confirmed new tournament uploads correctly use database points configuration for both net and gross calculations through TieHandler and calculateGrossPoints with pointsConfig parameter
 - **2025-07-01**: Fixed gross points calculations for major tournaments and improved gross position tracking
   - **Fixed major tournament gross points**: Major tournaments now correctly use major points table (1000, 800, 650, 520, 400...) instead of tour points for gross scoring
   - **Added gross position database field**: Added `grossPosition` column to player_results table for proper tracking of gross positions separately from net positions
