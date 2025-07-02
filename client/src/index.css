@@ -233,10 +233,11 @@
     }
   }
   
-  /* Mobile responsive adjustments */
+  /* Mobile and narrow viewport adjustments */
   @media (max-width: 767px) {
     .tournament-results-table {
-      @apply table-auto min-w-full;
+      @apply table-fixed;
+      min-width: 480px; /* Force minimum table width for proper column distribution */
     }
     
     .tournament-results-table th:nth-child(1),
@@ -257,14 +258,36 @@
     
     .tournament-results-table th:nth-child(6),
     .tournament-results-table td:nth-child(6) {
-      width: 60px !important;
+      width: 70px !important;
       @apply text-xs;
     }
     
     .tournament-results-table th:nth-child(2),
     .tournament-results-table td:nth-child(2) {
+      width: calc(100% - 260px) !important; /* Remaining space after fixed columns */
       @apply text-sm;
       min-width: 120px;
+    }
+  }
+  
+  /* Very narrow screens - force horizontal scroll */
+  @media (max-width: 480px) {
+    .tournament-results-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-right: 16px; /* Add padding to prevent content cutoff */
+    }
+    
+    .tournament-results-table {
+      min-width: 450px !important;
+    }
+  }
+  
+  /* Additional narrow viewport support */
+  @media (max-width: 600px) {
+    .tournament-results-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
   }
 }

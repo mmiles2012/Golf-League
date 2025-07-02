@@ -193,7 +193,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
               Net score leaderboard ordered by position from tournament upload. Points based on tournament type ({typeof tournament === 'object' && 'type' in tournament ? String(tournament.type) : ''}).
             </CardDescription>
           </CardHeader>
-          <CardContent className="overflow-x-auto">
+          <CardContent className="overflow-x-auto tournament-results-wrapper">
             <Table className="tournament-results-table">
               <TableHeader>
                 <TableRow>
@@ -265,7 +265,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
               Gross score leaderboard showing stored gross points from database.
             </CardDescription>
           </CardHeader>
-          <CardContent className="overflow-x-auto">
+          <CardContent className="overflow-x-auto tournament-results-wrapper">
             <Table className="tournament-results-table">
               <TableHeader>
                 <TableRow>
