@@ -237,7 +237,7 @@
   @media (max-width: 767px) {
     .tournament-results-table {
       @apply table-fixed;
-      min-width: 480px; /* Force minimum table width for proper column distribution */
+      min-width: 390px; /* Force minimum table width: 40+150+50+50+50+70 = 410px, reduced for tighter fit */
     }
     
     .tournament-results-table th:nth-child(1),
@@ -264,9 +264,13 @@
     
     .tournament-results-table th:nth-child(2),
     .tournament-results-table td:nth-child(2) {
-      width: calc(100% - 260px) !important; /* Remaining space after fixed columns */
+      width: 150px !important; /* Fixed width for player names */
       @apply text-sm;
       min-width: 120px;
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   }
   
@@ -279,7 +283,7 @@
     }
     
     .tournament-results-table {
-      min-width: 450px !important;
+      min-width: 390px !important;
     }
   }
   
