@@ -1,47 +1,54 @@
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { DataTable } from "@/components/ui/data-table";
 import { useQuery } from "@tanstack/react-query";
-import type { ColumnDef } from "@tanstack/react-table";
 import type { PlayerWithHistory, AppSettings } from "@shared/schema";
 import PlayerDetailsModal from "@/components/custom/PlayerDetailsModal";
-import { FileDown, Printer, ChevronUp, ChevronDown } from "lucide-react";
-import { useReactTable, getCoreRowModel, getSortedRowModel, flexRender } from '@tanstack/react-table';
 
 export default function Leaderboards() {
   const { toast } = useToast();
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
   const [isPlayerDetailsOpen, setIsPlayerDetailsOpen] = useState(false);
-  const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([]);
-  const [page, setPage] = useState(0);
+  const [sortingKey, setSortingKey] = useState<string>('rank');
+  const [sortingDesc, setSortingDesc] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<string>('net');
+  const [currentPage, setCurrentPage] = useState(0);
   const rowsPerPage = 25;
 
   // Fetch app settings to get custom page title
   const { data: appSettings } = useQuery<AppSettings>({
     queryKey: ["/api/settings"],
   });
-  
-  // Fetch both leaderboard types simultaneously for faster tab switching
-  const { data: netLeaderboardData, isLoading: isNetLoading } = useQuery<PlayerWithHistory[]>({
-    queryKey: [`/api/leaderboard/net`],
-    staleTime: 5 * 60 * 1000, // 5 minutes
+
+  // Fetch leaderboard data with server-side pagination
+  const {
+    data: pagedNetLeaderboard,
+    isLoading: isNetLoading,
+    error: netError
+  } = useQuery<{ data: PlayerWithHistory[]; total: number }>({
+    queryKey: ["/api/leaderboard/net", { page: currentPage, limit: rowsPerPage }],
+    staleTime: 5 * 60 * 1000,
+    enabled: activeTab === "net",
   });
-  
-  const { data: grossLeaderboardData, isLoading: isGrossLoading } = useQuery<PlayerWithHistory[]>({
-    queryKey: [`/api/leaderboard/gross`],
-    staleTime: 5 * 60 * 1000, // 5 minutes
+  const {
+    data: pagedGrossLeaderboard,
+    isLoading: isGrossLoading,
+    error: grossError
+  } = useQuery<{ data: PlayerWithHistory[]; total: number }>({
+    queryKey: ["/api/leaderboard/gross", { page: currentPage, limit: rowsPerPage }],
+    staleTime: 5 * 60 * 1000,
+    enabled: activeTab === "gross",
   });
-  
-  // --- Sorting logic ---
-  const [sortingKey, setSortingKey] = useState<string>('rank');
-  const [sortingDesc, setSortingDesc] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<string>('net');
-  const [leaderboardData, setLeaderboardData] = useState<PlayerWithHistory[]>([]); // or fetch from props/context
+
+  // Use the appropriate data source based on active tab
+  const data = activeTab === "net" ? pagedNetLeaderboard?.data : pagedGrossLeaderboard?.data;
+  const totalRows = activeTab === "net" ? pagedNetLeaderboard?.total ?? 0 : pagedGrossLeaderboard?.total ?? 0;
+  const isLoading = activeTab === "net" ? isNetLoading : isGrossLoading;
+  const error = activeTab === "net" ? netError : grossError;
 
   const handleSort = (key: string) => {
     if (sortingKey === key) {
@@ -57,73 +64,6 @@ export default function Leaderboards() {
     setIsPlayerDetailsOpen(true);
   };
 
-  // Use the appropriate data source based on active tab
-  const data = activeTab === "net" ? netLeaderboardData : grossLeaderboardData;
-  const isLoading = activeTab === "net" ? isNetLoading : isGrossLoading;
-
-  // Diagnostic: log a sample row and total count
-  if (data && data.length > 0) {
-    console.log("Sample leaderboard row:", data[0]);
-    console.log("Total leaderboard rows:", data.length);
-  }
-  
-  const exportToCSV = () => {
-    if (!data) return;
-    
-    // Create CSV content
-    const isGross = activeTab === "gross";
-    const headers = isGross
-      ? ['Rank', 'Player', 'Gross Points', 'Gross Tour Points', 'League Points', 'SUPR Points', 'Events']
-      : ['Rank', 'Player', 'Major Points', 'Tour Points', 'League Points', 'SUPR Points', 'Events', 'Total Points'];
-    
-    const rows = data.map(player => isGross
-      ? [
-          player.rank,
-          player.player.name,
-          player.grossTotalPoints || 0,
-          player.grossTourPoints || 0,
-          player.leaguePoints || 0,
-          player.suprPoints || 0,
-          player.totalEvents || 0
-        ]
-      : [
-          player.rank,
-          player.player.name,
-          player.majorPoints || 0,
-          player.tourPoints || 0,
-          player.leaguePoints || 0,
-          player.suprPoints || 0,
-          player.totalEvents || 0,
-          player.totalPoints || 0
-        ]
-    );
-    
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.join(','))
-    ].join('\n');
-    
-    // Create and download file
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${activeTab}-leaderboard-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast({
-      title: "Export successful",
-      description: `${activeTab.toUpperCase()} leaderboard has been exported to CSV`,
-    });
-  };
-  
-  const handlePrint = () => {
-    window.print();
-  };
-  
   // --- Column sort indicator helper ---
   const SortIndicator = ({ isSorted, isSortedDesc }: { isSorted: boolean, isSortedDesc: boolean }) => (
     isSorted ? (
@@ -360,35 +300,63 @@ export default function Leaderboards() {
         },
       ];
     }
-  }
-  
+  };
+
   const columns = useMemo(
     () => getColumns(handleSort, sortingKey, sortingDesc, handlePlayerClick, activeTab),
     [handleSort, sortingKey, sortingDesc, handlePlayerClick, activeTab]
   );
 
-  // --- Pagination logic ---
-  const [currentPage, setCurrentPage] = useState(0);
+  // --- Export to CSV ---
+  const exportToCSV = () => {
+    if (!data) return;
+    const isGross = activeTab === "gross";
+    const headers = isGross
+      ? ['Rank', 'Player', 'Gross Points', 'Gross Tour Points', 'League Points', 'SUPR Points', 'Events']
+      : ['Rank', 'Player', 'Major Points', 'Tour Points', 'League Points', 'SUPR Points', 'Events', 'Total Points'];
+    const rows = data.map(player => isGross
+      ? [
+          player.rank,
+          player.player.name,
+          player.grossTotalPoints || 0,
+          player.grossTourPoints || 0,
+          player.leaguePoints || 0,
+          player.suprPoints || 0,
+          player.totalEvents || 0
+        ]
+      : [
+          player.rank,
+          player.player.name,
+          player.majorPoints || 0,
+          player.tourPoints || 0,
+          player.leaguePoints || 0,
+          player.suprPoints || 0,
+          player.totalEvents || 0,
+          player.totalPoints || 0
+        ]
+    );
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${activeTab}-leaderboard-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast({
+      title: "Export successful",
+      description: `${activeTab.toUpperCase()} leaderboard has been exported to CSV`,
+    });
+  };
 
-  // Fetch leaderboard data with server-side pagination
-  const {
-    data: pagedNetLeaderboard,
-    isLoading: isNetLoading
-  } = useQuery<{ data: PlayerWithHistory[]; total: number }>({
-    queryKey: ["/api/leaderboard/net", { page: currentPage, limit: rowsPerPage }],
-    staleTime: 5 * 60 * 1000,
-  });
-  const {
-    data: pagedGrossLeaderboard,
-    isLoading: isGrossLoading
-  } = useQuery<{ data: PlayerWithHistory[]; total: number }>({
-    queryKey: ["/api/leaderboard/gross", { page: currentPage, limit: rowsPerPage }],
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const data = activeTab === "net" ? pagedNetLeaderboard?.data : pagedGrossLeaderboard?.data;
-  const totalRows = activeTab === "net" ? pagedNetLeaderboard?.total ?? 0 : pagedGrossLeaderboard?.total ?? 0;
-  const isLoading = activeTab === "net" ? isNetLoading : isGrossLoading;
+  const handlePrint = () => {
+    window.print();
+  };
 
   return (
     <section className="space-y-6">
@@ -397,24 +365,28 @@ export default function Leaderboards() {
           <h1 className="text-2xl md:text-3xl font-heading font-bold text-neutral-800">{appSettings?.pageTitle || "Overall Leaderboard"}</h1>
           <p className="text-neutral-600">Season standings and player performance</p>
         </div>
-        
         {/* Tab selection buttons */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
           <TabsList className="grid grid-cols-2 w-full md:w-[300px]">
-            <TabsTrigger value="net">Net Leaderboard</TabsTrigger>
-            <TabsTrigger value="gross">Gross Leaderboard</TabsTrigger>
+            <TabsTrigger value="net" aria-current={activeTab === 'net'}>Net Leaderboard</TabsTrigger>
+            <TabsTrigger value="gross" aria-current={activeTab === 'gross'}>Gross Leaderboard</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
-      
       {/* Leaderboard info section */}
       <div className="flex items-center text-sm text-neutral-700 mb-4 bg-neutral-50 p-3 rounded-md">
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-primary" viewBox="0 0 20 20" fill="currentColor">
           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-4 5a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
         </svg>
         <span>Click on any player to view their tournament history</span>
+        <span className="sr-only" aria-live="polite">{isLoading ? 'Loading leaderboard data...' : ''}</span>
       </div>
-      
+      {/* Error handling */}
+      {error && (
+        <div className="bg-red-100 text-red-700 p-3 rounded mb-4" role="alert">
+          <span className="font-semibold">Error loading leaderboard:</span> {error.message}
+        </div>
+      )}
       {/* Fixed tab navigation at bottom of screen */}
       <div className="fixed bottom-4 left-0 right-0 z-50 flex justify-center">
         <div className="bg-white rounded-full shadow-lg border px-4 py-3">
@@ -426,6 +398,7 @@ export default function Leaderboards() {
                   ? "bg-primary text-white" 
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
+              aria-current={activeTab === 'net'}
             >
               Net
             </button>
@@ -436,16 +409,15 @@ export default function Leaderboards() {
                   ? "bg-primary text-white" 
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
+              aria-current={activeTab === 'gross'}
             >
               Gross
             </button>
           </div>
         </div>
       </div>
-      
       {/* Leaderboard Table */}
-      {/* --- Table rendering --- */}
-      <Card className="mb-20">
+      <Card className="mb-20" aria-busy={isLoading} aria-live="polite">
         <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-rounded bg-white p-0">
           <div className="min-w-[900px]">
             <table className="w-full text-sm text-left border-separate border-spacing-0">
@@ -496,14 +468,13 @@ export default function Leaderboards() {
             Page {currentPage + 1} of {Math.ceil(totalRows / rowsPerPage)} ({totalRows} players)
           </span>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => setPage(0)} disabled={currentPage === 0}>First</Button>
-            <Button size="sm" variant="outline" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={currentPage === 0}>Prev</Button>
-            <Button size="sm" variant="outline" onClick={() => setPage(p => Math.min(Math.ceil(totalRows / rowsPerPage) - 1, p + 1))} disabled={currentPage >= Math.ceil(totalRows / rowsPerPage) - 1}>Next</Button>
-            <Button size="sm" variant="outline" onClick={() => setPage(Math.ceil(totalRows / rowsPerPage) - 1)} disabled={currentPage >= Math.ceil(totalRows / rowsPerPage) - 1}>Last</Button>
+            <Button size="sm" variant="outline" aria-label="First page" onClick={() => setCurrentPage(0)} disabled={currentPage === 0}>First</Button>
+            <Button size="sm" variant="outline" aria-label="Previous page" onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0}>Prev</Button>
+            <Button size="sm" variant="outline" aria-label="Next page" onClick={() => setCurrentPage(p => Math.min(Math.ceil(totalRows / rowsPerPage) - 1, p + 1))} disabled={currentPage >= Math.ceil(totalRows / rowsPerPage) - 1}>Next</Button>
+            <Button size="sm" variant="outline" aria-label="Last page" onClick={() => setCurrentPage(Math.ceil(totalRows / rowsPerPage) - 1)} disabled={currentPage >= Math.ceil(totalRows / rowsPerPage) - 1}>Last</Button>
           </div>
         </div>
       </Card>
-      
       {/* Player Details Modal */}
       <PlayerDetailsModal
         playerId={selectedPlayerId}
