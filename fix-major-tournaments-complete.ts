@@ -1,7 +1,7 @@
 import { db } from "./server/db";
 import { playerResults, tournaments } from "./shared/schema";
 import { eq, and, isNotNull } from "drizzle-orm";
-import { calculateGrossPoints } from './server/gross-points-utils';
+import { getPointsFromConfig, assignPositionsWithTies, groupResultsByScore, calculateTiePointsFromTable } from './server/migration-utils';
 import { storage } from "./server/storage-db";
 
 async function fixMajorTournamentsComplete() {
@@ -45,83 +45,38 @@ async function fixMajorTournamentsComplete() {
       
       console.log(`   🎯 Found ${results.length} results to fix`);
       
-      // Sort by gross score to determine gross positions
-      const sortedResults = [...results]
-        .sort((a, b) => (a.grossScore || 999) - (b.grossScore || 999));
-      
-      // Calculate gross positions with tie handling
-      const grossPositions: Array<{ id: number, playerId: number, position: number }> = [];
-      let currentPosition = 1;
-      
-      for (let i = 0; i < sortedResults.length; i++) {
-        const currentPlayer = sortedResults[i];
-        
-        // Check for ties with previous player
-        if (i > 0 && currentPlayer.grossScore === sortedResults[i - 1].grossScore) {
-          // Tie - use same position as previous player
-          grossPositions.push({
-            id: currentPlayer.id,
-            playerId: currentPlayer.playerId,
-            position: grossPositions[grossPositions.length - 1].position
-          });
-        } else {
-          // New position (skip positions if there were ties)
-          currentPosition = i + 1;
-          grossPositions.push({
-            id: currentPlayer.id,
-            playerId: currentPlayer.playerId,
-            position: currentPosition
-          });
+      // Sort by gross score (ascending)
+      const sortedResults = [...results].sort((a, b) => (a.grossScore || 999) - (b.grossScore || 999));
+      // Assign positions with tie handling
+      const positions = assignPositionsWithTies(sortedResults, 'grossScore');
+      // Group by score for tie handling
+      const groups = groupResultsByScore(sortedResults, 'grossScore');
+      // Prepare updates
+      const updates: Array<{ id: number; position: number; points: number }> = [];
+      let positionCursor = 1;
+      for (const group of groups) {
+        const numTied = group.players.length;
+        const points = numTied === 1
+          ? getPointsFromConfig(positionCursor, pointsConfig.major)
+          : calculateTiePointsFromTable(positionCursor, numTied, pointsConfig.major);
+        for (const player of group.players) {
+          updates.push({ id: player.id, position: positionCursor, points });
         }
+        positionCursor += numTied;
       }
-      
-      console.log(`   🔢 Calculated gross positions for ${grossPositions.length} players`);
-      
       // Update both gross position and gross points using major points table
       let updatedCount = 0;
-      for (const player of grossPositions) {
-        // Calculate correct gross points using major points table from database
-        const correctGrossPoints = calculateGrossPoints(player.position, 'major', pointsConfig);
-        
-        // Update both gross position and gross points
+      for (const update of updates) {
         await db
           .update(playerResults)
-          .set({ 
-            grossPosition: player.position,
-            grossPoints: correctGrossPoints 
-          })
-          .where(eq(playerResults.id, player.id));
-        
+          .set({ grossPosition: update.position, grossPoints: update.points })
+          .where(eq(playerResults.id, update.id));
         updatedCount++;
-        console.log(`   📝 Updated player ${player.playerId}: gross position ${player.position}, major gross points ${correctGrossPoints}`);
+        console.log(`   📝 Updated player result ${update.id}: gross position ${update.position}, major gross points ${update.points}`);
       }
-      
       console.log(`   ✅ Updated ${updatedCount} players with correct gross positions and major gross points`);
     }
-    
     console.log('\n🎉 Complete major tournament fix completed successfully!');
-    
-    // Verify the fix
-    const majorResults = await db
-      .select({
-        tournamentName: tournaments.name,
-        playerName: playerResults.playerId,
-        grossPosition: playerResults.grossPosition,
-        grossPoints: playerResults.grossPoints
-      })
-      .from(playerResults)
-      .innerJoin(tournaments, eq(playerResults.tournamentId, tournaments.id))
-      .where(and(
-        eq(tournaments.type, 'major'),
-        isNotNull(playerResults.grossScore)
-      ))
-      .limit(5);
-    
-    console.log('\n📊 Sample verification results:');
-    majorResults.forEach(result => {
-      console.log(`   ${result.tournamentName} - Player ${result.playerName}: Position ${result.grossPosition}, Points ${result.grossPoints}`);
-    });
-    
   } catch (error) {
     console.error('❌ Error during complete major tournament fix:', error);
     throw error;

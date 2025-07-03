@@ -2,7 +2,7 @@ import { db } from './server/db.js';
 import { tournaments, playerResults } from './shared/schema.js';
 import { eq, and, isNotNull } from 'drizzle-orm';
 import { storage } from './server/storage-db.js';
-import { getPointsFromConfig, logPointsConfig } from './server/migration-utils';
+import { getPointsFromConfig, logPointsConfig, assignPositionsWithTies, groupResultsByScore, calculateTiePointsFromTable } from './server/migration-utils';
 
 /**
  * Comprehensive fix for all hardcoded points values in the database
@@ -47,49 +47,57 @@ async function fixAllHardcodedPoints(): Promise<void> {
       // Get tour points table for gross scoring (always uses Tour points)
       const grossPointsTable = pointsConfig.tour;
       
+      // Assign net positions and group by net score
+      const netValidResults = results.filter(r => r.netScore !== null && r.netScore !== undefined);
+      netValidResults.sort((a, b) => (a.netScore as number) - (b.netScore as number));
+      const netPositions = assignPositionsWithTies(netValidResults, 'netScore');
+      const netGroups = groupResultsByScore(netValidResults, 'netScore');
+      // Assign gross positions and group by gross score
+      const grossValidResults = results.filter(r => r.grossScore !== null && r.grossScore !== undefined);
+      grossValidResults.sort((a, b) => (a.grossScore as number) - (b.grossScore as number));
+      const grossPositions = assignPositionsWithTies(grossValidResults, 'grossScore');
+      const grossGroups = groupResultsByScore(grossValidResults, 'grossScore');
+      // Update net points
       let netUpdatedCount = 0;
-      let grossUpdatedCount = 0;
-      
-      for (const result of results) {
-        let needsUpdate = false;
-        const updateData: any = {};
-        
-        // Check NET points against database configuration
-        if (result.position && result.position > 0 && Array.isArray(netPointsTable)) {
-          const expectedNetPoints = getPointsFromConfig(result.position, netPointsTable);
-          
-          if (result.points !== expectedNetPoints) {
-            console.log(`   📝 NET: Player ${result.playerId} pos ${result.position}: ${result.points} → ${expectedNetPoints}`);
-            updateData.points = expectedNetPoints;
-            needsUpdate = true;
+      for (const group of netGroups) {
+        const numTied = group.players.length;
+        const points = numTied === 1
+          ? getPointsFromConfig(netPositions.find(p => p.id === group.players[0].id)?.position || 999, netPointsTable)
+          : calculateTiePointsFromTable(netPositions.find(p => p.id === group.players[0].id)?.position || 999, numTied, netPointsTable);
+        for (const player of group.players) {
+          const pos = netPositions.find(p => p.id === player.id)?.position;
+          if (player.points !== points) {
+            await db
+              .update(playerResults)
+              .set({ points })
+              .where(eq(playerResults.id, player.id));
             netUpdatedCount++;
+            console.log(`   📝 NET: Player ${player.playerId} pos ${pos}: updated to ${points}`);
           }
-        }
-        
-        // Check GROSS points against Tour points table (always uses Tour regardless of tournament type)
-        if (result.grossPosition && result.grossPosition > 0 && Array.isArray(grossPointsTable)) {
-          const expectedGrossPoints = getPointsFromConfig(result.grossPosition, grossPointsTable);
-          
-          if (result.grossPoints !== expectedGrossPoints) {
-            console.log(`   📝 GROSS: Player ${result.playerId} gross pos ${result.grossPosition}: ${result.grossPoints} → ${expectedGrossPoints}`);
-            updateData.grossPoints = expectedGrossPoints;
-            needsUpdate = true;
-            grossUpdatedCount++;
-          }
-        }
-        
-        // Update the record if needed
-        if (needsUpdate) {
-          await db
-            .update(playerResults)
-            .set(updateData)
-            .where(eq(playerResults.id, result.id));
         }
       }
-      
-      console.log(`   ✅ Updated ${netUpdatedCount} net points and ${grossUpdatedCount} gross points`);
+      // Update gross points
+      let grossUpdatedCount = 0;
+      for (const group of grossGroups) {
+        const numTied = group.players.length;
+        const points = numTied === 1
+          ? getPointsFromConfig(grossPositions.find(p => p.id === group.players[0].id)?.position || 999, grossPointsTable)
+          : calculateTiePointsFromTable(grossPositions.find(p => p.id === group.players[0].id)?.position || 999, numTied, grossPointsTable);
+        for (const player of group.players) {
+          const pos = grossPositions.find(p => p.id === player.id)?.position;
+          if (player.grossPoints !== points) {
+            await db
+              .update(playerResults)
+              .set({ grossPoints: points })
+              .where(eq(playerResults.id, player.id));
+            grossUpdatedCount++;
+            console.log(`   📝 GROSS: Player ${player.playerId} gross pos ${pos}: updated to ${points}`);
+          }
+        }
+      }
       totalNetUpdated += netUpdatedCount;
       totalGrossUpdated += grossUpdatedCount;
+      console.log(`   ✅ Updated ${netUpdatedCount} net points and ${grossUpdatedCount} gross points`);
     }
     
     console.log(`\n🎉 Comprehensive points fix completed!`);

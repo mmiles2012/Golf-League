@@ -1,7 +1,7 @@
 import { db } from "./server/db";
 import { playerResults, tournaments } from "./shared/schema";
 import { eq, and, isNotNull } from "drizzle-orm";
-import { calculateGrossPoints } from './server/gross-points-utils';
+import { getPointsFromConfig } from './server/migration-utils';
 import { storage } from "./server/storage-db";
 
 async function fixMajorGrossPoints() {
@@ -45,11 +45,11 @@ async function fixMajorGrossPoints() {
       
       console.log(`   🎯 Found ${results.length} results to recalculate gross points`);
       
-      // Update gross points for each player using major points table
+      // Update gross points for each player using major points table from database
       let updatedCount = 0;
       for (const result of results) {
         // Calculate correct gross points using major points table from database
-        const correctGrossPoints = calculateGrossPoints(result.grossPosition || 999, 'major', pointsConfig);
+        const correctGrossPoints = getPointsFromConfig(result.grossPosition || 999, pointsConfig.major);
         
         // Only update if the points are different
         if (result.grossPoints !== correctGrossPoints) {

@@ -1,40 +1,15 @@
 import { db } from './server/db.js';
 import { playerResults, tournaments } from './shared/schema.js';
 import { eq } from 'drizzle-orm';
-import { getPointsFromConfig } from './server/migration-utils';
+import { getPointsFromConfig, calculateTiePointsFromTable, assignPositionsWithTies, groupResultsByScore } from './server/migration-utils';
 import { storage } from './server/storage-db.js';
-
-// Fetch actual tour points from database API
-async function fetchTourPoints() {
-  const response = await fetch('http://localhost:5000/api/points-config');
-  const pointsConfig = await response.json();
-  return pointsConfig.tour.map((p: any) => p.points);
-}
-
-function calculateTiePoints(startPosition: number, numTiedPlayers: number, tourPoints: number[]): number {
-  let totalPoints = 0;
-  for (let i = 0; i < numTiedPlayers; i++) {
-    const position = startPosition + i;
-    if (position <= tourPoints.length) {
-      totalPoints += tourPoints[position - 1]; // Arrays are 0-indexed, positions are 1-indexed
-    }
-  }
-  return totalPoints / numTiedPlayers;
-}
 
 async function fixLofotenWithDatabasePoints() {
   try {
-    console.log('Fetching actual tour points from database...');
+    console.log('Starting Lofoten Links gross points fix with DB-driven points...');
     // Use DB-driven points config for gross points
     const pointsConfig = await storage.getPointsConfig();
     const tourPointsTable = pointsConfig.tour;
-    console.log('Database tour points (positions 1-10):', tourPointsTable.slice(0, 10));
-    
-    // Verify the T5 calculation
-    const t5Points = tourPointsTable.slice(4, 9); // Positions 5-9 (0-indexed)
-    console.log('T5 positions 5-9 points:', t5Points);
-    const t5Average = t5Points.reduce((sum, points) => sum + points, 0) / 5;
-    console.log('T5 average points:', t5Average);
 
     // Get the Lofoten tournament
     const tournament = await db
@@ -70,96 +45,39 @@ async function fixLofotenWithDatabasePoints() {
     // Sort by gross score (ascending - lower scores are better)
     validResults.sort((a, b) => (a.grossScore as number) - (b.grossScore as number));
 
-    // Process results to handle ties and assign positions/points
-    const processedResults: Array<{
-      id: number;
-      playerId: number;
-      grossScore: number;
-      position: number;
-      points: number;
-    }> = [];
+    // Assign positions with tie handling
+    const positions = assignPositionsWithTies(validResults, 'grossScore');
 
-    let currentPosition = 1;
-    
-    for (let i = 0; i < validResults.length; i++) {
-      const currentScore = validResults[i].grossScore as number;
-      
-      // Find all players with the same score (ties)
-      const tiedPlayers = validResults.filter(r => r.grossScore === currentScore);
-      const numTiedPlayers = tiedPlayers.length;
-      
-      // Calculate points for this position using actual database values
-      const points = numTiedPlayers === 1 
-        ? getPointsFromConfig(currentPosition, tourPointsTable)
-        : (() => {
-            let totalPoints = 0;
-            for (let j = 0; j < numTiedPlayers; j++) {
-              totalPoints += getPointsFromConfig(currentPosition + j, tourPointsTable);
-            }
-            return totalPoints / numTiedPlayers;
-          })();
+    // Group by score for tie handling
+    const groups = groupResultsByScore(validResults, 'grossScore');
 
-      console.log(`Position ${currentPosition}, ${numTiedPlayers} tied players, points: ${points}`);
-
-      // Assign position and points to all tied players
-      for (const player of tiedPlayers) {
-        if (!processedResults.find(p => p.id === player.id)) {
-          processedResults.push({
-            id: player.id,
-            playerId: player.playerId,
-            grossScore: player.grossScore as number,
-            position: currentPosition,
-            points: points
-          });
-        }
+    // Prepare updates
+    const updates: Array<{ id: number; position: number; points: number }> = [];
+    let positionCursor = 1;
+    for (const group of groups) {
+      const numTied = group.players.length;
+      const points = numTied === 1
+        ? getPointsFromConfig(positionCursor, tourPointsTable)
+        : calculateTiePointsFromTable(positionCursor, numTied, tourPointsTable);
+      for (const player of group.players) {
+        updates.push({ id: player.id, position: positionCursor, points });
       }
-
-      // Move position forward by number of tied players
-      currentPosition += numTiedPlayers;
-      
-      // Skip ahead in the loop to avoid processing the same tied players again
-      while (i + 1 < validResults.length && validResults[i + 1].grossScore === currentScore) {
-        i++;
-      }
+      positionCursor += numTied;
     }
 
-    console.log('\nCalculated positions and points:');
-    processedResults.forEach(result => {
-      console.log(`  Player ${result.playerId}: Gross ${result.grossScore}, Position ${result.position}, Points ${result.points}`);
-    });
-
     // Update each result with the new gross position and points
-    for (const result of processedResults) {
+    for (const update of updates) {
       await db
         .update(playerResults)
         .set({
-          grossPosition: result.position,
-          grossPoints: result.points,
+          grossPosition: update.position,
+          grossPoints: update.points,
         })
-        .where(eq(playerResults.id, result.id));
-
-      console.log(`Updated result ${result.id}: grossPosition=${result.position}, grossPoints=${result.points}`);
+        .where(eq(playerResults.id, update.id));
+      console.log(`Updated result ${update.id}: grossPosition=${update.position}, grossPoints=${update.points}`);
     }
 
     console.log('✅ Successfully updated all gross positions and points with correct database values');
-
-    // Verification - check the T5 tie specifically
-    const t5Verification = await db
-      .select({
-        playerId: playerResults.playerId,
-        grossScore: playerResults.grossScore,
-        grossPosition: playerResults.grossPosition,
-        grossPoints: playerResults.grossPoints,
-      })
-      .from(playerResults)
-      .where(eq(playerResults.tournamentId, tournamentId));
-
-    const t5Players = t5Verification.filter(r => r.grossScore === 70);
-    console.log('\nT5 verification (gross score 70):');
-    t5Players.forEach(player => {
-      console.log(`  Player ${player.playerId}: Position ${player.grossPosition}, Points ${player.grossPoints}`);
-    });
-
   } catch (error) {
     console.error('Error fixing gross points:', error);
     throw error;
