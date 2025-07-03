@@ -122,392 +122,101 @@ export default function Leaderboards() {
       },
       {
         accessorKey: "player.name",
-        header: ({ column }) => {
-          // Remove sorting UI if column.getIsSorted is not a function
-          return (
-            <div className="flex items-center cursor-pointer select-none">
-              Player
-            </div>
-          );
-        },
+        header: "Player",
         cell: ({ row }) => <div className="font-medium">{row.original.player.name}</div>,
         enableSorting: true,
       },
       {
         accessorKey: "majorPoints",
-        header: ({ column }) => {
-          // Remove sorting UI if column.getIsSorted is not a function
-          return (
-            <div className="flex items-center justify-center cursor-pointer select-none">
-              Major
-            </div>
-          );
-        },
+        header: "Major",
         cell: ({ row }) => <div className="text-center">{row.original.majorPoints.toLocaleString()}</div>,
         enableSorting: true,
         size: 80,
       },
     ];
     
-    // Columns specific to net leaderboard
     if (activeTab === "net") {
-      // Create a new array with "Total Points" column right after player name
-      const rankAndPlayerColumns = baseColumns.slice(0, 2); // Take rank and player columns
-      
-      // Overall Points column (using top 8 points)
+      const rankAndPlayerColumns = baseColumns.slice(0, 2);
       const overallPointsColumn: ColumnDef<PlayerWithHistory> = {
         accessorKey: "top8TotalPoints",
-        header: ({ column }) => {
-          return (
-            <div 
-              className="flex items-center justify-end cursor-pointer select-none"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            >
-              Overall Points
-              {column.getIsSorted() === "asc" ? (
-                <span className="ml-1">▲</span>
-              ) : column.getIsSorted() === "desc" ? (
-                <span className="ml-1">▼</span>
-              ) : null}
-            </div>
-          )
-        },
+        header: "Overall Points",
         cell: ({ row }) => <div className="font-bold text-right">{(row.original.top8TotalPoints || 0).toLocaleString()}</div>,
         enableSorting: true,
       };
-      
-      // Events column (moved next to Total Points)
       const eventsColumn: ColumnDef<PlayerWithHistory> = {
         accessorKey: "totalEvents",
-        header: ({ column }) => {
-          return (
-            <div 
-              className="flex items-center justify-center cursor-pointer select-none"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            >
-              Events
-              {column.getIsSorted() === "asc" ? (
-                <span className="ml-1">▲</span>
-              ) : column.getIsSorted() === "desc" ? (
-                <span className="ml-1">▼</span>
-              ) : null}
-            </div>
-          )
-        },
+        header: "Events",
         cell: ({ row }) => <div className="text-center">{row.original.totalEvents}</div>,
         enableSorting: true,
         size: 80,
       };
-      
-      const remainingColumns = baseColumns.slice(2); // Get the remaining columns (Major Points)
-      
-
+      const remainingColumns = baseColumns.slice(2);
       return [
-        ...rankAndPlayerColumns, // Rank, Player Name
-        overallPointsColumn, // Overall Points (top 8) right after player name
-        eventsColumn, // Events right after Overall Points
-        ...remainingColumns, // Major Points
+        ...rankAndPlayerColumns,
+        overallPointsColumn,
+        eventsColumn,
+        ...remainingColumns,
         {
           accessorKey: "tourPoints",
-          header: ({ column }) => {
-            return (
-              <div 
-                className="flex items-center justify-center cursor-pointer select-none"
-                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-              >
-                Tour
-                {column.getIsSorted() === "asc" ? (
-                  <span className="ml-1">▲</span>
-                ) : column.getIsSorted() === "desc" ? (
-                  <span className="ml-1">▼</span>
-                ) : null}
-              </div>
-            )
-          },
+          header: "Tour",
           cell: ({ row }) => <div className="text-center">{row.original.tourPoints.toLocaleString()}</div>,
           enableSorting: true,
           size: 80,
         },
         {
           accessorKey: "leaguePoints",
-          header: ({ column }) => {
-            return (
-              <div 
-                className="flex items-center justify-center cursor-pointer select-none"
-                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-              >
-                League
-                {column.getIsSorted() === "asc" ? (
-                  <span className="ml-1">▲</span>
-                ) : column.getIsSorted() === "desc" ? (
-                  <span className="ml-1">▼</span>
-                ) : null}
-              </div>
-            )
-          },
+          header: "League",
           cell: ({ row }) => <div className="text-center">{row.original.leaguePoints.toLocaleString()}</div>,
           enableSorting: true,
         },
         {
           accessorKey: "suprPoints",
-          header: ({ column }) => {
-            return (
-              <div 
-                className="flex items-center justify-center cursor-pointer select-none"
-                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-              >
-                SUPR
-                {column.getIsSorted() === "asc" ? (
-                  <span className="ml-1">▲</span>
-                ) : column.getIsSorted() === "desc" ? (
-                  <span className="ml-1">▼</span>
-                ) : null}
-              </div>
-            )
-          },
+          header: "SUPR",
           cell: ({ row }) => <div className="text-center">{row.original.suprPoints.toLocaleString()}</div>,
           enableSorting: true,
           size: 80,
         },
       ];
-    } 
-    // Columns specific to gross leaderboard
-    else {
-      // Create a new array with "Gross Points" column right after player name
-      const rankAndPlayerColumns = baseColumns.slice(0, 2); // Take rank and player columns
-      
-      // Overall Points column (using gross top 8 points)
+    } else {
+      const rankAndPlayerColumns = baseColumns.slice(0, 2);
       const overallPointsColumn: ColumnDef<PlayerWithHistory> = {
         accessorKey: "grossTop8TotalPoints",
-        header: ({ column }) => {
-          return (
-            <div 
-              className="flex items-center justify-end cursor-pointer select-none"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            >
-              Overall Points
-              {column.getIsSorted() === "asc" ? (
-                <span className="ml-1">▲</span>
-              ) : column.getIsSorted() === "desc" ? (
-                <span className="ml-1">▼</span>
-              ) : null}
-            </div>
-          )
-        },
+        header: "Overall Points",
         cell: ({ row }) => <div className="font-bold text-right">{(row.original.grossTop8TotalPoints || 0).toLocaleString()}</div>,
         enableSorting: true,
       };
-      
-      // Events column (moved next to Gross Points)
       const eventsColumn: ColumnDef<PlayerWithHistory> = {
         accessorKey: "totalEvents",
-        header: ({ column }) => {
-          return (
-            <div 
-              className="flex items-center justify-center cursor-pointer select-none"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            >
-              Events
-              {column.getIsSorted() === "asc" ? (
-                <span className="ml-1">▲</span>
-              ) : column.getIsSorted() === "desc" ? (
-                <span className="ml-1">▼</span>
-              ) : null}
-            </div>
-          )
-        },
+        header: "Events",
         cell: ({ row }) => <div className="text-center">{row.original.totalEvents}</div>,
         enableSorting: true,
       };
-      
-      const remainingColumns = baseColumns.slice(2); // Get the remaining columns (Major Points)
-      
-
+      const remainingColumns = baseColumns.slice(2);
       return [
-        ...rankAndPlayerColumns, // Rank, Player Name
-        overallPointsColumn, // Overall Points (gross top 8) right after player name
-        eventsColumn, // Events right after Overall Points
-        ...remainingColumns, // Major Points
+        ...rankAndPlayerColumns,
+        overallPointsColumn,
+        eventsColumn,
+        ...remainingColumns,
         {
           accessorKey: "grossTourPoints",
-          header: ({ column }) => {
-            return (
-              <div 
-                className="flex items-center justify-center cursor-pointer select-none"
-                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-              >
-                Tour
-                {column.getIsSorted() === "asc" ? (
-                  <span className="ml-1">▲</span>
-                ) : column.getIsSorted() === "desc" ? (
-                  <span className="ml-1">▼</span>
-                ) : (
-                  <span className="ml-1 opacity-0 group-hover:opacity-100">▼</span>
-                )}
-              </div>
-            )
-          },
+          header: "Tour",
           cell: ({ row }) => <div className="text-center">{(row.original.grossTourPoints || 0).toLocaleString()}</div>,
           enableSorting: true,
         },
         {
           accessorKey: "leaguePoints",
-          header: ({ column }) => {
-            return (
-              <div 
-                className="flex items-center justify-center cursor-pointer select-none"
-                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-              >
-                League
-                {column.getIsSorted() === "asc" ? (
-                  <span className="ml-1">▲</span>
-                ) : column.getIsSorted() === "desc" ? (
-                  <span className="ml-1">▼</span>
-                ) : null}
-              </div>
-            )
-          },
+          header: "League",
           cell: ({ row }) => <div className="text-center">{row.original.leaguePoints.toLocaleString()}</div>,
           enableSorting: true,
         },
         {
           accessorKey: "suprPoints",
-          header: ({ column }) => {
-            return (
-              <div 
-                className="flex items-center justify-center cursor-pointer select-none"
-                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-              >
-                SUPR
-                {column.getIsSorted() === "asc" ? (
-                  <span className="ml-1">▲</span>
-                ) : column.getIsSorted() === "desc" ? (
-                  <span className="ml-1">▼</span>
-                ) : null}
-              </div>
-            )
-          },
+          header: "SUPR",
           cell: ({ row }) => <div className="text-center">{row.original.suprPoints.toLocaleString()}</div>,
           enableSorting: true,
-        }
+        },
       ];
     }
-    
-    // For gross leaderboard, return the base columns with totals column
-    const rankAndPlayerColumns = baseColumns.slice(0, 2); // Take rank and player columns
-    
-    // Total Points column for gross leaderboard  
-    const totalPointsColumn: ColumnDef<PlayerWithHistory> = {
-      accessorKey: "totalPoints",
-      header: ({ column }) => {
-        return (
-          <div 
-            className="flex items-center justify-end cursor-pointer select-none"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Total Points
-            {column.getIsSorted() === "asc" ? (
-              <span className="ml-1">▲</span>
-            ) : column.getIsSorted() === "desc" ? (
-              <span className="ml-1">▼</span>
-            ) : null}
-          </div>
-        )
-      },
-      cell: ({ row }) => <div className="font-bold text-right">{row.original.totalPoints.toLocaleString()}</div>,
-      enableSorting: true,
-    };
-    
-    // Events column
-    const eventsColumn: ColumnDef<PlayerWithHistory> = {
-      accessorKey: "totalEvents", 
-      header: ({ column }) => {
-        return (
-          <div 
-            className="flex items-center justify-center cursor-pointer select-none"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Events
-            {column.getIsSorted() === "asc" ? (
-              <span className="ml-1">▲</span>
-            ) : column.getIsSorted() === "desc" ? (
-              <span className="ml-1">▼</span>
-            ) : null}
-          </div>
-        )
-      },
-      cell: ({ row }) => <div className="text-center">{row.original.totalEvents}</div>,
-      enableSorting: true,
-    };
-    
-    const remainingColumns = baseColumns.slice(2); // Get remaining columns starting from Major Points
-    
-    return [
-      ...rankAndPlayerColumns, // Rank, Player Name
-      totalPointsColumn, // Total Points right after player name  
-      eventsColumn, // Events right after Total Points
-      ...remainingColumns, // Major Points
-      {
-        accessorKey: "tourPoints",
-        header: ({ column }) => {
-          return (
-            <div 
-              className="flex items-center justify-center cursor-pointer select-none"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            >
-              Tour
-              {column.getIsSorted() === "asc" ? (
-                <span className="ml-1">▲</span>
-              ) : column.getIsSorted() === "desc" ? (
-                <span className="ml-1">▼</span>
-              ) : null}
-            </div>
-          )
-        },
-        cell: ({ row }) => <div className="text-center">{row.original.tourPoints.toLocaleString()}</div>,
-        enableSorting: true,
-      },
-      {
-        accessorKey: "leaguePoints",
-        header: ({ column }) => {
-          return (
-            <div 
-              className="flex items-center justify-center cursor-pointer select-none"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            >
-              League
-              {column.getIsSorted() === "asc" ? (
-                <span className="ml-1">▲</span>
-              ) : column.getIsSorted() === "desc" ? (
-                <span className="ml-1">▼</span>
-              ) : null}
-            </div>
-          )
-        },
-        cell: ({ row }) => <div className="text-center">{row.original.leaguePoints.toLocaleString()}</div>,
-        enableSorting: true,
-      },
-      {
-        accessorKey: "suprPoints",
-        header: ({ column }) => {
-          return (
-            <div 
-              className="flex items-center justify-center cursor-pointer select-none"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            >
-              SUPR
-              {column.getIsSorted() === "asc" ? (
-                <span className="ml-1">▲</span>
-              ) : column.getIsSorted() === "desc" ? (
-                <span className="ml-1">▼</span>
-              ) : null}
-            </div>
-          )
-        },
-        cell: ({ row }) => <div className="text-center">{row.original.suprPoints.toLocaleString()}</div>,
-        enableSorting: true,
-      }
-    ];
   }
   
   const columns = getColumns();
