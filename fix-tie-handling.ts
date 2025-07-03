@@ -80,7 +80,7 @@ async function fixTieHandling(): Promise<void> {
           for (let pos = firstPosition; pos <= lastPosition; pos++) {
             totalPoints += getPointsFromConfig(pos, netPointsTable);
           }
-          const averagePoints = totalPoints / tiedPlayers.length;
+          const averagePoints = Math.round((totalPoints / tiedPlayers.length) * 10) / 10;
           
           console.log(`   🔗 NET TIE: ${tiedPlayers.length} players at net ${netScore}, positions ${firstPosition}-${lastPosition}, average points: ${averagePoints}`);
           
@@ -109,7 +109,7 @@ async function fixTieHandling(): Promise<void> {
           for (let pos = firstPosition; pos <= lastPosition; pos++) {
             totalPoints += getPointsFromConfig(pos, grossPointsTable);
           }
-          const averagePoints = totalPoints / tiedPlayers.length;
+          const averagePoints = Math.round((totalPoints / tiedPlayers.length) * 10) / 10;
           
           console.log(`   🔗 GROSS TIE: ${tiedPlayers.length} players at gross ${grossScore}, positions ${firstPosition}-${lastPosition}, average points: ${averagePoints}`);
           
