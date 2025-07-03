@@ -11,13 +11,15 @@ import type { ColumnDef } from "@tanstack/react-table";
 import type { PlayerWithHistory, AppSettings } from "@shared/schema";
 import PlayerDetailsModal from "@/components/custom/PlayerDetailsModal";
 import { FileDown, Printer } from "lucide-react";
+import { useReactTable, getCoreRowModel, getSortedRowModel, flexRender } from '@tanstack/react-table';
 
 export default function Leaderboards() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("net");
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
   const [isPlayerDetailsOpen, setIsPlayerDetailsOpen] = useState(false);
-  
+  const [sorting, setSorting] = useState([]);
+
   // Fetch app settings to get custom page title
   const { data: appSettings } = useQuery<AppSettings>({
     queryKey: ["/api/settings"],
@@ -113,19 +115,12 @@ export default function Leaderboards() {
       {
         accessorKey: "player.name",
         header: ({ column }) => {
+          // Remove sorting UI if column.getIsSorted is not a function
           return (
-            <div 
-              className="flex items-center cursor-pointer select-none"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            >
+            <div className="flex items-center cursor-pointer select-none">
               Player
-              {column.getIsSorted() === "asc" ? (
-                <span className="ml-1">▲</span>
-              ) : column.getIsSorted() === "desc" ? (
-                <span className="ml-1">▼</span>
-              ) : null}
             </div>
-          )
+          );
         },
         cell: ({ row }) => <div className="font-medium">{row.original.player.name}</div>,
         enableSorting: true,
@@ -133,19 +128,12 @@ export default function Leaderboards() {
       {
         accessorKey: "majorPoints",
         header: ({ column }) => {
+          // Remove sorting UI if column.getIsSorted is not a function
           return (
-            <div 
-              className="flex items-center justify-center cursor-pointer select-none"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            >
+            <div className="flex items-center justify-center cursor-pointer select-none">
               Major
-              {column.getIsSorted() === "asc" ? (
-                <span className="ml-1">▲</span>
-              ) : column.getIsSorted() === "desc" ? (
-                <span className="ml-1">▼</span>
-              ) : null}
             </div>
-          )
+          );
         },
         cell: ({ row }) => <div className="text-center">{row.original.majorPoints.toLocaleString()}</div>,
         enableSorting: true,
@@ -515,7 +503,19 @@ export default function Leaderboards() {
   }
   
   const columns = getColumns();
-  
+
+  // Set up the table instance using useReactTable (v8+)
+  const table = useReactTable({
+    data: leaderboardData || [],
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    manualSorting: false,
+    debugTable: false,
+  });
+
   return (
     <section className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -575,15 +575,35 @@ export default function Leaderboards() {
           <div className="min-w-[700px]">
             <table className="w-full text-sm text-left border-separate border-spacing-0">
               <thead className="bg-neutral-100 sticky top-0 z-10">
-                <tr>
-                  {/* Render columns dynamically as before, but ensure th uses Tailwind for spacing and sticky */}
-                  {columns.map((col, idx) => (
-                    <th key={col.accessorKey || idx} className="py-2 px-3 font-semibold text-neutral-700 text-left min-w-[80px] whitespace-nowrap sticky top-0 bg-neutral-100 z-10">{typeof col.header === 'function' ? col.header({ column: col }) : col.header}</th>
-                  ))}
-                </tr>
+                {table.getHeaderGroups().map(headerGroup => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map(header => {
+                      const isSorted = header.column.getIsSorted?.();
+                      return (
+                        <th
+                          key={header.id}
+                          className="py-2 px-3 font-semibold text-neutral-700 text-left min-w-[80px] whitespace-nowrap sticky top-0 bg-neutral-100 z-10 cursor-pointer select-none"
+                          onClick={header.column.getToggleSortingHandler?.()}
+                        >
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {isSorted === 'asc' && <span className="ml-1">▲</span>}
+                          {isSorted === 'desc' && <span className="ml-1">▼</span>}
+                        </th>
+                      );
+                    })}
+                  </tr>
+                ))}
               </thead>
               <tbody className="divide-y divide-neutral-200">
-                {/* ...existing row rendering logic... */}
+                {table.getRowModel().rows.map(row => (
+                  <tr key={row.id}>
+                    {row.getVisibleCells().map(cell => (
+                      <td key={cell.id} className="py-2 px-3">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
