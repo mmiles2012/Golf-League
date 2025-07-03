@@ -71,3 +71,5 @@ describe('Handicap and Score Calculations', () => {
     });
   });
 });
+
+// NOTE: All table layouts now use Tailwind utility classes. Do not expect custom CSS classes for tables in DOM tests.

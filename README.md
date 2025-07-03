@@ -357,3 +357,11 @@ If you are developing or testing, ensure that any changes to points, positions, 
 ## Deprecated: Frontend Points/Tie Calculation
 
 Previous versions of this project included frontend logic for calculating points, positions, and tie-breaking. This logic has been fully removed. All related helpers and tests have been deprecated or deleted. If you find references to frontend calculation, they are no longer in use.
+
+## UI Table Layouts & Responsiveness
+
+- All leaderboard and results tables now use only Tailwind CSS utility classes for layout, sticky headers, column widths, and responsive design.
+- All custom CSS for tables and wrappers has been removed from `index.css`.
+- Horizontal scrolling is enforced for tables on narrow screens, with a floating scrollbar for accessibility.
+- Table formatting and spacing is consistent between Net and Gross views, and no visual overlap occurs on any device.
+- Sticky headers and sticky first columns are implemented using Tailwind classes.

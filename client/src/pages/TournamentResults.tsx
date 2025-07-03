@@ -193,65 +193,51 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
               Net score leaderboard ordered by position from tournament upload. Points based on tournament type ({typeof tournament === 'object' && 'type' in tournament ? String(tournament.type) : ''}).
             </CardDescription>
           </CardHeader>
-          <CardContent className="overflow-x-auto tournament-results-wrapper">
-            <Table className="tournament-results-table">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="">Pos</TableHead>
-                  <TableHead>Player</TableHead>
-                  <TableHead className="text-center">Gross</TableHead>
-                  <TableHead className="text-center">Net</TableHead>
-                  <TableHead className="text-center">Handicap</TableHead>
-                  <TableHead className="text-right">Points</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {netResults.map((result, index) => {
-                  // Check if this net score is tied by looking for other players with the same net score
-                  const isTied = netResults.filter(r => r?.netScore === result?.netScore).length > 1;
-                  
-                  // Calculate proper tied position - find the first occurrence of this score
-                  let position = index + 1;
-                  if (isTied) {
-                    position = netResults.findIndex(r => r?.netScore === result?.netScore) + 1;
-                  }
-                  
-                  return (
-                  <TableRow key={result?.id || 'unknown'}>
-                    <TableCell className="font-semibold">
-                      {isTied ? `T${position}` : position.toString()}
-                    </TableCell>
-                    <TableCell>
-                      <a 
-                        href={`/player/${result?.player?.id || '#'}`}
-                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (result?.player?.id) {
-                            window.location.href = `/player/${result.player.id}`;
-                          }
-                        }}
-                      >
-                        {result?.player?.name || 'Unknown Player'}
-                      </a>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {result?.grossScore !== null && result?.grossScore !== undefined ? result.grossScore : "N/A"}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {result?.netScore !== null && result?.netScore !== undefined ? result.netScore : "N/A"}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {result?.handicap !== null && result?.handicap !== undefined ? result.handicap : "N/A"}
-                    </TableCell>
-                    <TableCell className="text-right font-semibold">
-                      {result?.points || 0}
-                    </TableCell>
-                  </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+          <CardContent className="overflow-x-auto scrollbar-thin scrollbar-thumb-rounded bg-white p-0">
+            <div className="min-w-[600px]">
+              <table className="w-full text-sm text-left border-separate border-spacing-0">
+                <thead className="bg-neutral-100 sticky top-0 z-10">
+                  <tr>
+                    <th className="py-2 pl-4 pr-2 font-semibold text-neutral-700 min-w-[48px] text-left sticky left-0 bg-neutral-100 z-20">Pos</th>
+                    <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[140px] text-left">Player</th>
+                    <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[60px] text-center">Gross</th>
+                    <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[60px] text-center">Net</th>
+                    <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[70px] text-center">Handicap</th>
+                    <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[70px] text-right">Points</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-200">
+                  {netResults.map((result, index) => {
+                    const isTied = netResults.filter(r => r?.netScore === result?.netScore).length > 1;
+                    let position = index + 1;
+                    if (isTied) {
+                      position = netResults.findIndex(r => r?.netScore === result?.netScore) + 1;
+                    }
+                    return (
+                      <tr key={result?.id || 'unknown'}>
+                        <td className="font-semibold">{isTied ? `T${position}` : position.toString()}</td>
+                        <td>
+                          <a 
+                            href={`/player/${result?.player?.id || '#'}`}
+                            className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                            onClick={e => {
+                              e.preventDefault();
+                              window.location.href = `/player/${result?.player?.id || '#'}`;
+                            }}
+                          >
+                            {result?.player?.name || 'Unknown'}
+                          </a>
+                        </td>
+                        <td className="text-center">{result?.grossScore !== null && result?.grossScore !== undefined ? result.grossScore : "N/A"}</td>
+                        <td className="text-center">{result?.netScore !== null && result?.netScore !== undefined ? result.netScore : "N/A"}</td>
+                        <td className="text-center">{result?.handicap !== null && result?.handicap !== undefined ? result.handicap : "N/A"}</td>
+                        <td className="text-right font-semibold">{result?.points || 0}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -265,65 +251,51 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
               Gross score leaderboard showing stored gross points from database.
             </CardDescription>
           </CardHeader>
-          <CardContent className="overflow-x-auto tournament-results-wrapper">
-            <Table className="tournament-results-table">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="">Pos</TableHead>
-                  <TableHead>Player</TableHead>
-                  <TableHead className="text-center">Gross</TableHead>
-                  <TableHead className="text-center">Net</TableHead>
-                  <TableHead className="text-center">Handicap</TableHead>
-                  <TableHead className="text-right">Points</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {grossResults.map((result, index) => {
-                  // Check if this gross score is tied by looking for other players with the same gross score
-                  const isTied = grossResults.filter(r => r?.grossScore === result?.grossScore).length > 1;
-                  
-                  // Calculate proper tied position - find the first occurrence of this score
-                  let position = index + 1;
-                  if (isTied) {
-                    position = grossResults.findIndex(r => r?.grossScore === result?.grossScore) + 1;
-                  }
-                  
-                  return (
-                    <TableRow key={result?.id || 'unknown'}>
-                      <TableCell className="font-semibold">
-                        {isTied ? `T${position}` : position.toString()}
-                      </TableCell>
-                    <TableCell>
-                      <a 
-                        href={`/player/${result?.player?.id || '#'}`}
-                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (result?.player?.id) {
-                            window.location.href = `/player/${result.player.id}`;
-                          }
-                        }}
-                      >
-                        {result?.player?.name || 'Unknown Player'}
-                      </a>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {result?.grossScore !== null && result?.grossScore !== undefined ? result.grossScore : "N/A"}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {result?.netScore !== null && result?.netScore !== undefined ? result.netScore : "N/A"}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {result?.handicap !== null && result?.handicap !== undefined ? result.handicap : "N/A"}
-                    </TableCell>
-                    <TableCell className="text-right font-semibold">
-                      {result?.grossPoints || 0}
-                    </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+          <CardContent className="overflow-x-auto scrollbar-thin scrollbar-thumb-rounded bg-white p-0">
+            <div className="min-w-[600px]">
+              <table className="w-full text-sm text-left border-separate border-spacing-0">
+                <thead className="bg-neutral-100 sticky top-0 z-10">
+                  <tr>
+                    <th className="py-2 pl-4 pr-2 font-semibold text-neutral-700 min-w-[48px] text-left sticky left-0 bg-neutral-100 z-20">Pos</th>
+                    <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[140px] text-left">Player</th>
+                    <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[60px] text-center">Gross</th>
+                    <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[60px] text-center">Net</th>
+                    <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[70px] text-center">Handicap</th>
+                    <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[70px] text-right">Points</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-200">
+                  {grossResults.map((result, index) => {
+                    const isTied = grossResults.filter(r => r?.grossScore === result?.grossScore).length > 1;
+                    let position = index + 1;
+                    if (isTied) {
+                      position = grossResults.findIndex(r => r?.grossScore === result?.grossScore) + 1;
+                    }
+                    return (
+                      <tr key={result?.id || 'unknown'}>
+                        <td className="font-semibold">{isTied ? `T${position}` : position.toString()}</td>
+                        <td>
+                          <a 
+                            href={`/player/${result?.player?.id || '#'}`}
+                            className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                            onClick={e => {
+                              e.preventDefault();
+                              window.location.href = `/player/${result?.player?.id || '#'}`;
+                            }}
+                          >
+                            {result?.player?.name || 'Unknown'}
+                          </a>
+                        </td>
+                        <td className="text-center">{result?.grossScore !== null && result?.grossScore !== undefined ? result.grossScore : "N/A"}</td>
+                        <td className="text-center">{result?.netScore !== null && result?.netScore !== undefined ? result.netScore : "N/A"}</td>
+                        <td className="text-center">{result?.handicap !== null && result?.handicap !== undefined ? result.handicap : "N/A"}</td>
+                        <td className="text-right font-semibold">{result?.grossPoints || 0}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
       )}

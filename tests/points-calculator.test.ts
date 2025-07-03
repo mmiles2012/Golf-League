@@ -7,3 +7,5 @@ describe.skip('Points Calculator & Auth (Deprecated)', () => {
     expect(true).toBe(true);
   });
 });
+
+// NOTE: All table layouts now use Tailwind utility classes. Do not expect custom CSS classes for tables in DOM tests.

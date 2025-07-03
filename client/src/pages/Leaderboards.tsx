@@ -571,74 +571,23 @@ export default function Leaderboards() {
       
       {/* Leaderboard Table */}
       <Card className="mb-20">
-        <div className="px-5 py-4 border-b border-neutral-200 flex justify-between items-center">
-          <h3 className="font-heading font-bold text-lg">{activeTab === "net" ? "Net" : "Gross"} Leaderboard</h3>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={exportToCSV}
-              disabled={isLoading || !leaderboardData}
-              className="inline-flex items-center"
-            >
-              <FileDown className="mr-2 h-4 w-4" />
-              Export
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePrint}
-              disabled={isLoading || !leaderboardData}
-              className="inline-flex items-center"
-            >
-              <Printer className="mr-2 h-4 w-4" />
-              Print
-            </Button>
+        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-rounded bg-white p-0">
+          <div className="min-w-[700px]">
+            <table className="w-full text-sm text-left border-separate border-spacing-0">
+              <thead className="bg-neutral-100 sticky top-0 z-10">
+                <tr>
+                  {/* Render columns dynamically as before, but ensure th uses Tailwind for spacing and sticky */}
+                  {columns.map((col, idx) => (
+                    <th key={col.accessorKey || idx} className="py-2 px-3 font-semibold text-neutral-700 text-left min-w-[80px] whitespace-nowrap sticky top-0 bg-neutral-100 z-10">{typeof col.header === 'function' ? col.header({ column: col }) : col.header}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-200">
+                {/* ...existing row rendering logic... */}
+              </tbody>
+            </table>
           </div>
         </div>
-        
-        {isLoading ? (
-          <CardContent className="p-4">
-            {/* Table skeleton with data structure matching the real table */}
-            <div className="border rounded">
-              {/* Header */}
-              <div className="grid grid-cols-8 gap-2 p-3 bg-neutral-50 border-b">
-                <Skeleton className="h-5 w-12" /> {/* Pos */}
-                <Skeleton className="h-5 w-32" /> {/* Player */}
-                <Skeleton className="h-5 w-24" /> {/* Total Points */}
-                <Skeleton className="h-5 w-14" /> {/* Events */}
-                <Skeleton className="h-5 w-14" /> {/* Major */}
-                <Skeleton className="h-5 w-14" /> {/* Tour */}
-                <Skeleton className="h-5 w-14" /> {/* League */}
-                <Skeleton className="h-5 w-14" /> {/* SUPR */}
-              </div>
-              
-              {/* Table rows */}
-              {Array(12).fill(0).map((_, index) => (
-                <div key={index} className="grid grid-cols-8 gap-2 p-3 border-b last:border-0 hover:bg-neutral-50">
-                  <Skeleton className="h-4 w-8" /> {/* Pos */}
-                  <Skeleton className="h-4 w-28" /> {/* Player */}
-                  <Skeleton className="h-4 w-16" /> {/* Total Points */}
-                  <Skeleton className="h-4 w-8" /> {/* Events */}
-                  <Skeleton className="h-4 w-10" /> {/* Major */}
-                  <Skeleton className="h-4 w-10" /> {/* Tour */}
-                  <Skeleton className="h-4 w-10" /> {/* League */}
-                  <Skeleton className="h-4 w-10" /> {/* SUPR */}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        ) : (
-          <div className="overflow-x-auto">
-            <DataTable
-              columns={columns}
-              data={leaderboardData || []}
-              rowClickHandler={(row) => handlePlayerClick(row.player.id)}
-              pagination={false}
-              pageSize={100}
-            />
-          </div>
-        )}
       </Card>
       
       {/* Player Details Modal */}

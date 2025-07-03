@@ -57,24 +57,24 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
             {/* Statistics section removed as requested */}
             
             <h4 className="font-heading font-semibold text-md mb-2">Tournament History</h4>
-            <div className="w-full overflow-hidden max-h-[60vh]">
-              <div className="overflow-x-auto pb-4">
-                <table className="min-w-full border-collapse">
-                  <thead className="bg-gray-100 sticky top-0 z-10">
+            <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-rounded pb-4">
+              <div className="min-w-[900px]">
+                <table className="w-full text-sm text-left border-separate border-spacing-0">
+                  <thead className="bg-neutral-100 sticky top-0 z-10">
                     <tr>
-                      <th className="py-2 px-4 text-left font-medium text-sm text-gray-600 bg-white sticky left-0 z-20" style={{ minWidth: '200px' }}>Tournament</th>
-                      <th className="py-2 px-4 text-left font-medium text-sm text-gray-600" style={{ minWidth: '100px' }}>Date</th>
-                      <th className="py-2 px-4 text-left font-medium text-sm text-gray-600" style={{ minWidth: '80px' }}>Type</th>
-                      <th className="py-2 px-4 text-center font-medium text-sm text-gray-600" style={{ minWidth: '80px' }}>Net Pos</th>
-                      <th className="py-2 px-4 text-center font-medium text-sm text-gray-600" style={{ minWidth: '90px' }}>Net Points</th>
-                      <th className="py-2 px-4 text-center font-medium text-sm text-gray-600" style={{ minWidth: '80px' }}>Gross Pos</th>
-                      <th className="py-2 px-4 text-center font-medium text-sm text-gray-600" style={{ minWidth: '90px' }}>Gross Points</th>
-                      <th className="py-2 px-4 text-center font-medium text-sm text-gray-600" style={{ minWidth: '70px' }}>Gross</th>
-                      <th className="py-2 px-4 text-center font-medium text-sm text-gray-600" style={{ minWidth: '70px' }}>Net</th>
-                      <th className="py-2 px-4 text-center font-medium text-sm text-gray-600" style={{ minWidth: '90px' }}>Handicap</th>
+                      <th className="py-2 px-4 font-semibold text-neutral-700 min-w-[200px] text-left sticky left-0 bg-white z-20">Tournament</th>
+                      <th className="py-2 px-4 font-semibold text-neutral-700 min-w-[100px] text-left">Date</th>
+                      <th className="py-2 px-4 font-semibold text-neutral-700 min-w-[80px] text-left">Type</th>
+                      <th className="py-2 px-4 font-semibold text-neutral-700 min-w-[80px] text-center">Net Pos</th>
+                      <th className="py-2 px-4 font-semibold text-neutral-700 min-w-[90px] text-center">Net Points</th>
+                      <th className="py-2 px-4 font-semibold text-neutral-700 min-w-[80px] text-center">Gross Pos</th>
+                      <th className="py-2 px-4 font-semibold text-neutral-700 min-w-[90px] text-center">Gross Points</th>
+                      <th className="py-2 px-4 font-semibold text-neutral-700 min-w-[70px] text-center">Gross</th>
+                      <th className="py-2 px-4 font-semibold text-neutral-700 min-w-[70px] text-center">Net</th>
+                      <th className="py-2 px-4 font-semibold text-neutral-700 min-w-[90px] text-center">Handicap</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-neutral-200">
                     {playerHistory.tournaments
                       .sort((a, b) => new Date(b.tournamentDate).getTime() - new Date(a.tournamentDate).getTime())
                       .map((tournament) => (
@@ -113,14 +113,11 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
                           {tournament.netScore ? tournament.netScore : "N/A"}
                         </td>
                         <td className="py-2 px-4 text-sm text-center border-b border-gray-200">
-                          {tournament.handicap !== null ? 
-                            (tournament.originalHandicap ? 
-                              tournament.originalHandicap : 
-                              (tournament.handicap > 0 && 
-                               tournament.grossScore < tournament.netScore ? 
-                                `+${tournament.handicap}` : 
-                                tournament.handicap)) : 
-                            "N/A"}
+                          {tournament.handicap !== null && tournament.handicap !== undefined
+                            ? (tournament.handicap > 0 && tournament.grossScore != null && tournament.netScore != null && tournament.grossScore < tournament.netScore
+                                ? `+${tournament.handicap}`
+                                : tournament.handicap)
+                            : "N/A"}
                         </td>
                       </tr>
                     ))}

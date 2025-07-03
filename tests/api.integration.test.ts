@@ -123,6 +123,8 @@ describe('Leaderboard API Backend-Driven Logic', () => {
   });
 });
 
+// NOTE: All table layouts now use Tailwind utility classes. Do not expect custom CSS classes for tables in DOM tests.
+
 describe('Authentication & Role Enforcement', () => {
   it('should allow player login via Replit OAuth and access to their own dashboard', async () => {
     // Simulate login via Replit OAuth (mock or integration)
