@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { PlayerWithHistory } from "@shared/schema";
@@ -41,7 +42,7 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-4 md:p-6">
         <DialogHeader className="p-0">
           <DialogTitle>
-            {isLoading ? "Loading player details..." : `${playerHistory?.player.name}`}
+            {isLoading ? "Loading player details..." : `${playerHistory?.player?.name ?? ''}`}
           </DialogTitle>
           <DialogDescription className="text-sm text-neutral-500">
             View tournament history and detailed statistics
@@ -49,8 +50,45 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
         </DialogHeader>
         
         {isLoading ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="my-4">
+            <h4 className="font-heading font-semibold text-md mb-2">Tournament History</h4>
+            <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-rounded pb-4">
+              <div className="min-w-[900px]">
+                <table className="w-full text-sm text-left border-separate border-spacing-0">
+                  <thead className="bg-neutral-100 sticky top-0 z-10">
+                    <tr>
+                      <th className="py-2 px-4 font-semibold text-neutral-700 min-w-[200px] text-left sticky left-0 bg-white z-20">Tournament</th>
+                      <th className="py-2 px-4 font-semibold text-neutral-700 min-w-[100px] text-left">Date</th>
+                      <th className="py-2 px-4 font-semibold text-neutral-700 min-w-[80px] text-left">Type</th>
+                      <th className="py-2 px-4 font-semibold text-neutral-700 min-w-[80px] text-center">Net Pos</th>
+                      <th className="py-2 px-4 font-semibold text-neutral-700 min-w-[90px] text-center">Net Points</th>
+                      <th className="py-2 px-4 font-semibold text-neutral-700 min-w-[80px] text-center">Gross Pos</th>
+                      <th className="py-2 px-4 font-semibold text-neutral-700 min-w-[90px] text-center">Gross Points</th>
+                      <th className="py-2 px-4 font-semibold text-neutral-700 min-w-[70px] text-center">Gross</th>
+                      <th className="py-2 px-4 font-semibold text-neutral-700 min-w-[70px] text-center">Net</th>
+                      <th className="py-2 px-4 font-semibold text-neutral-700 min-w-[90px] text-center">Handicap</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-200">
+                    {Array(8).fill(0).map((_, idx) => (
+                      <tr key={idx}>
+                        <td className="py-2 px-4 bg-white sticky left-0 z-10 border-b border-gray-200"><Skeleton className="h-5 w-32" /></td>
+                        <td className="py-2 px-4 border-b border-gray-200"><Skeleton className="h-5 w-20" /></td>
+                        <td className="py-2 px-4 border-b border-gray-200"><Skeleton className="h-5 w-12" /></td>
+                        <td className="py-2 px-4 border-b border-gray-200 text-center"><Skeleton className="h-5 w-8 mx-auto" /></td>
+                        <td className="py-2 px-4 border-b border-gray-200 text-center"><Skeleton className="h-5 w-10 mx-auto" /></td>
+                        <td className="py-2 px-4 border-b border-gray-200 text-center"><Skeleton className="h-5 w-8 mx-auto" /></td>
+                        <td className="py-2 px-4 border-b border-gray-200 text-center"><Skeleton className="h-5 w-10 mx-auto" /></td>
+                        <td className="py-2 px-4 border-b border-gray-200 text-center"><Skeleton className="h-5 w-10 mx-auto" /></td>
+                        <td className="py-2 px-4 border-b border-gray-200 text-center"><Skeleton className="h-5 w-10 mx-auto" /></td>
+                        <td className="py-2 px-4 border-b border-gray-200 text-center"><Skeleton className="h-5 w-10 mx-auto" /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="mt-2 text-xs text-neutral-500 italic text-center">Tip: Swipe left/right to view all data.</div>
           </div>
         ) : playerHistory ? (
           <div className="my-4">
@@ -76,8 +114,8 @@ export default function PlayerDetailsModal({ playerId, isOpen, onClose }: Player
                   </thead>
                   <tbody className="divide-y divide-neutral-200">
                     {playerHistory.tournaments
-                      .sort((a, b) => new Date(b.tournamentDate).getTime() - new Date(a.tournamentDate).getTime())
-                      .map((tournament) => (
+                      .sort((a: any, b: any) => new Date(b.tournamentDate).getTime() - new Date(a.tournamentDate).getTime())
+                      .map((tournament: any) => (
                       <tr key={tournament.id} className="hover:bg-gray-50">
                         <td className="py-2 px-4 text-sm font-medium bg-white sticky left-0 z-10 border-b border-gray-200">
                           <a

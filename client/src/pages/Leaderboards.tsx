@@ -367,38 +367,29 @@ export default function Leaderboards() {
     [handleSort, sortingKey, sortingDesc, handlePlayerClick, activeTab]
   );
 
-  // --- Sorted data ---
-  const sortedData = useMemo(() => {
-    if (!leaderboardData) return [];
-    const data = [...leaderboardData];
-    data.sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
-      switch (sortingKey) {
-        case 'player.name':
-          aValue = a.player.name;
-          bValue = b.player.name;
-          break;
-        default:
-          aValue = a[sortingKey as keyof PlayerWithHistory];
-          bValue = b[sortingKey as keyof PlayerWithHistory];
-      }
-      if (aValue == null) aValue = 0;
-      if (bValue == null) bValue = 0;
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortingDesc ? bValue.localeCompare(aValue) : aValue.localeCompare(bValue);
-      }
-      return sortingDesc ? bValue - aValue : aValue - bValue;
-    });
-    return data;
-  }, [leaderboardData, sortingKey, sortingDesc]);
-
   // --- Pagination logic ---
   const [currentPage, setCurrentPage] = useState(0);
-  const paginatedRows = useMemo(() => {
-    const start = currentPage * rowsPerPage;
-    return sortedData.slice(start, start + rowsPerPage);
-  }, [sortedData, currentPage]);
+  const rowsPerPage = 25;
+
+  // Fetch leaderboard data with server-side pagination
+  const {
+    data: pagedNetLeaderboard,
+    isLoading: isNetLoading
+  } = useQuery<{ data: PlayerWithHistory[]; total: number }>({
+    queryKey: ["/api/leaderboard/net", { page: currentPage, limit: rowsPerPage }],
+    staleTime: 5 * 60 * 1000,
+  });
+  const {
+    data: pagedGrossLeaderboard,
+    isLoading: isGrossLoading
+  } = useQuery<{ data: PlayerWithHistory[]; total: number }>({
+    queryKey: ["/api/leaderboard/gross", { page: currentPage, limit: rowsPerPage }],
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const data = activeTab === "net" ? pagedNetLeaderboard?.data : pagedGrossLeaderboard?.data;
+  const totalRows = activeTab === "net" ? pagedNetLeaderboard?.total ?? 0 : pagedGrossLeaderboard?.total ?? 0;
+  const isLoading = activeTab === "net" ? isNetLoading : isGrossLoading;
 
   return (
     <section className="space-y-6">
@@ -472,18 +463,30 @@ export default function Leaderboards() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-200">
-                {paginatedRows.map((row, rowIdx) => (
-                  <tr key={row.player.id || rowIdx} className="hover:bg-neutral-50 transition-colors">
-                    {columns.map((col, colIdx) => (
-                      <td
-                        key={col.accessorKey || colIdx}
-                        className="py-3 px-4 min-w-[80px] text-left align-middle"
-                      >
-                        {col.cell(row)}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
+                {isLoading ? (
+                  Array(10).fill(0).map((_, rowIdx) => (
+                    <tr key={rowIdx}>
+                      {columns.map((col, colIdx) => (
+                        <td key={col.accessorKey || colIdx} className="py-3 px-4 min-w-[80px] text-left align-middle">
+                          <Skeleton className="h-5 w-24" />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : (
+                  data?.map((row, rowIdx) => (
+                    <tr key={row.player.id || rowIdx} className="hover:bg-neutral-50 transition-colors">
+                      {columns.map((col, colIdx) => (
+                        <td
+                          key={col.accessorKey || colIdx}
+                          className="py-3 px-4 min-w-[80px] text-left align-middle"
+                        >
+                          {col.cell(row)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -491,13 +494,13 @@ export default function Leaderboards() {
         {/* Pagination controls */}
         <div className="flex justify-between items-center mt-4 px-4">
           <span className="text-sm text-neutral-600">
-            Page {page + 1} of {Math.ceil(sortedData.length / rowsPerPage)} ({sortedData.length} players)
+            Page {currentPage + 1} of {Math.ceil(totalRows / rowsPerPage)} ({totalRows} players)
           </span>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => setPage(0)} disabled={page === 0}>First</Button>
-            <Button size="sm" variant="outline" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}>Prev</Button>
-            <Button size="sm" variant="outline" onClick={() => setPage(p => Math.min(Math.ceil(sortedData.length / rowsPerPage) - 1, p + 1))} disabled={page >= Math.ceil(sortedData.length / rowsPerPage) - 1}>Next</Button>
-            <Button size="sm" variant="outline" onClick={() => setPage(Math.ceil(sortedData.length / rowsPerPage) - 1)} disabled={page >= Math.ceil(sortedData.length / rowsPerPage) - 1}>Last</Button>
+            <Button size="sm" variant="outline" onClick={() => setPage(0)} disabled={currentPage === 0}>First</Button>
+            <Button size="sm" variant="outline" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={currentPage === 0}>Prev</Button>
+            <Button size="sm" variant="outline" onClick={() => setPage(p => Math.min(Math.ceil(totalRows / rowsPerPage) - 1, p + 1))} disabled={currentPage >= Math.ceil(totalRows / rowsPerPage) - 1}>Next</Button>
+            <Button size="sm" variant="outline" onClick={() => setPage(Math.ceil(totalRows / rowsPerPage) - 1)} disabled={currentPage >= Math.ceil(totalRows / rowsPerPage) - 1}>Last</Button>
           </div>
         </div>
       </Card>

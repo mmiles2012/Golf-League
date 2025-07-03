@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { 
-  Card, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription, 
-  CardContent 
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import PlayerDetailsModal from "@/components/custom/PlayerDetailsModal";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function getTournamentTypeLabel(type: string): string {
   switch (type.toLowerCase()) {
@@ -28,26 +29,6 @@ function getTournamentTypeLabel(type: string): string {
   }
 }
 
-// Helper function to format position with tie prefix
-function formatPosition(position: number, isTied: boolean): string {
-  return isTied ? `T${position}` : position.toString();
-}
-
-// Helper function to get ordinal suffix (1st, 2nd, 3rd, etc.)
-function getOrdinalSuffix(num: number): string {
-  const j = num % 10;
-  const k = num % 100;
-  if (k >= 11 && k <= 13) {
-    return 'th';
-  }
-  switch (j) {
-    case 1: return 'st';
-    case 2: return 'nd';
-    case 3: return 'rd';
-    default: return 'th';
-  }
-}
-
 interface TournamentResultsProps {
   id?: string;
 }
@@ -57,6 +38,8 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
   const [activeTab, setActiveTab] = useState<"net" | "gross">("net");
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
   const [isPlayerDetailsOpen, setIsPlayerDetailsOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const rowsPerPage = 25;
 
   // Early return if no valid tournament ID
   if (!tournamentId || tournamentId <= 0) {
@@ -66,19 +49,42 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
       </div>
     );
   }
-  
+
   // Fetch tournament details
   const { data: tournament, isLoading: tournamentLoading } = useQuery({
     queryKey: ['/api/tournaments', tournamentId],
   });
-  
-  // Fetch tournament results - THIS IS THE KEY FIX
-  const { data: tournamentResults, isLoading: resultsLoading } = useQuery({
-    queryKey: [`/api/tournaments/${tournamentId}/results`],
+
+  // Helper type for tournament
+  type Tournament = {
+    id: number;
+    name: string;
+    date: string;
+    type: string;
+  };
+
+  // Fetch paginated tournament results for both tabs
+  const {
+    data: pagedNetResults,
+    isLoading: isNetLoading
+  } = useQuery<{ data: any[]; total: number }>({
+    queryKey: [`/api/tournaments/${tournamentId}/results/net`, { page: currentPage, limit: rowsPerPage }],
+    staleTime: 5 * 60 * 1000,
+    enabled: !!tournamentId && activeTab === 'net',
+  });
+  const {
+    data: pagedGrossResults,
+    isLoading: isGrossLoading
+  } = useQuery<{ data: any[]; total: number }>({
+    queryKey: [`/api/tournaments/${tournamentId}/results/gross`, { page: currentPage, limit: rowsPerPage }],
+    staleTime: 5 * 60 * 1000,
+    enabled: !!tournamentId && activeTab === 'gross',
   });
 
-  const isLoading = tournamentLoading || resultsLoading;
-  
+  const isLoading = tournamentLoading || (activeTab === 'net' ? isNetLoading : isGrossLoading);
+  const data = activeTab === 'net' ? pagedNetResults?.data : pagedGrossResults?.data;
+  const totalRows = activeTab === 'net' ? pagedNetResults?.total ?? 0 : pagedGrossResults?.total ?? 0;
+
   // Show loading state
   if (isLoading) {
     return (
@@ -87,7 +93,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
       </div>
     );
   }
-  
+
   // Show error if tournament not found
   if (!tournament) {
     return (
@@ -96,47 +102,18 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
       </div>
     );
   }
-  
+
+  // Cast tournament to expected type
+  const tournamentObj = tournament as Tournament;
+
   // Show error if results not found
-  if (!tournamentResults || !Array.isArray(tournamentResults)) {
+  if (!data || !Array.isArray(data)) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <p className="text-neutral-600">No tournament results found</p>
       </div>
     );
   }
-
-  // Sort results for NET leaderboard by net score (lower is better), then by handicap (lower first)
-  const netResults = [...tournamentResults].sort((a, b) => {
-    const scoreA = a?.netScore !== null && a?.netScore !== undefined ? a.netScore : 999;
-    const scoreB = b?.netScore !== null && b?.netScore !== undefined ? b.netScore : 999;
-    
-    // Primary sort: by net score
-    if (scoreA !== scoreB) {
-      return scoreA - scoreB;
-    }
-    
-    // Secondary sort: by handicap (lower handicap first for tied scores)
-    const handicapA = a?.handicap !== null && a?.handicap !== undefined ? a.handicap : 999;
-    const handicapB = b?.handicap !== null && b?.handicap !== undefined ? b.handicap : 999;
-    return handicapA - handicapB;
-  });
-
-  // Sort results for GROSS leaderboard by gross score (lower is better), then by handicap (lower first)
-  const grossResults = [...tournamentResults].sort((a, b) => {
-    const scoreA = a?.grossScore !== null && a?.grossScore !== undefined ? a.grossScore : 999;
-    const scoreB = b?.grossScore !== null && b?.grossScore !== undefined ? b.grossScore : 999;
-    
-    // Primary sort: by gross score
-    if (scoreA !== scoreB) {
-      return scoreA - scoreB;
-    }
-    
-    // Secondary sort: by handicap (lower handicap first for tied scores)
-    const handicapA = a?.handicap !== null && a?.handicap !== undefined ? a.handicap : 999;
-    const handicapB = b?.handicap !== null && b?.handicap !== undefined ? b.handicap : 999;
-    return handicapA - handicapB;
-  });
 
   // --- Table columns ---
   const getColumns = (
@@ -151,16 +128,8 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
       accessorKey: "position",
       header: () => <span>Pos</span>,
       cell: (row, idx) => {
-        const isTied = isGross
-          ? grossResults.filter(r => r?.grossScore === row?.grossScore).length > 1
-          : netResults.filter(r => r?.netScore === row?.netScore).length > 1;
-        let position = idx + 1;
-        if (isTied) {
-          position = (isGross
-            ? grossResults.findIndex(r => r?.grossScore === row?.grossScore)
-            : netResults.findIndex(r => r?.netScore === row?.netScore)) + 1;
-        }
-        return <span className="font-semibold">{isTied ? `T${position}` : position.toString()}</span>;
+        // Use backend-calculated position and isTied fields
+        return <span className="font-semibold">{row?.isTied ? `T${row?.position}` : row?.position}</span>;
       },
     },
     {
@@ -208,21 +177,21 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
     <div className="space-y-6 pb-20">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-heading font-bold">{typeof tournament === 'object' && 'name' in tournament ? String(tournament.name) : 'Tournament'}</h1>
+          <h1 className="text-2xl font-heading font-bold">{tournamentObj.name}</h1>
           <div className="flex items-center gap-3 mt-1">
-            <p className="text-neutral-600">{typeof tournament === 'object' && 'date' in tournament && tournament.date ? format(new Date(String(tournament.date)), 'MMM d, yyyy') : ''}</p>
-            {typeof tournament === 'object' && 'type' in tournament && tournament.type && (
-              <Badge variant={String(tournament.type) as any}>{getTournamentTypeLabel(String(tournament.type))}</Badge>
+            <p className="text-neutral-600">{tournamentObj.date ? format(new Date(tournamentObj.date), 'MMM d, yyyy') : ''}</p>
+            {tournamentObj.type && (
+              <Badge variant={tournamentObj.type as any}>{getTournamentTypeLabel(tournamentObj.type)}</Badge>
             )}
           </div>
         </div>
         <Button variant="outline" onClick={() => window.history.back()}>Back</Button>
       </div>
-      
+
       {/* Tab navigation */}
       <div className="flex space-x-1 p-1 bg-gray-100 rounded-lg max-w-fit">
         <button
-          onClick={() => setActiveTab("net")}
+          onClick={() => { setActiveTab("net"); setCurrentPage(0); }}
           className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
             activeTab === "net"
               ? "bg-white text-gray-900 shadow-sm"
@@ -232,7 +201,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
           Net
         </button>
         <button
-          onClick={() => setActiveTab("gross")}
+          onClick={() => { setActiveTab("gross"); setCurrentPage(0); }}
           className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
             activeTab === "gross"
               ? "bg-white text-gray-900 shadow-sm"
@@ -244,14 +213,14 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
       </div>
 
       <Separator />
-      
+
       {/* NET Leaderboard */}
       {activeTab === "net" && (
         <Card>
           <CardHeader>
             <CardTitle>Net Leaderboard</CardTitle>
             <CardDescription>
-              Net score leaderboard ordered by position from tournament upload. Points based on tournament type ({typeof tournament === 'object' && 'type' in tournament ? String(tournament.type) : ''}).
+              Net score leaderboard ordered by backend-calculated position. Points based on tournament type ({tournamentObj.type}).
             </CardDescription>
           </CardHeader>
           <CardContent className="overflow-x-auto scrollbar-thin scrollbar-thumb-rounded bg-white p-0">
@@ -270,28 +239,52 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-200">
-                  {netResults.map((result, index) => (
-                    <tr key={result?.id || 'unknown'}>
-                      {getColumns(handlePlayerClick, false).map((col, colIdx) => (
-                        <td
-                          key={col.accessorKey || colIdx}
-                          className={
-                            colIdx === 0
-                              ? "font-semibold pl-4 pr-2"
-                              : colIdx === 1
-                              ? ""
-                              : colIdx === 5
-                              ? "text-right font-semibold"
-                              : "text-center"
-                          }
-                        >
-                          {col.cell(result, index)}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
+                  {isLoading ? (
+                    Array(10).fill(0).map((_, rowIdx) => (
+                      <tr key={rowIdx}>
+                        {getColumns(handlePlayerClick, false).map((col, colIdx) => (
+                          <td key={col.accessorKey || colIdx} className="py-2 pl-4 pr-2">
+                            <Skeleton className="h-5 w-20" />
+                          </td>
+                        ))}
+                      </tr>
+                    ))
+                  ) : (
+                    data.map((result: any, index: number) => (
+                      <tr key={result?.id || 'unknown'}>
+                        {getColumns(handlePlayerClick, false).map((col, colIdx) => (
+                          <td
+                            key={col.accessorKey || colIdx}
+                            className={
+                              colIdx === 0
+                                ? "font-semibold pl-4 pr-2"
+                                : colIdx === 1
+                                ? ""
+                                : colIdx === 5
+                                ? "text-right font-semibold"
+                                : "text-center"
+                            }
+                          >
+                            {col.cell(result, index)}
+                          </td>
+                        ))}
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
+            </div>
+            {/* Pagination controls */}
+            <div className="flex justify-between items-center mt-4 px-4">
+              <span className="text-sm text-neutral-600">
+                Page {currentPage + 1} of {Math.ceil(totalRows / rowsPerPage)} ({totalRows} players)
+              </span>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => setCurrentPage(0)} disabled={currentPage === 0}>First</Button>
+                <Button size="sm" variant="outline" onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0}>Prev</Button>
+                <Button size="sm" variant="outline" onClick={() => setCurrentPage(p => Math.min(Math.ceil(totalRows / rowsPerPage) - 1, p + 1))} disabled={currentPage >= Math.ceil(totalRows / rowsPerPage) - 1}>Next</Button>
+                <Button size="sm" variant="outline" onClick={() => setCurrentPage(Math.ceil(totalRows / rowsPerPage) - 1)} disabled={currentPage >= Math.ceil(totalRows / rowsPerPage) - 1}>Last</Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -322,28 +315,52 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-200">
-                  {grossResults.map((result, index) => (
-                    <tr key={result?.id || 'unknown'}>
-                      {getColumns(handlePlayerClick, true).map((col, colIdx) => (
-                        <td
-                          key={col.accessorKey || colIdx}
-                          className={
-                            colIdx === 0
-                              ? "font-semibold pl-4 pr-2"
-                              : colIdx === 1
-                              ? ""
-                              : colIdx === 5
-                              ? "text-right font-semibold"
-                              : "text-center"
-                          }
-                        >
-                          {col.cell(result, index)}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
+                  {isLoading ? (
+                    Array(10).fill(0).map((_, rowIdx) => (
+                      <tr key={rowIdx}>
+                        {getColumns(handlePlayerClick, true).map((col, colIdx) => (
+                          <td key={col.accessorKey || colIdx} className="py-2 pl-4 pr-2">
+                            <Skeleton className="h-5 w-20" />
+                          </td>
+                        ))}
+                      </tr>
+                    ))
+                  ) : (
+                    data.map((result: any, index: number) => (
+                      <tr key={result?.id || 'unknown'}>
+                        {getColumns(handlePlayerClick, true).map((col, colIdx) => (
+                          <td
+                            key={col.accessorKey || colIdx}
+                            className={
+                              colIdx === 0
+                                ? "font-semibold pl-4 pr-2"
+                                : colIdx === 1
+                                ? ""
+                                : colIdx === 5
+                                ? "text-right font-semibold"
+                                : "text-center"
+                            }
+                          >
+                            {col.cell(result, index)}
+                          </td>
+                        ))}
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
+            </div>
+            {/* Pagination controls */}
+            <div className="flex justify-between items-center mt-4 px-4">
+              <span className="text-sm text-neutral-600">
+                Page {currentPage + 1} of {Math.ceil(totalRows / rowsPerPage)} ({totalRows} players)
+              </span>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => setCurrentPage(0)} disabled={currentPage === 0}>First</Button>
+                <Button size="sm" variant="outline" onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0}>Prev</Button>
+                <Button size="sm" variant="outline" onClick={() => setCurrentPage(p => Math.min(Math.ceil(totalRows / rowsPerPage) - 1, p + 1))} disabled={currentPage >= Math.ceil(totalRows / rowsPerPage) - 1}>Next</Button>
+                <Button size="sm" variant="outline" onClick={() => setCurrentPage(Math.ceil(totalRows / rowsPerPage) - 1)} disabled={currentPage >= Math.ceil(totalRows / rowsPerPage) - 1}>Last</Button>
+              </div>
             </div>
           </CardContent>
         </Card>

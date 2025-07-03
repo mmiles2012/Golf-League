@@ -626,41 +626,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   };
   
-  // Leaderboard endpoints with caching
-  app.get("/api/leaderboard/net", async (_req: Request, res: Response) => {
+  // Leaderboard endpoints with caching and server-side pagination
+  app.get("/api/leaderboard/net", async (req: Request, res: Response) => {
     try {
-      // Check if we have a valid cache
+      const page = parseInt(req.query.page as string) || 0;
+      const limit = parseInt(req.query.limit as string) || 25;
       const now = Date.now();
-      if (leaderboardCache.net.data && (now - leaderboardCache.net.timestamp) < leaderboardCache.net.ttl) {
-        return res.json(leaderboardCache.net.data);
+      // Only cache the first page for simplicity
+      if (page === 0 && leaderboardCache.net.data && (now - leaderboardCache.net.timestamp) < leaderboardCache.net.ttl) {
+        return res.json({ data: leaderboardCache.net.data.slice(0, limit), total: leaderboardCache.net.data.length });
       }
-      
-      // Cache miss - fetch and store data
+      // Fetch all, then slice for pagination (for now; can optimize later)
       const leaderboard = await storage.getNetLeaderboard();
-      leaderboardCache.net.data = leaderboard;
-      leaderboardCache.net.timestamp = now;
-      
-      res.json(leaderboard);
+      if (page === 0) {
+        leaderboardCache.net.data = leaderboard;
+        leaderboardCache.net.timestamp = now;
+      }
+      const paged = leaderboard.slice(page * limit, (page + 1) * limit);
+      res.json({ data: paged, total: leaderboard.length });
     } catch (error) {
       console.error("Error fetching net leaderboard:", error);
       res.status(500).json({ message: "Failed to fetch net leaderboard" });
     }
   });
   
-  app.get("/api/leaderboard/gross", async (_req: Request, res: Response) => {
+  app.get("/api/leaderboard/gross", async (req: Request, res: Response) => {
     try {
-      // Check if we have a valid cache
+      const page = parseInt(req.query.page as string) || 0;
+      const limit = parseInt(req.query.limit as string) || 25;
       const now = Date.now();
-      if (leaderboardCache.gross.data && (now - leaderboardCache.gross.timestamp) < leaderboardCache.gross.ttl) {
-        return res.json(leaderboardCache.gross.data);
+      if (page === 0 && leaderboardCache.gross.data && (now - leaderboardCache.gross.timestamp) < leaderboardCache.gross.ttl) {
+        return res.json({ data: leaderboardCache.gross.data.slice(0, limit), total: leaderboardCache.gross.data.length });
       }
-      
-      // Cache miss - fetch and store data
       const leaderboard = await storage.getGrossLeaderboard();
-      leaderboardCache.gross.data = leaderboard;
-      leaderboardCache.gross.timestamp = now;
-      
-      res.json(leaderboard);
+      if (page === 0) {
+        leaderboardCache.gross.data = leaderboard;
+        leaderboardCache.gross.timestamp = now;
+      }
+      const paged = leaderboard.slice(page * limit, (page + 1) * limit);
+      res.json({ data: paged, total: leaderboard.length });
     } catch (error) {
       console.error("Error fetching gross leaderboard:", error);
       res.status(500).json({ message: "Failed to fetch gross leaderboard" });
