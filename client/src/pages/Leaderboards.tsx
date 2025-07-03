@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,8 @@ export default function Leaderboards() {
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
   const [isPlayerDetailsOpen, setIsPlayerDetailsOpen] = useState(false);
   const [sorting, setSorting] = useState([]);
+  const [page, setPage] = useState(0);
+  const rowsPerPage = 25;
 
   // Fetch app settings to get custom page title
   const { data: appSettings } = useQuery<AppSettings>({
@@ -39,6 +41,12 @@ export default function Leaderboards() {
   // Use the appropriate data source based on active tab
   const leaderboardData = activeTab === "net" ? netLeaderboardData : grossLeaderboardData;
   const isLoading = activeTab === "net" ? isNetLoading : isGrossLoading;
+
+  // Diagnostic: log a sample row and total count
+  if (leaderboardData && leaderboardData.length > 0) {
+    console.log("Sample leaderboard row:", leaderboardData[0]);
+    console.log("Total leaderboard rows:", leaderboardData.length);
+  }
   
   const handlePlayerClick = (playerId: number) => {
     setSelectedPlayerId(playerId);
@@ -504,17 +512,17 @@ export default function Leaderboards() {
   
   const columns = getColumns();
 
-  // Set up the table instance using useReactTable (v8+)
-  const table = useReactTable({
-    data: leaderboardData || [],
-    columns,
-    state: { sorting },
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    manualSorting: false,
-    debugTable: false,
-  });
+  // Memoize sorted data if sorting is needed (optional, can be removed if not needed)
+  const sortedData = useMemo(() => {
+    if (!leaderboardData) return [];
+    // Optionally, implement sorting here if needed
+    return leaderboardData;
+  }, [leaderboardData]);
+
+  // Pagination logic
+  const totalRows = sortedData.length;
+  const totalPages = Math.ceil(totalRows / rowsPerPage);
+  const paginatedRows = sortedData.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
 
   return (
     <section className="space-y-6">
@@ -575,37 +583,40 @@ export default function Leaderboards() {
           <div className="min-w-[700px]">
             <table className="w-full text-sm text-left border-separate border-spacing-0">
               <thead className="bg-neutral-100 sticky top-0 z-10">
-                {table.getHeaderGroups().map(headerGroup => (
-                  <tr key={headerGroup.id}>
-                    {headerGroup.headers.map(header => {
-                      const isSorted = header.column.getIsSorted?.();
-                      return (
-                        <th
-                          key={header.id}
-                          className="py-2 px-3 font-semibold text-neutral-700 text-left min-w-[80px] whitespace-nowrap sticky top-0 bg-neutral-100 z-10 cursor-pointer select-none"
-                          onClick={header.column.getToggleSortingHandler?.()}
-                        >
-                          {flexRender(header.column.columnDef.header, header.getContext())}
-                          {isSorted === 'asc' && <span className="ml-1">▲</span>}
-                          {isSorted === 'desc' && <span className="ml-1">▼</span>}
-                        </th>
-                      );
-                    })}
-                  </tr>
-                ))}
+                <tr>
+                  {columns.map((col, idx) => (
+                    <th key={col.accessorKey || idx} className="py-2 px-3 font-semibold text-neutral-700 text-left min-w-[80px] whitespace-nowrap sticky top-0 bg-neutral-100 z-10">
+                      {typeof col.header === 'function' ? col.header({ column: col }) : col.header}
+                    </th>
+                  ))}
+                </tr>
               </thead>
               <tbody className="divide-y divide-neutral-200">
-                {table.getRowModel().rows.map(row => (
-                  <tr key={row.id}>
-                    {row.getVisibleCells().map(cell => (
-                      <td key={cell.id} className="py-2 px-3">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                {paginatedRows.map((row, rowIdx) => (
+                  <tr key={row.player.id || rowIdx}>
+                    {columns.map((col, colIdx) => (
+                      <td key={col.accessorKey || colIdx} className="py-2 px-3">
+                        {typeof col.cell === 'function'
+                          ? col.cell({ row: { original: row } })
+                          : row[col.accessorKey as keyof typeof row]}
                       </td>
                     ))}
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+        {/* Pagination controls */}
+        <div className="flex justify-between items-center mt-4 px-4">
+          <span className="text-sm text-neutral-600">
+            Page {page + 1} of {totalPages} ({totalRows} players)
+          </span>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => setPage(0)} disabled={page === 0}>First</Button>
+            <Button size="sm" variant="outline" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}>Prev</Button>
+            <Button size="sm" variant="outline" onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>Next</Button>
+            <Button size="sm" variant="outline" onClick={() => setPage(totalPages - 1)} disabled={page >= totalPages - 1}>Last</Button>
           </div>
         </div>
       </Card>
