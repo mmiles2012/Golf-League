@@ -9,6 +9,7 @@ import type {
   PointsConfig 
 } from "@shared/schema";
 import { setTimeout as setTimeoutPromise } from 'timers/promises';
+import { calculatePoints } from "./points-utils";
 
 // Simple in-memory cache for leaderboard results
 const leaderboardCache: {
@@ -293,24 +294,10 @@ export class LeaderboardCalculator {
 
   /**
    * Calculate points for a given position and tournament type
+   * (Replaced with shared utility)
    */
   calculatePointsForPosition(position: number, tournamentType: string): number {
-    if (!this.pointsConfig[tournamentType as keyof PointsConfig]) {
-      return 0;
-    }
-
-    const typeConfig = this.pointsConfig[tournamentType as keyof PointsConfig];
-    const positionConfig = typeConfig.find(p => p.position === position);
-    
-    if (positionConfig) {
-      return positionConfig.points;
-    } else if (typeConfig.length > 0) {
-      // If we don't have points for this specific position, use the last defined position
-      const lastPosition = typeConfig.slice(-1)[0];
-      return lastPosition ? lastPosition.points : 0;
-    }
-    
-    return 0;
+    return calculatePoints(position, tournamentType as any, this.pointsConfig[tournamentType as keyof PointsConfig]);
   }
 
   // Helper methods for database access
