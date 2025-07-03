@@ -369,7 +369,6 @@ export default function Leaderboards() {
 
   // --- Pagination logic ---
   const [currentPage, setCurrentPage] = useState(0);
-  const rowsPerPage = 25;
 
   // Fetch leaderboard data with server-side pagination
   const {
