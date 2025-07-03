@@ -197,12 +197,12 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
             <Table className="tournament-results-table">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-16">Pos</TableHead>
+                  <TableHead className="">Pos</TableHead>
                   <TableHead>Player</TableHead>
-                  <TableHead className="text-center w-20">Gross</TableHead>
-                  <TableHead className="text-center w-20">Net</TableHead>
-                  <TableHead className="text-center w-24">Handicap</TableHead>
-                  <TableHead className="text-right w-28">Points</TableHead>
+                  <TableHead className="text-center">Gross</TableHead>
+                  <TableHead className="text-center">Net</TableHead>
+                  <TableHead className="text-center">Handicap</TableHead>
+                  <TableHead className="text-right">Points</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -218,7 +218,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                   
                   return (
                   <TableRow key={result?.id || 'unknown'}>
-                    <TableCell className="font-semibold w-16">
+                    <TableCell className="font-semibold">
                       {isTied ? `T${position}` : position.toString()}
                     </TableCell>
                     <TableCell>
@@ -235,16 +235,16 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                         {result?.player?.name || 'Unknown Player'}
                       </a>
                     </TableCell>
-                    <TableCell className="text-center w-20">
+                    <TableCell className="text-center">
                       {result?.grossScore !== null && result?.grossScore !== undefined ? result.grossScore : "N/A"}
                     </TableCell>
-                    <TableCell className="text-center w-20">
+                    <TableCell className="text-center">
                       {result?.netScore !== null && result?.netScore !== undefined ? result.netScore : "N/A"}
                     </TableCell>
-                    <TableCell className="text-center w-24">
+                    <TableCell className="text-center">
                       {result?.handicap !== null && result?.handicap !== undefined ? result.handicap : "N/A"}
                     </TableCell>
-                    <TableCell className="text-right font-semibold w-28">
+                    <TableCell className="text-right font-semibold">
                       {result?.points || 0}
                     </TableCell>
                   </TableRow>
@@ -269,12 +269,12 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
             <Table className="tournament-results-table">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-16">Pos</TableHead>
+                  <TableHead className="">Pos</TableHead>
                   <TableHead>Player</TableHead>
-                  <TableHead className="text-center w-20">Gross</TableHead>
-                  <TableHead className="text-center w-20">Net</TableHead>
-                  <TableHead className="text-center w-24">Handicap</TableHead>
-                  <TableHead className="text-right w-28">Points</TableHead>
+                  <TableHead className="text-center">Gross</TableHead>
+                  <TableHead className="text-center">Net</TableHead>
+                  <TableHead className="text-center">Handicap</TableHead>
+                  <TableHead className="text-right">Points</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -290,7 +290,7 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                   
                   return (
                     <TableRow key={result?.id || 'unknown'}>
-                      <TableCell className="font-semibold w-16">
+                      <TableCell className="font-semibold">
                         {isTied ? `T${position}` : position.toString()}
                       </TableCell>
                     <TableCell>
@@ -307,16 +307,16 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
                         {result?.player?.name || 'Unknown Player'}
                       </a>
                     </TableCell>
-                    <TableCell className="text-center w-20">
+                    <TableCell className="text-center">
                       {result?.grossScore !== null && result?.grossScore !== undefined ? result.grossScore : "N/A"}
                     </TableCell>
-                    <TableCell className="text-center w-20">
+                    <TableCell className="text-center">
                       {result?.netScore !== null && result?.netScore !== undefined ? result.netScore : "N/A"}
                     </TableCell>
-                    <TableCell className="text-center w-24">
+                    <TableCell className="text-center">
                       {result?.handicap !== null && result?.handicap !== undefined ? result.handicap : "N/A"}
                     </TableCell>
-                    <TableCell className="text-right font-semibold w-28">
+                    <TableCell className="text-right font-semibold">
                       {result?.grossPoints || 0}
                     </TableCell>
                     </TableRow>
