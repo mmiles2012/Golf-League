@@ -4,6 +4,12 @@
 A professional golf league management platform that provides comprehensive tournament tracking, advanced score processing, and detailed performance analytics with enhanced precision in scoring calculations.
 
 ## Recent Changes
+- **2025-07-02**: Completed comprehensive table formatting standardization for tournament results
+  - **Fixed table width consistency**: Net and gross views now have identical column widths on both desktop and mobile
+  - **Resolved mobile overlap issues**: Implemented responsive CSS with precise column widths (40px Pos, 150px Player names with ellipsis, 50px scores/handicap, 70px Points)
+  - **Eliminated conflicting CSS**: Removed Tailwind width classes that were overriding custom responsive rules
+  - **Enhanced narrow window support**: Added minimum table width (390px) and horizontal scrolling for very narrow viewports
+  - **Cross-device compatibility**: Tables maintain consistent formatting across desktop, tablet, and mobile devices
 - **2025-07-02**: Fixed negative handicap handling for scratch and better players
   - **Removed Math.abs() calls**: Fixed frontend tournament upload processing to preserve negative handicap values instead of converting them to positive
   - **Updated TournamentUploader.tsx**: All four handicap parsing locations now correctly handle negative values for players better than scratch

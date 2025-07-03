@@ -237,7 +237,8 @@
   @media (max-width: 767px) {
     .tournament-results-table {
       @apply table-fixed;
-      min-width: 390px; /* Force minimum table width: 40+150+50+50+50+70 = 410px, reduced for tighter fit */
+      min-width: 430px; /* Force minimum table width: 40+150+50+50+50+70 = 410px, added extra padding */
+      table-layout: fixed !important;
     }
     
     .tournament-results-table th:nth-child(1),
@@ -271,6 +272,19 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .tournament-results-table th:nth-child(3),
+    .tournament-results-table td:nth-child(3) {
+      width: 50px !important; /* Fixed width for gross score */
+      @apply text-xs;
+      min-width: 50px;
+      max-width: 50px;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
     }
   }
   
