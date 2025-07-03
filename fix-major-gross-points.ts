@@ -1,7 +1,7 @@
 import { db } from "./server/db";
 import { playerResults, tournaments } from "./shared/schema";
 import { eq, and, isNotNull } from "drizzle-orm";
-import { calculateGrossPoints } from "./server/utils";
+import { calculateGrossPoints } from './server/gross-points-utils';
 import { storage } from "./server/storage-db";
 
 async function fixMajorGrossPoints() {

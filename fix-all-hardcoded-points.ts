@@ -2,6 +2,7 @@ import { db } from './server/db.js';
 import { tournaments, playerResults } from './shared/schema.js';
 import { eq, and, isNotNull } from 'drizzle-orm';
 import { storage } from './server/storage-db.js';
+import { getPointsFromConfig, logPointsConfig } from './server/migration-utils';
 
 /**
  * Comprehensive fix for all hardcoded points values in the database
@@ -16,8 +17,7 @@ async function fixAllHardcodedPoints(): Promise<void> {
     // Get the points configuration from database
     const pointsConfig = await storage.getPointsConfig();
     console.log('📊 Retrieved points configuration from database');
-    console.log('Tour points 1st-5th:', pointsConfig.tour.slice(0, 5).map(p => `${p.position}=${p.points}`));
-    console.log('Major points 1st-5th:', pointsConfig.major.slice(0, 5).map(p => `${p.position}=${p.points}`));
+    logPointsConfig(pointsConfig);
     
     // Get all tournaments
     const allTournaments = await db.select().from(tournaments);
@@ -44,7 +44,6 @@ async function fixAllHardcodedPoints(): Promise<void> {
       
       // Get tournament-specific points table for net scoring
       const netPointsTable = pointsConfig[tournament.type as keyof typeof pointsConfig];
-      
       // Get tour points table for gross scoring (always uses Tour points)
       const grossPointsTable = pointsConfig.tour;
       
@@ -101,11 +100,6 @@ async function fixAllHardcodedPoints(): Promise<void> {
   } catch (error) {
     console.error('❌ Error during comprehensive points fix:', error);
   }
-}
-
-function getPointsFromConfig(position: number, pointsTable: Array<{ position: number; points: number }>): number {
-  const entry = pointsTable.find(p => p.position === position);
-  return entry ? entry.points : 0;
 }
 
 // Run the comprehensive fix

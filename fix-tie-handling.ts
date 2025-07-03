@@ -2,6 +2,7 @@ import { db } from './server/db.js';
 import { tournaments, playerResults } from './shared/schema.js';
 import { eq } from 'drizzle-orm';
 import { storage } from './server/storage-db.js';
+import { getPointsFromConfig } from './server/migration-utils';
 
 /**
  * Fix tie handling for all tournaments
@@ -75,7 +76,6 @@ async function fixTieHandling(): Promise<void> {
           // Found a tie - calculate averaged points
           const firstPosition = Math.min(...tiedPlayers.map(p => p.position || 999));
           const lastPosition = firstPosition + tiedPlayers.length - 1;
-          
           let totalPoints = 0;
           for (let pos = firstPosition; pos <= lastPosition; pos++) {
             totalPoints += getPointsFromConfig(pos, netPointsTable);
@@ -104,7 +104,6 @@ async function fixTieHandling(): Promise<void> {
           // Found a tie - calculate averaged points
           const firstPosition = Math.min(...tiedPlayers.map(p => p.grossPosition || 999));
           const lastPosition = firstPosition + tiedPlayers.length - 1;
-          
           let totalPoints = 0;
           for (let pos = firstPosition; pos <= lastPosition; pos++) {
             totalPoints += getPointsFromConfig(pos, grossPointsTable);
@@ -140,11 +139,6 @@ async function fixTieHandling(): Promise<void> {
   } catch (error) {
     console.error('❌ Error during tie handling fix:', error);
   }
-}
-
-function getPointsFromConfig(position: number, pointsTable: Array<{ position: number; points: number }>): number {
-  const entry = pointsTable.find(p => p.position === position);
-  return entry ? entry.points : 0;
 }
 
 // Run the tie handling fix

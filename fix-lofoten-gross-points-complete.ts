@@ -1,29 +1,14 @@
 import { db } from './server/db.js';
 import { playerResults, tournaments } from './shared/schema.js';
 import { eq } from 'drizzle-orm';
-
-// Tour points table for gross scoring (standard tour points regardless of tournament type)
-const TOUR_POINTS = [
-  500, 300, 190, 145, 120, 100, 85, 75, 67, 60,
-  53, 49, 45, 42, 39, 37, 35, 33, 32, 30,
-  29, 28, 27, 26, 25, 24, 23, 22, 21, 20,
-  19, 18, 17, 16, 15, 14, 13, 12, 11, 10,
-  9, 8, 7, 6, 5, 4, 3, 2, 1, 0.5
-];
-
-function getPointsForPosition(position: number): number {
-  if (position <= 0) return 0;
-  if (position <= TOUR_POINTS.length) {
-    return TOUR_POINTS[position - 1];
-  }
-  return 0.5; // Default for positions beyond the table
-}
+import { getPointsFromConfig } from './server/migration-utils';
+import { storage } from './server/storage-db.js';
 
 // Calculate average points for tied positions
-function calculateTiePoints(startPosition: number, numTiedPlayers: number): number {
+function calculateTiePoints(startPosition: number, numTiedPlayers: number, tourPointsTable: number[]): number {
   let totalPoints = 0;
   for (let i = 0; i < numTiedPlayers; i++) {
-    totalPoints += getPointsForPosition(startPosition + i);
+    totalPoints += getPointsFromConfig(startPosition + i, tourPointsTable);
   }
   return totalPoints / numTiedPlayers;
 }
@@ -31,6 +16,9 @@ function calculateTiePoints(startPosition: number, numTiedPlayers: number): numb
 async function fixLofotenGrossPointsComplete() {
   try {
     console.log('Starting complete Lofoten Links gross points fix...');
+    // Get the points configuration from database
+    const pointsConfig = await storage.getPointsConfig();
+    const tourPointsTable = pointsConfig.tour;
 
     // Get the Lofoten tournament
     const tournament = await db
@@ -86,8 +74,8 @@ async function fixLofotenGrossPointsComplete() {
       
       // Calculate points for this position (average if tied)
       const points = numTiedPlayers === 1 
-        ? getPointsForPosition(currentPosition)
-        : calculateTiePoints(currentPosition, numTiedPlayers);
+        ? getPointsFromConfig(currentPosition, tourPointsTable)
+        : calculateTiePoints(currentPosition, numTiedPlayers, tourPointsTable);
 
       // Assign position and points to all tied players
       for (const player of tiedPlayers) {

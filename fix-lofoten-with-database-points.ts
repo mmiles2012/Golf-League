@@ -1,6 +1,8 @@
 import { db } from './server/db.js';
 import { playerResults, tournaments } from './shared/schema.js';
 import { eq } from 'drizzle-orm';
+import { getPointsFromConfig } from './server/migration-utils';
+import { storage } from './server/storage-db.js';
 
 // Fetch actual tour points from database API
 async function fetchTourPoints() {
@@ -23,11 +25,13 @@ function calculateTiePoints(startPosition: number, numTiedPlayers: number, tourP
 async function fixLofotenWithDatabasePoints() {
   try {
     console.log('Fetching actual tour points from database...');
-    const tourPoints = await fetchTourPoints();
-    console.log('Database tour points (positions 1-10):', tourPoints.slice(0, 10));
+    // Use DB-driven points config for gross points
+    const pointsConfig = await storage.getPointsConfig();
+    const tourPointsTable = pointsConfig.tour;
+    console.log('Database tour points (positions 1-10):', tourPointsTable.slice(0, 10));
     
     // Verify the T5 calculation
-    const t5Points = tourPoints.slice(4, 9); // Positions 5-9 (0-indexed)
+    const t5Points = tourPointsTable.slice(4, 9); // Positions 5-9 (0-indexed)
     console.log('T5 positions 5-9 points:', t5Points);
     const t5Average = t5Points.reduce((sum, points) => sum + points, 0) / 5;
     console.log('T5 average points:', t5Average);
@@ -86,8 +90,14 @@ async function fixLofotenWithDatabasePoints() {
       
       // Calculate points for this position using actual database values
       const points = numTiedPlayers === 1 
-        ? (currentPosition <= tourPoints.length ? tourPoints[currentPosition - 1] : 0.5)
-        : calculateTiePoints(currentPosition, numTiedPlayers, tourPoints);
+        ? getPointsFromConfig(currentPosition, tourPointsTable)
+        : (() => {
+            let totalPoints = 0;
+            for (let j = 0; j < numTiedPlayers; j++) {
+              totalPoints += getPointsFromConfig(currentPosition + j, tourPointsTable);
+            }
+            return totalPoints / numTiedPlayers;
+          })();
 
       console.log(`Position ${currentPosition}, ${numTiedPlayers} tied players, points: ${points}`);
 
