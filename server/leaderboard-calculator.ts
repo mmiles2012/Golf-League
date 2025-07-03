@@ -8,6 +8,14 @@ import type {
   PlayerWithHistory,
   PointsConfig 
 } from "@shared/schema";
+import { setTimeout as setTimeoutPromise } from 'timers/promises';
+
+// Simple in-memory cache for leaderboard results
+const leaderboardCache: {
+  net?: { data: PlayerWithHistory[]; expires: number };
+  gross?: { data: PlayerWithHistory[]; expires: number };
+} = {};
+const LEADERBOARD_CACHE_TTL_MS = 5* 60 * 1000; // 5 minutes
 
 export class LeaderboardCalculator {
   private pointsConfig: PointsConfig;
@@ -152,74 +160,90 @@ export class LeaderboardCalculator {
   }
 
   /**
-   * Generate net leaderboard with proper sorting
+   * Generate net leaderboard with proper sorting (batch DB, with cache)
    */
   async generateNetLeaderboard(): Promise<PlayerWithHistory[]> {
-    const allPlayers = await this.getAllPlayers();
+    const now = Date.now();
+    if (leaderboardCache.net && leaderboardCache.net.expires > now) {
+      return leaderboardCache.net.data;
+    }
+    // Batch fetch all players, results, and tournaments
+    const [allPlayers, allResults, allTournaments] = await Promise.all([
+      this.getAllPlayers(),
+      this.getAllPlayerResults(),
+      this.getAllTournaments()
+    ]);
+    const tournamentMap = new Map<number, Tournament>();
+    allTournaments.forEach((t: Tournament) => tournamentMap.set(t.id, t));
+    // Group results by playerId
+    const resultsByPlayer = new Map<number, PlayerResult[]>();
+    for (const result of allResults) {
+      if (!resultsByPlayer.has(result.playerId)) resultsByPlayer.set(result.playerId, []);
+      resultsByPlayer.get(result.playerId)!.push(result);
+    }
     const leaderboard: PlayerWithHistory[] = [];
-    
     for (const player of allPlayers) {
-      const playerHistory = await this.calculatePlayerHistory(player.id, 'net');
+      const results = resultsByPlayer.get(player.id) || [];
+      if (!results.length) continue;
+      const playerHistory = await this.calculatePlayerHistoryBatch(player, results, tournamentMap, 'net');
       if (playerHistory && (playerHistory.top8TotalPoints || 0) > 0) {
         leaderboard.push(playerHistory);
       }
     }
-    
-    // Sort by top 8 points (descending), then by player handicap (ascending - lower handicap wins ties)
     leaderboard.sort((a, b) => {
       const top8PointsA = a.top8TotalPoints || 0;
       const top8PointsB = b.top8TotalPoints || 0;
-      
-      if (top8PointsB !== top8PointsA) {
-        return top8PointsB - top8PointsA;
-      }
-      // Use player default handicap for tie-breaking (lower handicap wins)
+      if (top8PointsB !== top8PointsA) return top8PointsB - top8PointsA;
       const handicapA = a.player.defaultHandicap || 999;
       const handicapB = b.player.defaultHandicap || 999;
       return handicapA - handicapB;
     });
-    
-    // Assign ranks
-    leaderboard.forEach((player, index) => {
-      player.rank = index + 1;
-    });
-    
+    leaderboard.forEach((player, index) => { player.rank = index + 1; });
+    leaderboardCache.net = { data: leaderboard, expires: Date.now() + LEADERBOARD_CACHE_TTL_MS };
     return leaderboard;
   }
 
   /**
-   * Generate gross leaderboard with proper sorting
+   * Generate gross leaderboard with proper sorting (batch DB, with cache)
    */
   async generateGrossLeaderboard(): Promise<PlayerWithHistory[]> {
-    const allPlayers = await this.getAllPlayers();
+    const now = Date.now();
+    if (leaderboardCache.gross && leaderboardCache.gross.expires > now) {
+      return leaderboardCache.gross.data;
+    }
+    // Batch fetch all players, results, and tournaments
+    const [allPlayers, allResults, allTournaments] = await Promise.all([
+      this.getAllPlayers(),
+      this.getAllPlayerResults(),
+      this.getAllTournaments()
+    ]);
+    const tournamentMap = new Map<number, Tournament>();
+    allTournaments.forEach((t: Tournament) => tournamentMap.set(t.id, t));
+    // Group results by playerId
+    const resultsByPlayer = new Map<number, PlayerResult[]>();
+    for (const result of allResults) {
+      if (!resultsByPlayer.has(result.playerId)) resultsByPlayer.set(result.playerId, []);
+      resultsByPlayer.get(result.playerId)!.push(result);
+    }
     const leaderboard: PlayerWithHistory[] = [];
-    
     for (const player of allPlayers) {
-      const playerHistory = await this.calculatePlayerHistory(player.id, 'gross');
+      const results = resultsByPlayer.get(player.id) || [];
+      if (!results.length) continue;
+      const playerHistory = await this.calculatePlayerHistoryBatch(player, results, tournamentMap, 'gross');
       if (playerHistory && (playerHistory.grossTop8TotalPoints || 0) > 0) {
         leaderboard.push(playerHistory);
       }
     }
-    
-    // Sort by gross top 8 points (descending), then by player handicap (ascending - lower handicap wins ties)
     leaderboard.sort((a, b) => {
       const grossTop8PointsA = a.grossTop8TotalPoints || 0;
       const grossTop8PointsB = b.grossTop8TotalPoints || 0;
-      
-      if (grossTop8PointsB !== grossTop8PointsA) {
-        return grossTop8PointsB - grossTop8PointsA;
-      }
-      // Use player default handicap for tie-breaking (lower handicap wins)
+      if (grossTop8PointsB !== grossTop8PointsA) return grossTop8PointsB - grossTop8PointsA;
       const handicapA = a.player.defaultHandicap || 999;
       const handicapB = b.player.defaultHandicap || 999;
       return handicapA - handicapB;
     });
-    
-    // Assign ranks
-    leaderboard.forEach((player, index) => {
-      player.rank = index + 1;
-    });
-    
+    leaderboard.forEach((player, index) => { player.rank = index + 1; });
+    leaderboardCache.gross = { data: leaderboard, expires: Date.now() + LEADERBOARD_CACHE_TTL_MS };
     return leaderboard;
   }
 
@@ -315,5 +339,124 @@ export class LeaderboardCalculator {
     })
       .from(playerResults)
       .where(eq(playerResults.playerId, playerId));
+  }
+
+  private async getAllPlayerResults(): Promise<PlayerResult[]> {
+    return db.select({
+      id: playerResults.id,
+      playerId: playerResults.playerId,
+      tournamentId: playerResults.tournamentId,
+      position: playerResults.position,
+      grossPosition: playerResults.grossPosition,
+      grossScore: playerResults.grossScore,
+      netScore: playerResults.netScore,
+      handicap: playerResults.handicap,
+      points: playerResults.points,
+      grossPoints: playerResults.grossPoints,
+      createdAt: playerResults.createdAt,
+    }).from(playerResults);
+  }
+  private async getAllTournaments(): Promise<Tournament[]> {
+    return db.select().from(tournaments);
+  }
+
+  // Batch version of calculatePlayerHistory
+  private async calculatePlayerHistoryBatch(player: Player, results: PlayerResult[], tournamentMap: Map<number, Tournament>, scoreType: 'net' | 'gross'): Promise<PlayerWithHistory | undefined> {
+    if (!results.length) return undefined;
+
+    const tournamentDetails = [];
+    let totalPoints = 0;
+    let majorPoints = 0;
+    let tourPoints = 0;
+    let leaguePoints = 0;
+    let suprPoints = 0;
+    let totalNetScores = 0;
+    let totalGrossScores = 0;
+    let scoreCount = 0;
+
+    for (const result of results) {
+      const tournament = tournamentMap.get(result.tournamentId);
+      if (!tournament) continue;
+
+      const netScore = result.netScore;
+      const grossScore = result.netScore !== null && result.handicap !== null ? result.netScore + result.handicap : null;
+
+      if (netScore !== null) {
+        totalNetScores += netScore;
+        if (grossScore !== null) totalGrossScores += grossScore;
+        scoreCount++;
+      }
+
+      const pointsToUse = scoreType === 'gross' ? (result.grossPoints || 0) : (result.points || 0);
+
+      const tournamentDetail = {
+        id: result.id,
+        tournamentId: tournament.id,
+        tournamentName: tournament.name,
+        tournamentDate: tournament.date,
+        tournamentType: tournament.type,
+        position: result.position,
+        grossPosition: result.grossPosition || result.position,
+        netScore: netScore,
+        grossScore: grossScore,
+        handicap: result.handicap,
+        points: pointsToUse,
+        grossPoints: result.grossPoints || 0,
+        netPoints: result.points || 0
+      };
+
+      tournamentDetails.push(tournamentDetail);
+      totalPoints += pointsToUse;
+
+      switch (tournament.type) {
+        case 'major': majorPoints += pointsToUse; break;
+        case 'tour': tourPoints += pointsToUse; break;
+        case 'league': leaguePoints += pointsToUse; break;
+        case 'supr': suprPoints += pointsToUse; break;
+      }
+    }
+
+    const averageNetScore = scoreCount > 0 ? totalNetScores / scoreCount : 0;
+    const averageGrossScore = scoreCount > 0 ? totalGrossScores / scoreCount : 0;
+
+    const resultObj: any = {
+      player: {
+        id: player.id,
+        name: player.name,
+        email: player.email,
+        defaultHandicap: player.defaultHandicap
+      },
+      tournaments: tournamentDetails,
+      totalPoints,
+      majorPoints,
+      tourPoints,
+      leaguePoints,
+      suprPoints,
+      totalEvents: tournamentDetails.length,
+      rank: 0,
+      averageNetScore,
+      averageGrossScore,
+      averageScore: scoreType === 'net' ? averageNetScore : averageGrossScore
+    };
+
+    const top8Results = this.calculateTop8Points(tournamentDetails, scoreType);
+
+    if (scoreType === 'gross') {
+      return {
+        ...resultObj,
+        grossTotalPoints: totalPoints,
+        grossTourPoints: tourPoints,
+        grossTop8TotalPoints: top8Results.totalPoints,
+        grossTop8TourPoints: top8Results.tourPoints,
+        grossTop8MajorPoints: top8Results.majorPoints
+      };
+    }
+
+    return {
+      ...resultObj,
+      top8TotalPoints: top8Results.totalPoints,
+      top8TourPoints: top8Results.tourPoints,
+      top8MajorPoints: top8Results.majorPoints
+    };
   }
 }
