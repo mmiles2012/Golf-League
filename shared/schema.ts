@@ -23,9 +23,8 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  role: varchar("role").default("player").notNull(), // player, admin, super_admin
-  displayName: varchar("display_name"),
-  homeClub: varchar("home_club"),
+  role: varchar("role", { enum: ["player", "admin", "super_admin"] }).default("player").notNull(),
+  homeClub: varchar("home_club", { length: 32 }).notNull(),
   friendsList: text("friends_list").array().default([]),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
@@ -293,19 +292,19 @@ export const upsertUserSchema = createInsertSchema(users).omit({
 }).extend({
   id: z.string(),
   email: z.string().email().optional().nullable(),
-  firstName: z.string().optional().nullable(),
-  lastName: z.string().optional().nullable(),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
   profileImageUrl: z.string().url().optional().nullable(),
-  role: z.enum(['player', 'admin', 'super_admin']).default('player'),
-  displayName: z.string().optional().nullable(),
-  homeClub: z.string().optional().nullable(),
+  role: z.enum(["player", "admin", "super_admin"]).default("player"),
+  homeClub: z.string().min(1, "Home club is required"),
   friendsList: z.array(z.string()).default([]),
   isActive: z.boolean().default(true),
 });
 
 export const updateUserProfileSchema = z.object({
-  displayName: z.string().min(1, "Display name is required"),
-  homeClub: z.string().optional(),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  homeClub: z.string().min(1, "Home club is required"),
   friendsList: z.array(z.string()).optional().default([]),
 });
 
@@ -330,3 +329,11 @@ export type PlayerProfileLink = z.infer<typeof playerProfileLinkSchema>;
 export type PlayerProfile = typeof playerProfiles.$inferSelect;
 export type PlayerLinkRequest = typeof playerLinkRequests.$inferSelect;
 export type InsertPlayerLinkRequest = z.infer<typeof playerLinkRequestSchema>;
+
+// Home club options table (editable by super-admin)
+export const homeClubOptionsTable = pgTable("home_club_options", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 32 }).unique().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});

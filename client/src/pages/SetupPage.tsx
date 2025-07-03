@@ -35,6 +35,49 @@ export default function SetupPage() {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [pendingSettings, setPendingSettings] = useState<AppSettings | null>(null);
+
+  // --- Home Club Options Management (Super-Admin Only) ---
+  // Placeholder: Replace with real user/role context
+  const isSuperAdmin = true; // TODO: Replace with real check
+
+  // Fetch home club options from backend
+  const { data: homeClubOptions = [], refetch: refetchHomeClubs } = useQuery<string[]>({
+    queryKey: ["/api/home-club-options"],
+  });
+  const [editedHomeClubs, setEditedHomeClubs] = useState<string[]>([]);
+  const [showHomeClubModal, setShowHomeClubModal] = useState(false);
+  const [pendingHomeClubs, setPendingHomeClubs] = useState<string[]>([]);
+
+  // Sync local state with backend
+  useEffect(() => {
+    if (homeClubOptions.length) setEditedHomeClubs(homeClubOptions);
+  }, [homeClubOptions]);
+
+  const handleHomeClubChange = (idx: number, value: string) => {
+    setEditedHomeClubs(clubs => clubs.map((c, i) => (i === idx ? value : c)));
+  };
+  const handleAddHomeClub = () => setEditedHomeClubs(clubs => [...clubs, ""]);
+  const handleRemoveHomeClub = (idx: number) => setEditedHomeClubs(clubs => clubs.filter((_, i) => i !== idx));
+
+  const saveHomeClubsMutation = useMutation({
+    mutationFn: async (clubs: string[]) => apiRequest("PUT", "/api/home-club-options", { options: clubs }),
+    onSuccess: () => {
+      toast({ title: "Home clubs updated", description: "Home club options have been updated." });
+      refetchHomeClubs();
+      setShowHomeClubModal(false);
+    },
+    onError: () => toast({ title: "Error", description: "Failed to update home club options.", variant: "destructive" })
+  });
+
+  const handleSaveHomeClubs = () => {
+    setPendingHomeClubs(editedHomeClubs);
+    setShowHomeClubModal(true);
+  };
+  const confirmSaveHomeClubs = () => {
+    saveHomeClubsMutation.mutate(pendingHomeClubs);
+  };
 
   // Fetch current settings
   const { data: currentSettings, isLoading, isError } = useQuery<AppSettings>({
@@ -136,15 +179,31 @@ export default function SetupPage() {
     }
   });
 
-  // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Handle form submit with confirmation modal
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setPendingSettings(settings);
+    setShowSettingsModal(true);
+  };
+
+  // Actual save logic (replace with your mutation logic as needed)
+  const saveSettings = async (settingsToSave: AppSettings) => {
     setIsSaving(true);
-    
     try {
-      await saveMutation.mutateAsync();
+      // Replace with your mutation or API call
+      await apiRequest("PUT", "/api/settings", settingsToSave);
+      toast({ title: "Settings updated", description: "App settings have been updated." });
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to update app settings.", variant: "destructive" });
     } finally {
       setIsSaving(false);
+      setShowSettingsModal(false);
+    }
+  };
+
+  const confirmSaveSettings = () => {
+    if (pendingSettings) {
+      saveSettings(pendingSettings);
     }
   };
 
@@ -292,6 +351,32 @@ export default function SetupPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Home Club Options Card (Super-Admin Only) */}
+          {isSuperAdmin && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Home Club Options</CardTitle>
+                <CardDescription>Manage the list of selectable home clubs for player profiles</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {editedHomeClubs.map((club, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <Input
+                      value={club}
+                      onChange={e => handleHomeClubChange(idx, e.target.value)}
+                      placeholder="Enter club name"
+                      className="flex-1"
+                      disabled={isSaving}
+                    />
+                    <Button type="button" variant="destructive" onClick={() => handleRemoveHomeClub(idx)} disabled={isSaving}>Remove</Button>
+                  </div>
+                ))}
+                <Button type="button" onClick={handleAddHomeClub} disabled={isSaving}>Add Club</Button>
+                <Button type="button" onClick={handleSaveHomeClubs} disabled={isSaving || saveHomeClubsMutation.isLoading} className="ml-2">Save Home Clubs</Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <div className="mt-6 flex justify-end">
@@ -314,6 +399,38 @@ export default function SetupPage() {
           </Button>
         </div>
       </form>
+
+      {/* Modal confirmation for app settings changes */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
+            <h2 className="text-xl font-bold mb-4">Are you sure?</h2>
+            <p className="mb-4">Changing core application settings (branding, display, scoring) will affect all users. This action cannot be undone easily. Proceed?</p>
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => setShowSettingsModal(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={confirmSaveSettings} disabled={isSaving}>
+                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Yes, Save"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal confirmation for home club changes */}
+      {showHomeClubModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
+            <h2 className="text-xl font-bold mb-4">Are you sure?</h2>
+            <p className="mb-4">Changing home club options will affect all player profiles. This action cannot be undone easily. Proceed?</p>
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => setShowHomeClubModal(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={confirmSaveHomeClubs} disabled={saveHomeClubsMutation.isLoading}>
+                {saveHomeClubsMutation.isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Yes, Save"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
