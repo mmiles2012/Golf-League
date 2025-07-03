@@ -7,6 +7,8 @@ import { tournamentUploadSchema, manualEntrySchema, editTournamentSchema, insert
 import { TieHandler } from "./tie-handler";
 import { calculatePoints, calculateGrossPoints } from "./utils";
 import { setupAuth, isAuthenticated, requireRole } from "./replitAuth";
+import { adminRecalcHandler } from './admin-api';
+import { adminRecalcLogsHandler } from './admin-recalc-logs-api';
 
 // Set up multer for file uploads
 const upload = multer({
@@ -1375,6 +1377,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to upload logo" });
     }
   });
+  
+  // Admin recalculation endpoints
+  app.post('/api/admin/recalculate', requireRole('admin'), adminRecalcHandler);
+  app.get('/api/admin/recalculate-logs', requireRole('super_admin'), adminRecalcLogsHandler);
   
   const httpServer = createServer(app);
   return httpServer;
