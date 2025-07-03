@@ -11,6 +11,16 @@ import type {
 import { setTimeout as setTimeoutPromise } from 'timers/promises';
 import { calculatePoints } from "./points-utils";
 
+/**
+ * Enum for supported tournament types
+ */
+enum TournamentType {
+  Major = 'major',
+  Tour = 'tour',
+  League = 'league',
+  Supr = 'supr'
+}
+
 // Simple in-memory cache for leaderboard results
 const leaderboardCache: {
   net?: { data: PlayerWithHistory[]; expires: number };
@@ -27,6 +37,9 @@ export class LeaderboardCalculator {
 
   /**
    * Calculate player history for either net or gross scoring
+   * @param playerId Player ID
+   * @param scoreType 'net' or 'gross'
+   * @returns PlayerWithHistory or undefined if no results
    */
   async calculatePlayerHistory(playerId: number, scoreType: 'net' | 'gross'): Promise<PlayerWithHistory | undefined> {
     const player = await this.getPlayer(playerId);
@@ -162,6 +175,7 @@ export class LeaderboardCalculator {
 
   /**
    * Generate net leaderboard with proper sorting (batch DB, with cache)
+   * @returns Array of PlayerWithHistory sorted by top 8 net points
    */
   async generateNetLeaderboard(): Promise<PlayerWithHistory[]> {
     const now = Date.now();
@@ -206,6 +220,7 @@ export class LeaderboardCalculator {
 
   /**
    * Generate gross leaderboard with proper sorting (batch DB, with cache)
+   * @returns Array of PlayerWithHistory sorted by top 8 gross points
    */
   async generateGrossLeaderboard(): Promise<PlayerWithHistory[]> {
     const now = Date.now();
@@ -250,8 +265,19 @@ export class LeaderboardCalculator {
 
   /**
    * Calculate top 8 events points from tournament details
+   * @param tournamentDetails Array of tournament result details for a player
+   * @param scoreType 'net' or 'gross' - determines which points field to use
+   * @returns Object with totalPoints, majorPoints, and tourPoints for top 8 events
    */
-  private calculateTop8Points(tournamentDetails: any[], scoreType: 'net' | 'gross'): {
+  private calculateTop8Points(
+    tournamentDetails: Array<{
+      [key: string]: any;
+      points: number;
+      grossPoints: number;
+      tournamentType: string;
+    }>,
+    scoreType: 'net' | 'gross'
+  ): {
     totalPoints: number;
     majorPoints: number;
     tourPoints: number;
@@ -295,21 +321,39 @@ export class LeaderboardCalculator {
   /**
    * Calculate points for a given position and tournament type
    * (Replaced with shared utility)
+   * @param position Player's finishing position
+   * @param tournamentType Type of tournament (major, tour, league, supr)
+   * @returns Points awarded for the position and tournament type
    */
   calculatePointsForPosition(position: number, tournamentType: string): number {
-    return calculatePoints(position, tournamentType as any, this.pointsConfig[tournamentType as keyof PointsConfig]);
+    // Use TournamentType type union for safety
+    if (!['major', 'tour', 'league', 'supr'].includes(tournamentType)) return 0;
+    return calculatePoints(
+      Number(position),
+      tournamentType as TournamentType,
+      this.pointsConfig[tournamentType as keyof PointsConfig]
+    );
   }
 
   // Helper methods for database access
+  /**
+   * Get a player by ID
+   */
   private async getPlayer(id: number): Promise<Player | undefined> {
     const [player] = await db.select().from(players).where(eq(players.id, id));
     return player;
   }
 
+  /**
+   * Get all players
+   */
   private async getAllPlayers(): Promise<Player[]> {
     return db.select().from(players).orderBy(players.name);
   }
 
+  /**
+   * Get all results for a player
+   */
   private async getPlayerResults(playerId: number): Promise<PlayerResult[]> {
     return db.select({
       id: playerResults.id,
@@ -328,6 +372,9 @@ export class LeaderboardCalculator {
       .where(eq(playerResults.playerId, playerId));
   }
 
+  /**
+   * Get all player results
+   */
   private async getAllPlayerResults(): Promise<PlayerResult[]> {
     return db.select({
       id: playerResults.id,
@@ -343,12 +390,27 @@ export class LeaderboardCalculator {
       createdAt: playerResults.createdAt,
     }).from(playerResults);
   }
+  /**
+   * Get all tournaments
+   */
   private async getAllTournaments(): Promise<Tournament[]> {
     return db.select().from(tournaments);
   }
 
-  // Batch version of calculatePlayerHistory
-  private async calculatePlayerHistoryBatch(player: Player, results: PlayerResult[], tournamentMap: Map<number, Tournament>, scoreType: 'net' | 'gross'): Promise<PlayerWithHistory | undefined> {
+  /**
+   * Batch version of calculatePlayerHistory for leaderboard generation
+   * @param player Player object
+   * @param results Array of PlayerResult
+   * @param tournamentMap Map of tournamentId to Tournament
+   * @param scoreType 'net' or 'gross'
+   * @returns PlayerWithHistory or undefined
+   */
+  private async calculatePlayerHistoryBatch(
+    player: Player,
+    results: PlayerResult[],
+    tournamentMap: Map<number, Tournament>,
+    scoreType: 'net' | 'gross'
+  ): Promise<PlayerWithHistory | undefined> {
     if (!results.length) return undefined;
 
     const tournamentDetails = [];
