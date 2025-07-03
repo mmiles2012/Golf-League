@@ -134,16 +134,16 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
             <table className="w-full text-sm text-left border-separate border-spacing-0">
               <thead className="bg-neutral-100 sticky top-0 z-10">
                 <tr>
-                  <th className="py-2 pl-5 pr-2 font-semibold text-neutral-700 min-w-[200px] text-left sticky left-0 bg-white z-20">Tournament</th>
-                  <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[100px] text-left">Date</th>
-                  <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[80px] text-left">Type</th>
-                  <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[80px] text-center">Net Pos</th>
-                  <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[90px] text-center">Gross Pos</th>
-                  <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[70px] text-center">Gross</th>
-                  <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[70px] text-center">Net</th>
-                  <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[90px] text-center">Handicap</th>
-                  <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[90px] text-center">Gross Points</th>
-                  <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[90px] text-center">Net Points</th>
+                  <th className="py-3 pl-5 pr-2 font-semibold text-neutral-700 min-w-[200px] text-left sticky left-0 bg-white z-20">Tournament</th>
+                  <th className="px-4 py-3 font-semibold text-neutral-700 min-w-[100px] text-left">Date</th>
+                  <th className="px-4 py-3 font-semibold text-neutral-700 min-w-[80px] text-left">Type</th>
+                  <th className="px-4 py-3 font-semibold text-neutral-700 min-w-[80px] text-center">Net Pos</th>
+                  <th className="px-4 py-3 font-semibold text-neutral-700 min-w-[90px] text-center">Gross Pos</th>
+                  <th className="px-4 py-3 font-semibold text-neutral-700 min-w-[70px] text-center">Gross</th>
+                  <th className="px-4 py-3 font-semibold text-neutral-700 min-w-[70px] text-center">Net</th>
+                  <th className="px-4 py-3 font-semibold text-neutral-700 min-w-[90px] text-center">Handicap</th>
+                  <th className="px-4 py-3 font-semibold text-neutral-700 min-w-[90px] text-center">Gross Points</th>
+                  <th className="px-4 py-3 font-semibold text-neutral-700 min-w-[90px] text-center">Net Points</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-200">
@@ -153,31 +153,31 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
                       <td className="py-3 pl-5 pr-2 whitespace-nowrap">
                         <Skeleton className="h-5 w-40" />
                       </td>
-                      <td className="px-2 py-3 whitespace-nowrap">
+                      <td className="px-4 py-3 whitespace-nowrap">
                         <Skeleton className="h-5 w-24" />
                       </td>
-                      <td className="px-2 py-3 whitespace-nowrap">
+                      <td className="px-4 py-3 whitespace-nowrap">
                         <Skeleton className="h-5 w-16" />
                       </td>
-                      <td className="px-2 py-3 whitespace-nowrap text-center">
+                      <td className="px-4 py-3 whitespace-nowrap text-center">
                         <Skeleton className="h-5 w-8 mx-auto" />
                       </td>
-                      <td className="px-2 py-3 whitespace-nowrap text-center">
+                      <td className="px-4 py-3 whitespace-nowrap text-center">
                         <Skeleton className="h-5 w-8 mx-auto" />
                       </td>
-                      <td className="px-2 py-3 whitespace-nowrap text-center">
+                      <td className="px-4 py-3 whitespace-nowrap text-center">
                         <Skeleton className="h-5 w-12 mx-auto" />
                       </td>
-                      <td className="px-2 py-3 whitespace-nowrap text-center">
+                      <td className="px-4 py-3 whitespace-nowrap text-center">
                         <Skeleton className="h-5 w-12 mx-auto" />
                       </td>
-                      <td className="px-2 py-3 whitespace-nowrap text-center">
+                      <td className="px-4 py-3 whitespace-nowrap text-center">
                         <Skeleton className="h-5 w-12 mx-auto" />
                       </td>
-                      <td className="px-2 py-3 whitespace-nowrap text-center">
+                      <td className="px-4 py-3 whitespace-nowrap text-center">
                         <Skeleton className="h-5 w-12 mx-auto" />
                       </td>
-                      <td className="px-2 py-3 whitespace-nowrap text-center">
+                      <td className="px-4 py-3 whitespace-nowrap text-center">
                         <Skeleton className="h-5 w-12 mx-auto" />
                       </td>
                     </tr>
@@ -187,48 +187,48 @@ export default function PlayerProfile({ id }: PlayerProfileProps) {
                   [...playerHistory.tournaments]
                     .sort((a, b) => new Date(b.tournamentDate).getTime() - new Date(a.tournamentDate).getTime())
                     .map((tournament) => (
-                      <tr key={tournament.id}>
+                      <tr key={tournament.id} className="hover:bg-neutral-50 transition-colors">
                         <td className="py-3 pl-5 pr-2 whitespace-nowrap text-sm font-medium">
                           {tournament.tournamentName}
                         </td>
-                        <td className="px-2 py-3 whitespace-nowrap text-sm">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm">
                           {formatDate(tournament.tournamentDate)}
                         </td>
-                        <td className="px-2 py-3 whitespace-nowrap text-sm">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm">
                           <Badge variant={getTournamentTypeVariant(tournament.tournamentType)}>
                             {tournament.tournamentType.charAt(0).toUpperCase() + tournament.tournamentType.slice(1)}
                           </Badge>
                         </td>
-                        <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
                           {tournament.position}
                         </td>
-                        <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
                           {tournament.grossPosition || "N/A"}
                         </td>
-                        <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
                           {tournament.grossScore || "N/A"}
                         </td>
-                        <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
                           {tournament.netScore || "N/A"}
                         </td>
-                        <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
                           {tournament.handicap !== undefined && tournament.handicap !== null
                             ? (tournament.handicap > 0 && tournament.grossScore != null && tournament.netScore != null && tournament.grossScore < tournament.netScore
                                 ? `+${tournament.handicap}`
                                 : tournament.handicap)
                             : "N/A"}
                         </td>
-                        <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
                           {tournament.grossPoints || "0"}
                         </td>
-                        <td className="px-2 py-3 whitespace-nowrap text-sm text-center">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
                           {tournament.points || "0"}
                         </td>
                       </tr>
                     ))
                 ) : (
                   <tr>
-                    <td colSpan={8} className="py-6 text-center text-neutral-500">
+                    <td colSpan={10} className="py-6 text-center text-neutral-500">
                       No tournament history available
                     </td>
                   </tr>

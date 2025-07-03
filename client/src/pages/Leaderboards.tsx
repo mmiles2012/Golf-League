@@ -10,15 +10,14 @@ import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { PlayerWithHistory, AppSettings } from "@shared/schema";
 import PlayerDetailsModal from "@/components/custom/PlayerDetailsModal";
-import { FileDown, Printer } from "lucide-react";
+import { FileDown, Printer, ChevronUp, ChevronDown } from "lucide-react";
 import { useReactTable, getCoreRowModel, getSortedRowModel, flexRender } from '@tanstack/react-table';
 
 export default function Leaderboards() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("net");
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
   const [isPlayerDetailsOpen, setIsPlayerDetailsOpen] = useState(false);
-  const [sorting, setSorting] = useState([]);
+  const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([]);
   const [page, setPage] = useState(0);
   const rowsPerPage = 25;
 
@@ -38,23 +37,38 @@ export default function Leaderboards() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
   
+  // --- Sorting logic ---
+  const [sortingKey, setSortingKey] = useState<string>('rank');
+  const [sortingDesc, setSortingDesc] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<string>('net');
+  const [leaderboardData, setLeaderboardData] = useState<PlayerWithHistory[]>([]); // or fetch from props/context
+
+  const handleSort = (key: string) => {
+    if (sortingKey === key) {
+      setSortingDesc(!sortingDesc);
+    } else {
+      setSortingKey(key);
+      setSortingDesc(false);
+    }
+  };
+
+  const handlePlayerClick = (id: number) => {
+    setSelectedPlayerId(id);
+    setIsPlayerDetailsOpen(true);
+  };
+
   // Use the appropriate data source based on active tab
-  const leaderboardData = activeTab === "net" ? netLeaderboardData : grossLeaderboardData;
+  const data = activeTab === "net" ? netLeaderboardData : grossLeaderboardData;
   const isLoading = activeTab === "net" ? isNetLoading : isGrossLoading;
 
   // Diagnostic: log a sample row and total count
-  if (leaderboardData && leaderboardData.length > 0) {
-    console.log("Sample leaderboard row:", leaderboardData[0]);
-    console.log("Total leaderboard rows:", leaderboardData.length);
+  if (data && data.length > 0) {
+    console.log("Sample leaderboard row:", data[0]);
+    console.log("Total leaderboard rows:", data.length);
   }
   
-  const handlePlayerClick = (playerId: number) => {
-    setSelectedPlayerId(playerId);
-    setIsPlayerDetailsOpen(true);
-  };
-  
   const exportToCSV = () => {
-    if (!leaderboardData) return;
+    if (!data) return;
     
     // Create CSV content
     const isGross = activeTab === "gross";
@@ -62,7 +76,7 @@ export default function Leaderboards() {
       ? ['Rank', 'Player', 'Gross Points', 'Gross Tour Points', 'League Points', 'SUPR Points', 'Events']
       : ['Rank', 'Player', 'Major Points', 'Tour Points', 'League Points', 'SUPR Points', 'Events', 'Total Points'];
     
-    const rows = leaderboardData.map(player => isGross
+    const rows = data.map(player => isGross
       ? [
           player.rank,
           player.player.name,
@@ -110,43 +124,108 @@ export default function Leaderboards() {
     window.print();
   };
   
-  // Define columns for DataTable
-  const getColumns = (): ColumnDef<PlayerWithHistory>[] => {
-    // Base columns that exclude Events as it will be positioned near Total Points
-    const baseColumns: ColumnDef<PlayerWithHistory>[] = [
+  // --- Column sort indicator helper ---
+  const SortIndicator = ({ isSorted, isSortedDesc }: { isSorted: boolean, isSortedDesc: boolean }) => (
+    isSorted ? (
+      <span className="ml-1 inline-block align-middle">
+        {isSortedDesc ? '▼' : '▲'}
+      </span>
+    ) : null
+  );
+
+  // --- Table columns ---
+  const getColumns = (
+    handleSortFn: (key: string) => void,
+    sortingKeyVal: string,
+    sortingDescVal: boolean,
+    handlePlayerClick: (id: number) => void,
+    activeTab: string
+  ): Array<{
+    accessorKey?: string;
+    header: () => React.ReactNode;
+    cell: (row: PlayerWithHistory) => React.ReactNode;
+  }> => {
+    const playerCell = (row: PlayerWithHistory) => (
+      <button
+        className="text-primary underline font-semibold hover:text-primary-700 focus:outline-none focus:ring-2 focus:ring-primary px-1 py-0.5 rounded"
+        onClick={() => handlePlayerClick(row.player.id)}
+        tabIndex={0}
+        aria-label={`View details for ${row.player.name}`}
+      >
+        {row.player.name}
+      </button>
+    );
+
+    const baseColumns = [
       {
         accessorKey: "rank",
-        header: "Pos",
-        cell: ({ row }) => <div className="font-medium">{row.original.rank}</div>,
-        size: 60,
+        header: () => (
+          <button
+            className="flex items-center w-full px-2 py-1 font-semibold text-neutral-700 bg-transparent hover:bg-neutral-200 rounded focus:outline-none"
+            onClick={() => handleSortFn('rank')}
+          >
+            Pos
+            <SortIndicator isSorted={sortingKeyVal === 'rank'} isSortedDesc={sortingDescVal} />
+          </button>
+        ),
+        cell: (row: PlayerWithHistory) => <div className="font-medium text-center min-w-[48px]">{row.rank}</div>,
       },
       {
         accessorKey: "player.name",
-        header: "Player",
-        cell: ({ row }) => <div className="font-medium">{row.original.player.name}</div>,
-        enableSorting: true,
+        header: () => (
+          <button
+            className="flex items-center w-full px-2 py-1 font-semibold text-neutral-700 bg-transparent hover:bg-neutral-200 rounded focus:outline-none"
+            onClick={() => handleSortFn('player.name')}
+          >
+            Player
+            <SortIndicator isSorted={sortingKeyVal === 'player.name'} isSortedDesc={sortingDescVal} />
+          </button>
+        ),
+        cell: playerCell,
       },
       {
         accessorKey: "majorPoints",
-        header: "Major",
-        cell: ({ row }) => <div className="text-center">{row.original.majorPoints.toLocaleString()}</div>,
-        enableSorting: true,
-        size: 80,
+        header: () => (
+          <button
+            className="flex items-center w-full px-2 py-1 font-semibold text-neutral-700 bg-transparent hover:bg-neutral-200 rounded focus:outline-none"
+            onClick={() => handleSortFn('majorPoints')}
+          >
+            Major
+            <SortIndicator isSorted={sortingKeyVal === 'majorPoints'} isSortedDesc={sortingDescVal} />
+          </button>
+        ),
+        cell: (row: PlayerWithHistory) => <div className="text-center min-w-[60px]">{row.majorPoints?.toLocaleString() ?? 0}</div>,
       },
     ];
-    
+
     if (activeTab === "net") {
       const rankAndPlayerColumns = baseColumns.slice(0, 2);
-      const overallPointsColumn: ColumnDef<PlayerWithHistory> = {
+      const overallPointsColumn = {
         accessorKey: "top8TotalPoints",
-        header: "Overall Points",
-        cell: ({ row }) => <div className="font-bold text-right">{(row.original.top8TotalPoints || 0).toLocaleString()}</div>,
+        header: () => (
+          <button
+            className="flex items-center w-full px-2 py-1 font-semibold text-neutral-700 bg-transparent hover:bg-neutral-200 rounded focus:outline-none"
+            onClick={() => handleSortFn('top8TotalPoints')}
+          >
+            Overall Points
+            <SortIndicator isSorted={sortingKeyVal === 'top8TotalPoints'} isSortedDesc={sortingDescVal} />
+          </button>
+        ),
+        cell: (row: PlayerWithHistory) => <div className="font-bold text-right min-w-[80px]">{(row.top8TotalPoints || 0).toLocaleString()}</div>,
         enableSorting: true,
       };
-      const eventsColumn: ColumnDef<PlayerWithHistory> = {
+      const eventsColumn = {
         accessorKey: "totalEvents",
-        header: "Events",
-        cell: ({ row }) => <div className="text-center">{row.original.totalEvents}</div>,
+        header: () => (
+          <button
+            className="flex items-center w-full px-2 py-1 font-semibold text-neutral-700 bg-transparent hover:bg-neutral-200 rounded focus:outline-none"
+            onClick={() => handleSortFn('totalEvents')}
+          >
+            Events
+            <SortIndicator isSorted={sortingKeyVal === 'totalEvents'} isSortedDesc={sortingDescVal} />
+          </button>
+        ),
+        cell: (row: PlayerWithHistory) => <div className="text-center min-w-[60px]">{row.totalEvents}</div>,
         enableSorting: true,
         size: 80,
       };
@@ -158,37 +237,77 @@ export default function Leaderboards() {
         ...remainingColumns,
         {
           accessorKey: "tourPoints",
-          header: "Tour",
-          cell: ({ row }) => <div className="text-center">{row.original.tourPoints.toLocaleString()}</div>,
+          header: () => (
+            <button
+              className="flex items-center w-full px-2 py-1 font-semibold text-neutral-700 bg-transparent hover:bg-neutral-200 rounded focus:outline-none"
+              onClick={() => handleSortFn('tourPoints')}
+            >
+              Tour
+              <SortIndicator isSorted={sortingKeyVal === 'tourPoints'} isSortedDesc={sortingDescVal} />
+            </button>
+          ),
+          cell: (row: PlayerWithHistory) => <div className="text-center min-w-[60px]">{row.tourPoints?.toLocaleString() ?? 0}</div>,
           enableSorting: true,
           size: 80,
         },
         {
           accessorKey: "leaguePoints",
-          header: "League",
-          cell: ({ row }) => <div className="text-center">{row.original.leaguePoints.toLocaleString()}</div>,
+          header: () => (
+            <button
+              className="flex items-center w-full px-2 py-1 font-semibold text-neutral-700 bg-transparent hover:bg-neutral-200 rounded focus:outline-none"
+              onClick={() => handleSortFn('leaguePoints')}
+            >
+              League
+              <SortIndicator isSorted={sortingKeyVal === 'leaguePoints'} isSortedDesc={sortingDescVal} />
+            </button>
+          ),
+          cell: (row: PlayerWithHistory) => <div className="text-center min-w-[60px]">{row.leaguePoints?.toLocaleString() ?? 0}</div>,
           enableSorting: true,
         },
         {
           accessorKey: "suprPoints",
-          header: "SUPR",
-          cell: ({ row }) => <div className="text-center">{row.original.suprPoints.toLocaleString()}</div>,
+          header: () => (
+            <button
+              className="flex items-center w-full px-2 py-1 font-semibold text-neutral-700 bg-transparent hover:bg-neutral-200 rounded focus:outline-none"
+              onClick={() => handleSortFn('suprPoints')}
+            >
+              SUPR
+              <SortIndicator isSorted={sortingKeyVal === 'suprPoints'} isSortedDesc={sortingDescVal} />
+            </button>
+          ),
+          cell: (row: PlayerWithHistory) => <div className="text-center min-w-[60px]">{row.suprPoints?.toLocaleString() ?? 0}</div>,
           enableSorting: true,
           size: 80,
         },
       ];
     } else {
       const rankAndPlayerColumns = baseColumns.slice(0, 2);
-      const overallPointsColumn: ColumnDef<PlayerWithHistory> = {
+      const overallPointsColumn = {
         accessorKey: "grossTop8TotalPoints",
-        header: "Overall Points",
-        cell: ({ row }) => <div className="font-bold text-right">{(row.original.grossTop8TotalPoints || 0).toLocaleString()}</div>,
+        header: () => (
+          <button
+            className="flex items-center w-full px-2 py-1 font-semibold text-neutral-700 bg-transparent hover:bg-neutral-200 rounded focus:outline-none"
+            onClick={() => handleSortFn('grossTop8TotalPoints')}
+          >
+            Overall Points
+            <SortIndicator isSorted={sortingKeyVal === 'grossTop8TotalPoints'} isSortedDesc={sortingDescVal} />
+          </button>
+        ),
+        cell: (row: PlayerWithHistory) => <div className="font-bold text-right min-w-[80px]">{(row.grossTop8TotalPoints || 0).toLocaleString()}</div>,
         enableSorting: true,
       };
-      const eventsColumn: ColumnDef<PlayerWithHistory> = {
+      const eventsColumn = {
         accessorKey: "totalEvents",
-        header: "Events",
-        cell: ({ row }) => <div className="text-center">{row.original.totalEvents}</div>,
+        header: () => (
+          <button
+            className="flex items-center w-full px-2 py-1 font-semibold text-neutral-700 bg-transparent hover:bg-neutral-200 rounded focus:outline-none"
+            onClick={() => handleSortFn('totalEvents')}
+          >
+            Events
+            <SortIndicator isSorted={sortingKeyVal === 'totalEvents'} isSortedDesc={sortingDescVal} />
+          </button>
+        ),
+        cell: (row: PlayerWithHistory) => <div className="text-center min-w-[60px]">{row.totalEvents}</div>,
         enableSorting: true,
       };
       const remainingColumns = baseColumns.slice(2);
@@ -199,39 +318,87 @@ export default function Leaderboards() {
         ...remainingColumns,
         {
           accessorKey: "grossTourPoints",
-          header: "Tour",
-          cell: ({ row }) => <div className="text-center">{(row.original.grossTourPoints || 0).toLocaleString()}</div>,
+          header: () => (
+            <button
+              className="flex items-center w-full px-2 py-1 font-semibold text-neutral-700 bg-transparent hover:bg-neutral-200 rounded focus:outline-none"
+              onClick={() => handleSortFn('grossTourPoints')}
+            >
+              Tour
+              <SortIndicator isSorted={sortingKeyVal === 'grossTourPoints'} isSortedDesc={sortingDescVal} />
+            </button>
+          ),
+          cell: (row: PlayerWithHistory) => <div className="text-center min-w-[60px]">{row.grossTourPoints?.toLocaleString() ?? 0}</div>,
           enableSorting: true,
         },
         {
           accessorKey: "leaguePoints",
-          header: "League",
-          cell: ({ row }) => <div className="text-center">{row.original.leaguePoints.toLocaleString()}</div>,
+          header: () => (
+            <button
+              className="flex items-center w-full px-2 py-1 font-semibold text-neutral-700 bg-transparent hover:bg-neutral-200 rounded focus:outline-none"
+              onClick={() => handleSortFn('leaguePoints')}
+            >
+              League
+              <SortIndicator isSorted={sortingKeyVal === 'leaguePoints'} isSortedDesc={sortingDescVal} />
+            </button>
+          ),
+          cell: (row: PlayerWithHistory) => <div className="text-center min-w-[60px]">{row.leaguePoints?.toLocaleString() ?? 0}</div>,
           enableSorting: true,
         },
         {
           accessorKey: "suprPoints",
-          header: "SUPR",
-          cell: ({ row }) => <div className="text-center">{row.original.suprPoints.toLocaleString()}</div>,
+          header: () => (
+            <button
+              className="flex items-center w-full px-2 py-1 font-semibold text-neutral-700 bg-transparent hover:bg-neutral-200 rounded focus:outline-none"
+              onClick={() => handleSortFn('suprPoints')}
+            >
+              SUPR
+              <SortIndicator isSorted={sortingKeyVal === 'suprPoints'} isSortedDesc={sortingDescVal} />
+            </button>
+          ),
+          cell: (row: PlayerWithHistory) => <div className="text-center min-w-[60px]">{row.suprPoints?.toLocaleString() ?? 0}</div>,
           enableSorting: true,
         },
       ];
     }
   }
   
-  const columns = getColumns();
+  const columns = useMemo(
+    () => getColumns(handleSort, sortingKey, sortingDesc, handlePlayerClick, activeTab),
+    [handleSort, sortingKey, sortingDesc, handlePlayerClick, activeTab]
+  );
 
-  // Memoize sorted data if sorting is needed (optional, can be removed if not needed)
+  // --- Sorted data ---
   const sortedData = useMemo(() => {
     if (!leaderboardData) return [];
-    // Optionally, implement sorting here if needed
-    return leaderboardData;
-  }, [leaderboardData]);
+    const data = [...leaderboardData];
+    data.sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+      switch (sortingKey) {
+        case 'player.name':
+          aValue = a.player.name;
+          bValue = b.player.name;
+          break;
+        default:
+          aValue = a[sortingKey as keyof PlayerWithHistory];
+          bValue = b[sortingKey as keyof PlayerWithHistory];
+      }
+      if (aValue == null) aValue = 0;
+      if (bValue == null) bValue = 0;
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortingDesc ? bValue.localeCompare(aValue) : aValue.localeCompare(bValue);
+      }
+      return sortingDesc ? bValue - aValue : aValue - bValue;
+    });
+    return data;
+  }, [leaderboardData, sortingKey, sortingDesc]);
 
-  // Pagination logic
-  const totalRows = sortedData.length;
-  const totalPages = Math.ceil(totalRows / rowsPerPage);
-  const paginatedRows = sortedData.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
+  // --- Pagination logic ---
+  const [currentPage, setCurrentPage] = useState(0);
+  const paginatedRows = useMemo(() => {
+    const start = currentPage * rowsPerPage;
+    return sortedData.slice(start, start + rowsPerPage);
+  }, [sortedData, currentPage]);
 
   return (
     <section className="space-y-6">
@@ -287,27 +454,32 @@ export default function Leaderboards() {
       </div>
       
       {/* Leaderboard Table */}
+      {/* --- Table rendering --- */}
       <Card className="mb-20">
         <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-rounded bg-white p-0">
-          <div className="min-w-[700px]">
+          <div className="min-w-[900px]">
             <table className="w-full text-sm text-left border-separate border-spacing-0">
               <thead className="bg-neutral-100 sticky top-0 z-10">
                 <tr>
                   {columns.map((col, idx) => (
-                    <th key={col.accessorKey || idx} className="py-2 px-3 font-semibold text-neutral-700 text-left min-w-[80px] whitespace-nowrap sticky top-0 bg-neutral-100 z-10">
-                      {typeof col.header === 'function' ? col.header({ column: col }) : col.header}
+                    <th
+                      key={col.accessorKey || idx}
+                      className="py-3 px-4 font-semibold text-neutral-700 text-left min-w-[80px] whitespace-nowrap sticky top-0 bg-neutral-100 z-10 border-b border-neutral-200"
+                    >
+                      {col.header()}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-200">
                 {paginatedRows.map((row, rowIdx) => (
-                  <tr key={row.player.id || rowIdx}>
+                  <tr key={row.player.id || rowIdx} className="hover:bg-neutral-50 transition-colors">
                     {columns.map((col, colIdx) => (
-                      <td key={col.accessorKey || colIdx} className="py-2 px-3">
-                        {typeof col.cell === 'function'
-                          ? col.cell({ row: { original: row } })
-                          : row[col.accessorKey as keyof typeof row]}
+                      <td
+                        key={col.accessorKey || colIdx}
+                        className="py-3 px-4 min-w-[80px] text-left align-middle"
+                      >
+                        {col.cell(row)}
                       </td>
                     ))}
                   </tr>
@@ -319,13 +491,13 @@ export default function Leaderboards() {
         {/* Pagination controls */}
         <div className="flex justify-between items-center mt-4 px-4">
           <span className="text-sm text-neutral-600">
-            Page {page + 1} of {totalPages} ({totalRows} players)
+            Page {page + 1} of {Math.ceil(sortedData.length / rowsPerPage)} ({sortedData.length} players)
           </span>
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={() => setPage(0)} disabled={page === 0}>First</Button>
             <Button size="sm" variant="outline" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}>Prev</Button>
-            <Button size="sm" variant="outline" onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>Next</Button>
-            <Button size="sm" variant="outline" onClick={() => setPage(totalPages - 1)} disabled={page >= totalPages - 1}>Last</Button>
+            <Button size="sm" variant="outline" onClick={() => setPage(p => Math.min(Math.ceil(sortedData.length / rowsPerPage) - 1, p + 1))} disabled={page >= Math.ceil(sortedData.length / rowsPerPage) - 1}>Next</Button>
+            <Button size="sm" variant="outline" onClick={() => setPage(Math.ceil(sortedData.length / rowsPerPage) - 1)} disabled={page >= Math.ceil(sortedData.length / rowsPerPage) - 1}>Last</Button>
           </div>
         </div>
       </Card>

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
+import PlayerDetailsModal from "@/components/custom/PlayerDetailsModal";
 
 function getTournamentTypeLabel(type: string): string {
   switch (type.toLowerCase()) {
@@ -54,7 +55,9 @@ interface TournamentResultsProps {
 export default function TournamentResults({ id }: TournamentResultsProps) {
   const tournamentId = id ? parseInt(id) : null;
   const [activeTab, setActiveTab] = useState<"net" | "gross">("net");
-  
+  const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
+  const [isPlayerDetailsOpen, setIsPlayerDetailsOpen] = useState(false);
+
   // Early return if no valid tournament ID
   if (!tournamentId || tournamentId <= 0) {
     return (
@@ -135,6 +138,72 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
     return handicapA - handicapB;
   });
 
+  // --- Table columns ---
+  const getColumns = (
+    handlePlayerClick: (id: number) => void,
+    isGross: boolean
+  ): Array<{
+    accessorKey?: string;
+    header: () => React.ReactNode;
+    cell: (row: any, idx: number) => React.ReactNode;
+  }> => [
+    {
+      accessorKey: "position",
+      header: () => <span>Pos</span>,
+      cell: (row, idx) => {
+        const isTied = isGross
+          ? grossResults.filter(r => r?.grossScore === row?.grossScore).length > 1
+          : netResults.filter(r => r?.netScore === row?.netScore).length > 1;
+        let position = idx + 1;
+        if (isTied) {
+          position = (isGross
+            ? grossResults.findIndex(r => r?.grossScore === row?.grossScore)
+            : netResults.findIndex(r => r?.netScore === row?.netScore)) + 1;
+        }
+        return <span className="font-semibold">{isTied ? `T${position}` : position.toString()}</span>;
+      },
+    },
+    {
+      accessorKey: "player",
+      header: () => <span>Player</span>,
+      cell: (row) => (
+        <button
+          className="text-primary underline font-semibold hover:text-primary-700 focus:outline-none focus:ring-2 focus:ring-primary px-1 py-0.5 rounded"
+          onClick={() => handlePlayerClick(row?.player?.id)}
+          tabIndex={0}
+          aria-label={`View details for ${row?.player?.name}`}
+        >
+          {row?.player?.name || 'Unknown'}
+        </button>
+      ),
+    },
+    {
+      accessorKey: "grossScore",
+      header: () => <span>Gross</span>,
+      cell: (row) => <span className="text-center">{row?.grossScore !== null && row?.grossScore !== undefined ? row.grossScore : "N/A"}</span>,
+    },
+    {
+      accessorKey: "netScore",
+      header: () => <span>Net</span>,
+      cell: (row) => <span className="text-center">{row?.netScore !== null && row?.netScore !== undefined ? row.netScore : "N/A"}</span>,
+    },
+    {
+      accessorKey: "handicap",
+      header: () => <span>Handicap</span>,
+      cell: (row) => <span className="text-center">{row?.handicap !== null && row?.handicap !== undefined ? row.handicap : "N/A"}</span>,
+    },
+    {
+      accessorKey: "points",
+      header: () => <span>Points</span>,
+      cell: (row) => <span className="text-right font-semibold">{isGross ? (row?.grossPoints || 0) : (row?.points || 0)}</span>,
+    },
+  ];
+
+  const handlePlayerClick = (id: number) => {
+    setSelectedPlayerId(id);
+    setIsPlayerDetailsOpen(true);
+  };
+
   return (
     <div className="space-y-6 pb-20">
       <div className="flex justify-between items-center">
@@ -190,43 +259,37 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
               <table className="w-full text-sm text-left border-separate border-spacing-0">
                 <thead className="bg-neutral-100 sticky top-0 z-10">
                   <tr>
-                    <th className="py-2 pl-4 pr-2 font-semibold text-neutral-700 min-w-[48px] text-left sticky left-0 bg-neutral-100 z-20">Pos</th>
-                    <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[140px] text-left">Player</th>
-                    <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[60px] text-center">Gross</th>
-                    <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[60px] text-center">Net</th>
-                    <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[70px] text-center">Handicap</th>
-                    <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[70px] text-right">Points</th>
+                    {getColumns(handlePlayerClick, false).map((col, idx) => (
+                      <th
+                        key={col.accessorKey || idx}
+                        className="py-2 pl-4 pr-2 font-semibold text-neutral-700 min-w-[48px] text-left sticky left-0 bg-neutral-100 z-20"
+                      >
+                        {col.header()}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-200">
-                  {netResults.map((result, index) => {
-                    const isTied = netResults.filter(r => r?.netScore === result?.netScore).length > 1;
-                    let position = index + 1;
-                    if (isTied) {
-                      position = netResults.findIndex(r => r?.netScore === result?.netScore) + 1;
-                    }
-                    return (
-                      <tr key={result?.id || 'unknown'}>
-                        <td className="font-semibold">{isTied ? `T${position}` : position.toString()}</td>
-                        <td>
-                          <a 
-                            href={`/player/${result?.player?.id || '#'}`}
-                            className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
-                            onClick={e => {
-                              e.preventDefault();
-                              window.location.href = `/player/${result?.player?.id || '#'}`;
-                            }}
-                          >
-                            {result?.player?.name || 'Unknown'}
-                          </a>
+                  {netResults.map((result, index) => (
+                    <tr key={result?.id || 'unknown'}>
+                      {getColumns(handlePlayerClick, false).map((col, colIdx) => (
+                        <td
+                          key={col.accessorKey || colIdx}
+                          className={
+                            colIdx === 0
+                              ? "font-semibold pl-4 pr-2"
+                              : colIdx === 1
+                              ? ""
+                              : colIdx === 5
+                              ? "text-right font-semibold"
+                              : "text-center"
+                          }
+                        >
+                          {col.cell(result, index)}
                         </td>
-                        <td className="text-center">{result?.grossScore !== null && result?.grossScore !== undefined ? result.grossScore : "N/A"}</td>
-                        <td className="text-center">{result?.netScore !== null && result?.netScore !== undefined ? result.netScore : "N/A"}</td>
-                        <td className="text-center">{result?.handicap !== null && result?.handicap !== undefined ? result.handicap : "N/A"}</td>
-                        <td className="text-right font-semibold">{result?.points || 0}</td>
-                      </tr>
-                    );
-                  })}
+                      ))}
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -248,49 +311,49 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
               <table className="w-full text-sm text-left border-separate border-spacing-0">
                 <thead className="bg-neutral-100 sticky top-0 z-10">
                   <tr>
-                    <th className="py-2 pl-4 pr-2 font-semibold text-neutral-700 min-w-[48px] text-left sticky left-0 bg-neutral-100 z-20">Pos</th>
-                    <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[140px] text-left">Player</th>
-                    <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[60px] text-center">Gross</th>
-                    <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[60px] text-center">Net</th>
-                    <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[70px] text-center">Handicap</th>
-                    <th className="px-2 py-2 font-semibold text-neutral-700 min-w-[70px] text-right">Points</th>
+                    {getColumns(handlePlayerClick, true).map((col, idx) => (
+                      <th
+                        key={col.accessorKey || idx}
+                        className="py-2 pl-4 pr-2 font-semibold text-neutral-700 min-w-[48px] text-left sticky left-0 bg-neutral-100 z-20"
+                      >
+                        {col.header()}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-200">
-                  {grossResults.map((result, index) => {
-                    const isTied = grossResults.filter(r => r?.grossScore === result?.grossScore).length > 1;
-                    let position = index + 1;
-                    if (isTied) {
-                      position = grossResults.findIndex(r => r?.grossScore === result?.grossScore) + 1;
-                    }
-                    return (
-                      <tr key={result?.id || 'unknown'}>
-                        <td className="font-semibold">{isTied ? `T${position}` : position.toString()}</td>
-                        <td>
-                          <a 
-                            href={`/player/${result?.player?.id || '#'}`}
-                            className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
-                            onClick={e => {
-                              e.preventDefault();
-                              window.location.href = `/player/${result?.player?.id || '#'}`;
-                            }}
-                          >
-                            {result?.player?.name || 'Unknown'}
-                          </a>
+                  {grossResults.map((result, index) => (
+                    <tr key={result?.id || 'unknown'}>
+                      {getColumns(handlePlayerClick, true).map((col, colIdx) => (
+                        <td
+                          key={col.accessorKey || colIdx}
+                          className={
+                            colIdx === 0
+                              ? "font-semibold pl-4 pr-2"
+                              : colIdx === 1
+                              ? ""
+                              : colIdx === 5
+                              ? "text-right font-semibold"
+                              : "text-center"
+                          }
+                        >
+                          {col.cell(result, index)}
                         </td>
-                        <td className="text-center">{result?.grossScore !== null && result?.grossScore !== undefined ? result.grossScore : "N/A"}</td>
-                        <td className="text-center">{result?.netScore !== null && result?.netScore !== undefined ? result.netScore : "N/A"}</td>
-                        <td className="text-center">{result?.handicap !== null && result?.handicap !== undefined ? result.handicap : "N/A"}</td>
-                        <td className="text-right font-semibold">{result?.grossPoints || 0}</td>
-                      </tr>
-                    );
-                  })}
+                      ))}
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           </CardContent>
         </Card>
       )}
+      {/* Player Details Modal */}
+      <PlayerDetailsModal
+        playerId={selectedPlayerId}
+        isOpen={isPlayerDetailsOpen}
+        onClose={() => setIsPlayerDetailsOpen(false)}
+      />
     </div>
   );
 }
