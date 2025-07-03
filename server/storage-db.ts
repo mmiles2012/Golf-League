@@ -29,7 +29,7 @@ import {
 import { db } from "./db";
 import { IStorage } from "./storage";
 import { LeaderboardCalculator } from "./leaderboard-calculator";
-import { calculatePoints } from "./utils";
+// Removed hardcoded calculatePoints import - now using database points configuration
 
 // Default points configurations based on provided PDFs
 const DEFAULT_POINTS_CONFIG = {
@@ -373,7 +373,7 @@ export class DatabaseStorage implements IStorage {
         grossScore: result.grossScore || null,
         netScore: result.netScore || null,
         handicap: result.handicap || null,
-        points: result.points || calculatePoints(result.position, type),
+        points: result.points || this.leaderboardCalculator.calculatePointsForPosition(result.position, type),
         grossPoints: null, // Added to satisfy schema
       });
     }

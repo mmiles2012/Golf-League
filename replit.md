@@ -4,6 +4,13 @@
 A professional golf league management platform that provides comprehensive tournament tracking, advanced score processing, and detailed performance analytics with enhanced precision in scoring calculations.
 
 ## Recent Changes
+- **2025-07-03**: Fixed critical hardcoded points calculation issue across all tournament types
+  - **Eliminated hardcoded values in tournament uploads**: Replaced `calculatePoints` function calls with database points configuration in `server/storage-db.ts`
+  - **Corrected 259 tournament results**: Updated 128 net points and 131 gross points to use proper database values instead of hardcoded calculations
+  - **Fixed major discrepancies**: Tour 1st place was giving 400 instead of 500 gross points, 2nd place giving 300 instead of 190, etc.
+  - **Resolved zero points issues**: Players in positions 15-45 who had 0 points now receive correct database values
+  - **Verified all tournament types**: Major, Tour, League, and SUPR tournaments now consistently use database points configuration for both net and gross scoring
+  - **Future-proofed system**: All new tournament uploads will automatically use database points configuration without hardcoded fallbacks
 - **2025-07-02**: Completed comprehensive table formatting standardization for tournament results
   - **Fixed table width consistency**: Net and gross views now have identical column widths on both desktop and mobile
   - **Resolved mobile overlap issues**: Implemented responsive CSS with precise column widths (40px Pos, 150px Player names with ellipsis, 50px scores/handicap, 70px Points)
