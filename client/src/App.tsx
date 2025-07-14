@@ -33,13 +33,13 @@ function Router() {
       
       {/* Authenticated Player Routes */}
       <Route path="/dashboard" component={PlayerDashboard} />
+      <Route path="/manual-entry" component={ManualEntry} />
       
       {/* Admin-only Routes */}
       {isAdmin && (
         <>
           <Route path="/upload" component={UploadScores} />
           <Route path="/upload-scores" component={UploadScores} />
-          <Route path="/manual-entry" component={ManualEntry} />
           <Route path="/tournaments" component={TournamentManagement} />
           <Route path="/points-config" component={PointsConfiguration} />
           <Route path="/setup" component={SetupPage} />
