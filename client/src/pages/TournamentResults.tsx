@@ -69,6 +69,12 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
     isLoading: isNetLoading
   } = useQuery<{ data: any[]; total: number }>({
     queryKey: [`/api/tournaments/${tournamentId}/results/net`, { page: currentPage, limit: rowsPerPage }],
+    queryFn: async () => {
+      const url = `/api/tournaments/${tournamentId}/results/net?page=${currentPage}&limit=${rowsPerPage}`;
+      const response = await fetch(url, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch net results');
+      return response.json();
+    },
     staleTime: 5 * 60 * 1000,
     enabled: !!tournamentId && activeTab === 'net',
   });
@@ -77,6 +83,12 @@ export default function TournamentResults({ id }: TournamentResultsProps) {
     isLoading: isGrossLoading
   } = useQuery<{ data: any[]; total: number }>({
     queryKey: [`/api/tournaments/${tournamentId}/results/gross`, { page: currentPage, limit: rowsPerPage }],
+    queryFn: async () => {
+      const url = `/api/tournaments/${tournamentId}/results/gross?page=${currentPage}&limit=${rowsPerPage}`;
+      const response = await fetch(url, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch gross results');
+      return response.json();
+    },
     staleTime: 5 * 60 * 1000,
     enabled: !!tournamentId && activeTab === 'gross',
   });
