@@ -173,10 +173,12 @@ export type TournamentUpload = z.infer<typeof tournamentUploadSchema>;
 // Schema for manual entry
 export const manualEntrySchema = insertTournamentSchema.extend({
   leagueId: z.number().optional(),
+  scoringType: z.string().optional(), // Free text field for scoring type
   results: z.array(z.object({
     playerId: z.number().optional(),
     playerName: z.string().min(1, "Player name is required"),
-    position: z.number().int().positive("Position must be a positive integer").optional(), // Optional for automatic position calculation
+    position: z.number().int().positive("Position must be a positive integer"),
+    points: z.number().min(0, "Points must be non-negative"), // Direct points input
     grossScore: z.number().optional(),
     netScore: z.number().optional(),
     handicap: z.number().optional(),

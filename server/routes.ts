@@ -1184,36 +1184,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const { name, date, type, results } = validationResult.data;
+      const { name, date, type, scoringType, results } = validationResult.data;
       
-      // Create tournament
-      const tournament = await storage.createTournament({
+      console.log(`Creating manual tournament: ${name}, type: ${type}, scoring: ${scoringType || 'Not specified'}`);
+      
+      // Create tournament with optional scoring type
+      const tournamentData: any = {
         name,
         date: typeof date === 'string' ? date : new Date(date).toISOString(),
         type,
         status: "completed"
-      });
+      };
       
-      // Process player results with tie handling
+      // Add scoring type to tournament name if provided
+      const finalTournamentName = scoringType ? `${name} (${scoringType})` : name;
+      tournamentData.name = finalTournamentName;
+      
+      const tournament = await storage.createTournament(tournamentData);
+      console.log(`Created tournament with ID: ${tournament.id}`);
+      
+      // Process player results directly (no tie handling needed - points are provided)
       const processedResults = [];
-      
-      // Prepare data for tie handling
-      const playerData: Array<{
-        playerId: number;
-        playerName: string;
-        grossScore: number | null;
-        netScore: number | null;
-        handicap: number | null;
-      }> = [];
 
-      // First pass: find or create all players
+      // Process each result entry
       for (const result of results) {
         let playerId = result.playerId;
         
+        // Find or create player if needed
         if (!playerId) {
           let player = await storage.findPlayerByName(result.playerName);
           
           if (!player) {
+            console.log(`Creating new player: ${result.playerName}`);
             player = await storage.createPlayer({
               name: result.playerName,
               defaultHandicap: result.handicap !== undefined ? result.handicap : null
@@ -1223,67 +1225,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
           playerId = player.id;
         }
 
-        playerData.push({
+        // Create player result directly with provided points (no tie handling needed)
+        const playerResultData = {
           playerId,
-          playerName: result.playerName,
-          grossScore: result.grossScore !== undefined ? result.grossScore : null,
-          netScore: result.netScore !== undefined ? result.netScore : null,
-          handicap: result.handicap !== undefined ? result.handicap : null
-        });
-      }
-
-      // Get points configuration and initialize tie handler
-      const pointsConfig = await storage.getPointsConfig();
-      const tieHandler = new TieHandler(pointsConfig);
-      
-      // Process results with tie handling (default to net score for manual entry)
-      const processedTieResults = tieHandler.processResultsWithTies(
-        playerData,
-        type,
-        'net'
-      );
-
-      // Calculate gross positions and points with proper tie handling for manual entry using tournament-specific points
-      const grossTieHandler = new TieHandler({
-        ...pointsConfig,
-        [type]: pointsConfig[type].map(entry => ({ 
-          position: entry.position, 
-          points: calculateGrossPoints(entry.position, type, pointsConfig) 
-        }))
-      });
-      
-      const processedGrossResults = grossTieHandler.processResultsWithTies(
-        playerData,
-        type, // Use tournament-specific points for gross scoring
-        'gross'
-      );
-      
-      // Create a map of playerId to gross position and points
-      const grossPositionMap = new Map<number, { position: number, points: number }>();
-      processedGrossResults.forEach((result) => {
-        grossPositionMap.set(result.playerId, { 
-          position: result.position, 
-          points: result.points 
-        });
-      });
-
-      // Second pass: create player results with proper tie handling and gross points
-      for (const result of processedTieResults) {
-        const grossData = grossPositionMap.get(result.playerId) || { position: 999, points: 0 };
-        
-        const playerResult = await storage.createPlayerResult({
-          playerId: result.playerId,
           tournamentId: tournament.id,
           position: result.position,
-          grossPosition: grossData.position,
-          grossScore: result.grossScore,
-          netScore: result.netScore,
-          handicap: result.handicap,
-          points: result.points,
-          grossPoints: grossData.points
-        });
+          grossPosition: result.position, // Use same position for gross if not calculated separately
+          grossScore: result.grossScore !== undefined ? result.grossScore : null,
+          netScore: result.netScore !== undefined ? result.netScore : null,
+          handicap: result.handicap !== undefined ? result.handicap : null,
+          points: result.points, // Use the points provided directly
+          grossPoints: result.points // Use same points for gross if not calculated separately
+        };
         
-        processedResults.push(playerResult);
+        console.log(`Creating result for ${result.playerName}: Position ${result.position}, Points ${result.points}`);
+        
+        try {
+          const playerResult = await storage.createPlayerResult(playerResultData);
+          console.log(`Created player result with ID: ${playerResult.id}`);
+          processedResults.push(playerResult);
+        } catch (error) {
+          console.error("Error creating player result:", error);
+          throw error;
+        }
       }
       
       res.status(201).json({
