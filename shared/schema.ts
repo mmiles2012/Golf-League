@@ -85,6 +85,7 @@ export const tournaments = pgTable("tournaments", {
   type: text("type").$type<TournamentType>().notNull(),
   status: text("status").default("completed").notNull(),
   leagueId: integer("league_id").references(() => leagues.id, { onDelete: "set null" }),
+  isManualEntry: boolean("is_manual_entry").default(false).notNull(), // Track manual entry tournaments
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -123,6 +124,7 @@ export const insertTournamentSchema = createInsertSchema(tournaments).omit({
 }).extend({
   type: z.enum(tournamentTypes),
   leagueId: z.number().optional(),
+  isManualEntry: z.boolean().optional().default(false),
 });
 
 export const insertPlayerResultSchema = createInsertSchema(playerResults)
@@ -174,6 +176,7 @@ export type TournamentUpload = z.infer<typeof tournamentUploadSchema>;
 export const manualEntrySchema = insertTournamentSchema.extend({
   leagueId: z.number().optional(),
   scoringType: z.string().optional(), // Free text field for scoring type
+  isManualEntry: z.boolean().optional().default(true), // Override default for manual entry
   results: z.array(z.object({
     playerId: z.number().optional(),
     playerName: z.string().min(1, "Player name is required"),

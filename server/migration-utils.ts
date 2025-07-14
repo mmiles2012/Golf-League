@@ -1,4 +1,5 @@
 import { PointsConfig } from "../shared/schema";
+import type { Tournament } from "../shared/schema";
 
 /**
  * Get points for a given position from a points table (array of {position, points})
@@ -111,4 +112,17 @@ export function assignPositionsWithTies<T extends { id: number; playerId: number
     }
   }
   return positions;
+}
+
+/**
+ * Check if a tournament should be excluded from migration/recalculation
+ * @param tournament Tournament object
+ * @returns true if tournament should be skipped
+ */
+export function shouldSkipTournament(tournament: Pick<Tournament, 'isManualEntry' | 'name'>): boolean {
+  if (tournament.isManualEntry) {
+    console.log(`   ⏭️  Skipping manual entry tournament: ${tournament.name}`);
+    return true;
+  }
+  return false;
 }

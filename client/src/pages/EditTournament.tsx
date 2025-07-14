@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArrowLeft, Save, Loader2, Search } from "lucide-react";
@@ -182,9 +183,119 @@ export default function EditTournament() {
   };
   
   if (isLoading) {
+    return <div className="flex justify-center items-center h-64">Loading tournament...</div>;
+  }
+
+  if (!tournament) {
+    return <div>Tournament not found</div>;
+  }
+
+  // Check if this is a manual entry tournament
+  if (tournament.isManualEntry) {
+    // Get player names for manual entry tournament results
+    const [playerNames, setPlayerNames] = useState<Map<number, string>>(new Map());
+    
+    useEffect(() => {
+      if (tournament.results) {
+        fetch('/api/players')
+          .then(response => response.json())
+          .then(players => {
+            const playerMap = new Map();
+            players.forEach((player: any) => {
+              playerMap.set(player.id, player.name);
+            });
+            setPlayerNames(playerMap);
+          })
+          .catch(error => {
+            console.error("Error fetching player names:", error);
+          });
+      }
+    }, [tournament.results]);
+
     return (
-      <div className="flex justify-center items-center min-h-[50vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="space-y-6">
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" onClick={goBack}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-heading font-bold">Tournament Details</h1>
+            <p className="text-neutral-600">Manual entry tournaments cannot be edited</p>
+          </div>
+        </div>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <span>{tournament.name}</span>
+              <Badge variant="secondary">Manual Entry</Badge>
+            </CardTitle>
+            <CardDescription>
+              This tournament was created via manual entry and cannot be edited. 
+              Manual entry tournaments preserve their original points and positions to prevent data loss.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div>
+                <Label>Date</Label>
+                <p className="mt-1 text-sm">{new Date(tournament.date).toLocaleDateString()}</p>
+              </div>
+              <div>
+                <Label>Type</Label>
+                <p className="mt-1 text-sm">
+                  {TOURNAMENT_TYPES.find(t => t.value === tournament.type)?.label}
+                </p>
+              </div>
+              <div>
+                <Label>Players</Label>
+                <p className="mt-1 text-sm">{tournament.results?.length || 0} players</p>
+              </div>
+            </div>
+            
+            {tournament.results && tournament.results.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Results (Read-only)</h3>
+                <div className="border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Player</TableHead>
+                        <TableHead>Position</TableHead>
+                        <TableHead>Points</TableHead>
+                        <TableHead>Gross Score</TableHead>
+                        <TableHead>Net Score</TableHead>
+                        <TableHead>Handicap</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {tournament.results
+                        .sort((a, b) => (a.position || 0) - (b.position || 0))
+                        .map((result) => (
+                          <TableRow key={result.id}>
+                            <TableCell className="font-medium">
+                              {playerNames.get(result.playerId) || 'Unknown Player'}
+                            </TableCell>
+                            <TableCell>{result.position || '-'}</TableCell>
+                            <TableCell className="font-semibold">{result.points?.toFixed(1) || '-'}</TableCell>
+                            <TableCell>{result.grossScore || '-'}</TableCell>
+                            <TableCell>{result.netScore || '-'}</TableCell>
+                            <TableCell>{result.handicap?.toFixed(1) || '-'}</TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+          </CardContent>
+          <CardFooter>
+            <Button variant="outline" onClick={goBack}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Tournament Management
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
     );
   }

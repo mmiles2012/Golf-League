@@ -38,8 +38,10 @@ export class RecalculationService {
   }
 
   async recalculateAllTournaments({ type, mode }: { type?: RecalcType, mode: RecalcMode }) {
-    const where = type && type !== 'all' ? eq(tournaments.type, type) : undefined;
-    const allTournaments = await db.select().from(tournaments).where(where || undefined);
+    const where = type && type !== 'all' ? 
+      and(eq(tournaments.type, type), eq(tournaments.isManualEntry, false)) : 
+      eq(tournaments.isManualEntry, false);
+    const allTournaments = await db.select().from(tournaments).where(where);
     for (const t of allTournaments) {
       await this.recalculateTournament({ tournamentId: t.id, mode });
     }
@@ -49,6 +51,13 @@ export class RecalculationService {
   async recalculateTournament({ tournamentId, mode }: { tournamentId: number, mode: RecalcMode }) {
     const tournament = (await db.select().from(tournaments).where(eq(tournaments.id, tournamentId)))[0];
     if (!tournament) throw new Error('Tournament not found');
+    
+    // Skip manual entry tournaments
+    if (tournament.isManualEntry) {
+      this.log('skippedManualEntryTournament', { tournamentId, name: tournament.name });
+      return;
+    }
+    
     const results = await db.select().from(playerResults).where(eq(playerResults.tournamentId, tournamentId));
     if (mode === 'gross' || mode === 'both') {
       await this.recalculateResults(results, tournament, 'gross');
@@ -64,6 +73,13 @@ export class RecalculationService {
     for (const result of results) {
       const tournament = (await db.select().from(tournaments).where(eq(tournaments.id, result.tournamentId)))[0];
       if (!tournament) continue;
+      
+      // Skip manual entry tournaments
+      if (tournament.isManualEntry) {
+        this.log('skippedManualEntryTournamentForPlayer', { tournamentId: tournament.id, name: tournament.name, playerId });
+        continue;
+      }
+      
       if (mode === 'gross' || mode === 'both') {
         await this.recalculateResults([result], tournament, 'gross');
       }

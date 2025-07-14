@@ -19,6 +19,7 @@ interface Tournament {
   status: 'completed' | 'upcoming' | 'in-progress';
   createdAt: string;
   playerCount?: number; // Added for player count from API
+  isManualEntry?: boolean; // Added to indicate manual entry tournaments
 }
 
 export default function TournamentManagement() {
@@ -136,9 +137,16 @@ export default function TournamentManagement() {
                       {formatDate(tournament.date)}
                     </td>
                     <td className="px-2 py-3 whitespace-nowrap text-sm">
-                      <Badge variant={tournament.type}>
-                        {tournament.type.charAt(0).toUpperCase() + tournament.type.slice(1)}
-                      </Badge>
+                      <div className="flex gap-1">
+                        <Badge variant={tournament.type}>
+                          {tournament.type.charAt(0).toUpperCase() + tournament.type.slice(1)}
+                        </Badge>
+                        {tournament.isManualEntry && (
+                          <Badge variant="secondary" className="text-xs">
+                            Manual Entry
+                          </Badge>
+                        )}
+                      </div>
                     </td>
                     <td className="px-2 py-3 whitespace-nowrap text-sm">
                       {tournament.status === 'upcoming' ? '-' : getPlayerCount(tournament)}

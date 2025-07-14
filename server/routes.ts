@@ -489,7 +489,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post("/api/tournaments", async (req: Request, res: Response) => {
     try {
-      const tournament = req.body;
+      const tournament = { ...req.body, isManualEntry: false }; // Default to non-manual entry
       const newTournament = await storage.createTournament(tournament);
       res.status(201).json(newTournament);
     } catch (error) {
@@ -1039,7 +1039,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: validData.name,
         date: typeof date === 'string' ? date : new Date(date).toISOString(),
         type: validData.type,
-        status: "completed"
+        status: "completed",
+        isManualEntry: false, // Mark as non-manual entry (spreadsheet upload)
       });
       
       console.log(`Created tournament with ID: ${tournament.id}`);
@@ -1193,7 +1194,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name,
         date: typeof date === 'string' ? date : new Date(date).toISOString(),
         type,
-        status: "completed"
+        status: "completed",
+        isManualEntry: true, // Mark as manual entry to prevent recalculation
       };
       
       // Add scoring type to tournament name if provided
@@ -1201,7 +1203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       tournamentData.name = finalTournamentName;
       
       const tournament = await storage.createTournament(tournamentData);
-      console.log(`Created tournament with ID: ${tournament.id}`);
+      console.log(`Created manual entry tournament with ID: ${tournament.id}`);
       
       // Process player results directly (no tie handling needed - points are provided)
       const processedResults = [];

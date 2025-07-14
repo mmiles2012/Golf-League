@@ -2,12 +2,14 @@ import { db } from './server/db.js';
 import { tournaments, playerResults } from './shared/schema.js';
 import { eq, and, isNotNull } from 'drizzle-orm';
 import { storage } from './server/storage-db.js';
-import { getPointsFromConfig, logPointsConfig, assignPositionsWithTies, groupResultsByScore, calculateTiePointsFromTable } from './server/migration-utils';
+import { getPointsFromConfig, logPointsConfig, assignPositionsWithTies, groupResultsByScore, calculateTiePointsFromTable, shouldSkipTournament } from './server/migration-utils';
 
 /**
  * Comprehensive fix for all hardcoded points values in the database
  * This script will recalculate ALL tournament points using database configuration
  * instead of any remaining hardcoded values
+ * 
+ * Note: Manual entry tournaments are automatically excluded from recalculation
  */
 
 async function fixAllHardcodedPoints(): Promise<void> {
@@ -19,15 +21,22 @@ async function fixAllHardcodedPoints(): Promise<void> {
     console.log('📊 Retrieved points configuration from database');
     logPointsConfig(pointsConfig);
     
-    // Get all tournaments
+    // Get all tournaments (including the isManualEntry field)
     const allTournaments = await db.select().from(tournaments);
     console.log(`Found ${allTournaments.length} tournaments to process`);
     
     let totalNetUpdated = 0;
     let totalGrossUpdated = 0;
+    let skippedManualEntry = 0;
     
     for (const tournament of allTournaments) {
       console.log(`\n📊 Processing tournament: ${tournament.name} (${tournament.type})`);
+      
+      // Skip manual entry tournaments
+      if (shouldSkipTournament(tournament)) {
+        skippedManualEntry++;
+        continue;
+      }
       
       // Get all results for this tournament
       const results = await db
@@ -104,6 +113,11 @@ async function fixAllHardcodedPoints(): Promise<void> {
     console.log(`Total net points updated: ${totalNetUpdated}`);
     console.log(`Total gross points updated: ${totalGrossUpdated}`);
     console.log(`All tournaments now use database points configuration!`);
+    console.log(`📋 Summary:`);
+    console.log(`   - Processed: ${allTournaments.length - skippedManualEntry} tournaments`);
+    console.log(`   - Skipped manual entry: ${skippedManualEntry} tournaments`);
+    console.log(`   - Net points updated: ${totalNetUpdated}`);
+    console.log(`   - Gross points updated: ${totalGrossUpdated}`);
     
   } catch (error) {
     console.error('❌ Error during comprehensive points fix:', error);
