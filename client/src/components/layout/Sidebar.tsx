@@ -83,32 +83,19 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
           {/* Divider */}
           <li className="my-4 border-t border-primary-light/20"></li>
           
-          {/* Authenticated User Functions */}
+          {/* Player Dashboard - Available to authenticated users */}
           {isAuthenticated && (
-            <>
-              <li>
-                <Link href="/dashboard">
-                  <div 
-                    className={`sidebar-link ${isActive("/dashboard") ? "active" : ""}`}
-                    onClick={onNavigation}
-                  >
-                    <LayoutDashboard className="sidebar-icon mr-2" />
-                    <span>My Dashboard</span>
-                  </div>
-                </Link>
-              </li>
-              <li>
-                <Link href="/manual-entry">
-                  <div 
-                    className={`sidebar-link ${isActive("/manual-entry") ? "active" : ""}`}
-                    onClick={onNavigation}
-                  >
-                    <PenSquare className="sidebar-icon mr-2" />
-                    <span>Manual Entry</span>
-                  </div>
-                </Link>
-              </li>
-            </>
+            <li>
+              <Link href="/dashboard">
+                <div 
+                  className={`sidebar-link ${isActive("/dashboard") ? "active" : ""}`}
+                  onClick={onNavigation}
+                >
+                  <LayoutDashboard className="sidebar-icon mr-2" />
+                  <span>My Dashboard</span>
+                </div>
+              </Link>
+            </li>
           )}
 
           {/* Admin-only functions - Only visible to admins */}
@@ -133,6 +120,17 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
                   >
                     <FileUp className="sidebar-icon mr-2" />
                     <span>Upload Scores</span>
+                  </div>
+                </Link>
+              </li>
+              <li>
+                <Link href="/manual-entry">
+                  <div 
+                    className={`sidebar-link ${isActive("/manual-entry") ? "active" : ""}`}
+                    onClick={onNavigation}
+                  >
+                    <PenSquare className="sidebar-icon mr-2" />
+                    <span>Manual Entry</span>
                   </div>
                 </Link>
               </li>
