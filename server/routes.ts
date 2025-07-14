@@ -592,6 +592,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch tournament results" });
     }
   });
+
+  // Tournament results with net/gross filtering and pagination
+  app.get("/api/tournaments/:id/results/:scoreType", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const scoreType = req.params.scoreType as 'net' | 'gross';
+      const page = parseInt(req.query.page as string) || 0;
+      const limit = parseInt(req.query.limit as string) || 25;
+      
+      if (!['net', 'gross'].includes(scoreType)) {
+        return res.status(400).json({ message: "Score type must be 'net' or 'gross'" });
+      }
+
+      const results = await storage.getPlayerResultsByTournament(id);
+      
+      // Enhance the results with player information
+      const enhancedResults = await Promise.all(results.map(async (result) => {
+        const player = await storage.getPlayer(result.playerId);
+        return {
+          ...result,
+          player: player || { id: result.playerId, name: "Unknown Player" }
+        };
+      }));
+
+      // Sort results based on score type
+      const sortedResults = enhancedResults.sort((a, b) => {
+        if (scoreType === 'net') {
+          return (a.position || 999) - (b.position || 999);
+        } else {
+          return (a.grossPosition || 999) - (b.grossPosition || 999);
+        }
+      });
+
+      // Apply pagination
+      const startIndex = page * limit;
+      const endIndex = startIndex + limit;
+      const paginatedResults = sortedResults.slice(startIndex, endIndex);
+
+      res.json({
+        data: paginatedResults,
+        total: sortedResults.length
+      });
+    } catch (error) {
+      console.error("Error fetching tournament results:", error);
+      res.status(500).json({ message: "Failed to fetch tournament results" });
+    }
+  });
   
   app.get("/api/players/:id/results", async (req: Request, res: Response) => {
     try {
