@@ -326,11 +326,19 @@ export default function ManualEntryFormNew() {
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Manual Tournament Entry</CardTitle>
-          <CardDescription>
-            Enter tournament results manually with custom scoring and direct points assignment.
-            These results will not be subject to automatic recalculations.
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                Manual Tournament Entry
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800">Enhanced v2.0</Badge>
+                <Badge variant="outline" className="text-xs">ID: NEW-FORM-{Date.now().toString().slice(-6)}</Badge>
+              </CardTitle>
+              <CardDescription>
+                Enter tournament results manually with custom scoring and direct points assignment.
+                These results will not be subject to automatic recalculations.
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { Trash2, Plus, Save, Upload, FileSpreadsheet } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { TOURNAMENT_TYPES } from "@/lib/constants";
@@ -287,7 +288,10 @@ export default function ManualEntryForm() {
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Tournament Information</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            Tournament Information
+            <Badge variant="destructive" className="bg-red-100 text-red-800">OLD FORM v1.0</Badge>
+          </CardTitle>
           <CardDescription>Enter details for any tournament type with flexible scoring</CardDescription>
         </CardHeader>
         <CardContent>
