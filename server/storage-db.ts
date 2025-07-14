@@ -412,15 +412,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    // Check if user already exists
-    const existingUser = await db
+    // Check if user already exists by ID first
+    const existingUserById = await db
       .select()
       .from(users)
       .where(eq(users.id, userData.id))
       .limit(1);
 
-    if (existingUser.length > 0) {
-      // User exists - only update authentication-related fields, preserve custom profile data
+    if (existingUserById.length > 0) {
+      // User exists by ID - only update authentication-related fields, preserve custom profile data
       const [user] = await db
         .update(users)
         .set({
@@ -436,14 +436,42 @@ export class DatabaseStorage implements IStorage {
         .where(eq(users.id, userData.id))
         .returning();
       return user;
-    } else {
-      // New user - insert with all provided data
-      const [user] = await db
-        .insert(users)
-        .values(userData)
-        .returning();
-      return user;
+    } 
+    
+    // Check if a user exists with the same email but different ID
+    if (userData.email) {
+      const existingUserByEmail = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, userData.email))
+        .limit(1);
+
+      if (existingUserByEmail.length > 0) {
+        // User exists with same email but different ID - update the existing record with new ID
+        console.log(`Updating existing user with email ${userData.email} to new ID ${userData.id}`);
+        const [user] = await db
+          .update(users)
+          .set({
+            id: userData.id,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            profileImageUrl: userData.profileImageUrl,
+            role: userData.role,
+            isActive: userData.isActive,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.email, userData.email))
+          .returning();
+        return user;
+      }
     }
+
+    // New user - insert with all provided data
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .returning();
+    return user;
   }
 
   async updateUserProfile(userId: string, profileData: UpdateUserProfile): Promise<User | undefined> {
