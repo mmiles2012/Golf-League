@@ -1,4 +1,5 @@
 import { PointsConfig } from "../shared/schema";
+import { calculateTiePoints, formatPosition, calculatePoints } from "./points-utils";
 
 export interface TieGroup {
   position: number;
@@ -70,17 +71,17 @@ export class TieHandler {
 
     for (const tieGroup of tieGroups) {
       const numPlayersInTie = tieGroup.players.length;
-      
-      // Calculate points for this tie group
-      const pointsPerPlayer = this.calculateTiePoints(
+      // Calculate points for this tie group using shared utility
+      const pointsPerPlayer = calculateTiePoints(
         currentPosition,
         numPlayersInTie,
-        tournamentType
+        tournamentType as any,
+        this.pointsConfig[tournamentType as keyof PointsConfig]
       );
 
       // Add each player in the tie group
       for (const player of tieGroup.players) {
-        const displayPosition = numPlayersInTie > 1 ? `T${currentPosition}` : `${currentPosition}`;
+        const displayPosition = formatPosition(currentPosition, numPlayersInTie > 1);
         
         processedResults.push({
           playerId: player.playerId,
@@ -154,43 +155,10 @@ export class TieHandler {
   }
 
   /**
-   * Calculate points for tied players
-   * Points are averaged across all tied positions
-   */
-  private calculateTiePoints(
-    startPosition: number,
-    numTiedPlayers: number,
-    tournamentType: string
-  ): number {
-    let totalPoints = 0;
-
-    // Sum points for all tied positions
-    for (let i = 0; i < numTiedPlayers; i++) {
-      const position = startPosition + i;
-      totalPoints += this.getPointsForPosition(position, tournamentType);
-    }
-
-    // Return average points (rounded to 1 decimal place)
-    return Math.round((totalPoints / numTiedPlayers) * 10) / 10;
-  }
-
-  /**
-   * Get points for a specific position and tournament type
+   * Get points for a specific position and tournament type (now uses shared utility)
    */
   public getPointsForPosition(position: number, tournamentType: string): number {
-    const config = this.pointsConfig[tournamentType as keyof PointsConfig];
-    if (!config || !Array.isArray(config)) return 0;
-
-    // Find the position in the config array
-    const positionConfig = config.find(p => p.position === position);
-    
-    if (positionConfig) {
-      return positionConfig.points;
-    }
-
-    // If exact position not found, try to find the last available position
-    const lastPosition = config[config.length - 1];
-    return position > lastPosition.position ? 0 : lastPosition.points;
+    return calculatePoints(position, tournamentType as any, this.pointsConfig[tournamentType as keyof PointsConfig]);
   }
 
   /**

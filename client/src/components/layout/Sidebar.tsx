@@ -12,7 +12,9 @@ import {
   User,
   Settings,
   Award,
-  ListOrdered
+  ListOrdered,
+  ServerCog,
+  List
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -22,7 +24,7 @@ interface SidebarProps {
 
 export default function Sidebar({ onNavigation }: SidebarProps) {
   const [location, navigate] = useLocation();
-  const { user, isAuthenticated, isAdmin, isLoading } = useAuth();
+  const { user, isAuthenticated, isAdmin, isLoading, isSuperAdmin } = useAuth();
   
   const isActive = (path: string) => {
     if (path === "/") return location === "/";
@@ -154,6 +156,31 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
                   </div>
                 </Link>
               </li>
+              <li>
+                <Link href="/admin-recalculation">
+                  <div 
+                    className={`sidebar-link ${isActive("/admin-recalculation") ? "active" : ""}`}
+                    onClick={onNavigation}
+                  >
+                    <ServerCog className="sidebar-icon mr-2" />
+                    <span>Recalculate Points</span>
+                  </div>
+                </Link>
+              </li>
+              {/* Super admin: log viewer */}
+              {isSuperAdmin && (
+                <li>
+                  <Link href="/admin-recalculation-log">
+                    <div 
+                      className={`sidebar-link ${isActive("/admin-recalculation-log") ? "active" : ""}`}
+                      onClick={onNavigation}
+                    >
+                      <List className="sidebar-icon mr-2" />
+                      <span>Recalc Logs</span>
+                    </div>
+                  </Link>
+                </li>
+              )}
             </>
           )}
           

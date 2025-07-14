@@ -1,7 +1,7 @@
 import { db } from './server/db';
 import { playerResults, tournaments } from './shared/schema';
 import { eq, and, isNotNull } from 'drizzle-orm';
-import { calculateGrossPoints } from './server/utils';
+import { getPointsFromConfig, assignPositionsWithTies, groupResultsByScore, calculateTiePointsFromTable } from './server/migration-utils';
 import { storage } from './server/storage-db';
 
 interface PlayerResult {
@@ -67,88 +67,39 @@ async function fixGrossPointsZero() {
           eq(playerResults.tournamentId, tournament.id),
           isNotNull(playerResults.grossScore)
         ));
-      
-      // Convert to format expected by TieHandler
-      const playerData: PlayerResult[] = allTournamentResults.map(result => ({
-        id: result.id,
-        playerId: result.playerId,
-        playerName: `Player ${result.playerId}`, // We don't need actual names for tie handling
-        grossScore: result.grossScore,
-        netScore: result.netScore,
-        handicap: result.handicap
-      }));
-      
-      // Sort players by gross score to determine positions
-      const sortedByGross = playerData
-        .filter(p => p.grossScore !== null)
-        .sort((a, b) => a.grossScore! - b.grossScore!);
-      
-      // Calculate positions with tie handling
-      const grossPositions: Array<{id: number, playerId: number, position: number}> = [];
-      let currentPosition = 1;
-      
-      for (let i = 0; i < sortedByGross.length; i++) {
-        const player = sortedByGross[i];
-        
-        // Check if tied with previous player
-        if (i > 0 && player.grossScore === sortedByGross[i - 1].grossScore) {
-          // Use same position as previous player
-          grossPositions.push({
-            id: player.id,
-            playerId: player.playerId,
-            position: grossPositions[grossPositions.length - 1].position
-          });
-        } else {
-          // New position (skip positions if there were ties)
-          currentPosition = i + 1;
-          grossPositions.push({
-            id: player.id,
-            playerId: player.playerId,
-            position: currentPosition
-          });
+      const validResults = allTournamentResults.filter(r => r.grossScore !== null && r.grossScore !== undefined);
+      validResults.sort((a, b) => (a.grossScore as number) - (b.grossScore as number));
+      const positions = assignPositionsWithTies(validResults, 'grossScore');
+      const groups = groupResultsByScore(validResults, 'grossScore');
+      const updates: Array<{ id: number; position: number; points: number }> = [];
+      let positionCursor = 1;
+      for (const group of groups) {
+        const numTied = group.players.length;
+        const points = numTied === 1
+          ? getPointsFromConfig(positionCursor, pointsConfig.tour)
+          : calculateTiePointsFromTable(positionCursor, numTied, pointsConfig.tour);
+        for (const player of group.players) {
+          updates.push({ id: player.id, position: positionCursor, points });
+        }
+        positionCursor += numTied;
+      }
+      let updatedCount = 0;
+      for (const update of updates) {
+        if (results.find(r => r.id === update.id)) {
+          await db
+            .update(playerResults)
+            .set({ grossPosition: update.position, grossPoints: update.points })
+            .where(eq(playerResults.id, update.id));
+          updatedCount++;
+          console.log(`   📝 Updated player result ${update.id}: gross position ${update.position}, gross points ${update.points}`);
         }
       }
-      
-      console.log(`   🔢 Calculated gross positions for ${grossPositions.length} players`);
-      
-      // Update gross points for each player with zero gross points
-      let updatedCount = 0;
-      for (const player of grossPositions) {
-        // Only update players that currently have zero gross points
-        const hasZeroGrossPoints = results.some(r => r.id === player.id);
-        if (!hasZeroGrossPoints) continue;
-        
-        // Calculate gross points using tournament-specific points table from database
-        const grossPoints = calculateGrossPoints(player.position, tournament.type, pointsConfig);
-        
-        // Update the database
-        await db
-          .update(playerResults)
-          .set({ grossPoints })
-          .where(eq(playerResults.id, player.id));
-        
-        updatedCount++;
-        console.log(`   📝 Updated player ${player.playerId}: position ${player.position} → ${grossPoints} gross points`);
-      }
-      
-      console.log(`   ✅ Updated ${updatedCount} players with correct gross points`);
+      console.log(`   ✅ Updated ${updatedCount} players with correct gross positions and gross points`);
     }
-    
-    console.log('\n🎉 Gross points fix completed successfully!');
-    
-    // Verify the fix
-    const remainingZeroGrossPoints = await db
-      .select()
-      .from(playerResults)
-      .where(and(
-        eq(playerResults.grossPoints, 0),
-        isNotNull(playerResults.grossScore)
-      ));
-    
-    console.log(`\n📊 Verification: ${remainingZeroGrossPoints.length} players still have zero gross points`);
-    
+    console.log('\n🎉 Gross points zero fix completed successfully!');
   } catch (error) {
-    console.error('❌ Error during gross points fix:', error);
+    console.error('❌ Error during gross points zero fix:', error);
+    throw error;
   }
 }
 

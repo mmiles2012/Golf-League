@@ -4,6 +4,14 @@
 A professional golf league management platform that provides comprehensive tournament tracking, advanced score processing, and detailed performance analytics with enhanced precision in scoring calculations.
 
 ## Recent Changes
+- **2025-07-14**: Enhanced authentication system and manual entry functionality
+  - **Created AuthRequiredPage component**: Replaced generic 404 errors with proper authentication/authorization messages
+  - **Added role-based access control**: Different error messages for unauthenticated users vs insufficient privileges
+  - **Enhanced manual entry system**: Complete rewrite to support all tournament types (Major, Tour, League, SUPR) with spreadsheet-style bulk input
+  - **Implemented direct points assignment**: Manual entry now accepts direct points values for flexible scoring (e.g., team events where multiple players get full points)
+  - **Added free text scoring type field**: Allows custom event descriptions and flexible tournament naming
+  - **Improved user experience**: Sign-in buttons for unauthenticated users, clear error states, and proper loading indicators
+  - **Maintained admin-only access**: Manual entry remains restricted to admin users with proper error handling
 - **2025-07-03**: Fixed critical hardcoded points calculation issue across all tournament types
   - **Eliminated hardcoded values in tournament uploads**: Replaced `calculatePoints` function calls with database points configuration in `server/storage-db.ts`
   - **Corrected 259 tournament results**: Updated 128 net points and 131 gross points to use proper database values instead of hardcoded calculations
@@ -13,6 +21,7 @@ A professional golf league management platform that provides comprehensive tourn
   - **Future-proofed system**: All new tournament uploads will automatically use database points configuration without hardcoded fallbacks
   - **Verified tie handling accuracy**: Comprehensive verification confirms tie calculations match tournament upload system with 99.97% accuracy (3 minor rounding differences out of 139 total results)
   - **Consistent calculation methods**: Both manual fixes and tournament uploads use identical TieHandler logic with proper decimal rounding and database points configuration
+  - **Fixed tournament display API**: Added missing `/api/tournaments/:id/results/:scoreType` endpoint to resolve "no tournament results found" error for tournament 38 and other tournaments
 - **2025-07-02**: Completed comprehensive table formatting standardization for tournament results
   - **Fixed table width consistency**: Net and gross views now have identical column widths on both desktop and mobile
   - **Resolved mobile overlap issues**: Implemented responsive CSS with precise column widths (40px Pos, 150px Player names with ellipsis, 50px scores/handicap, 70px Points)

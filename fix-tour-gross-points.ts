@@ -1,7 +1,7 @@
 import { db } from "./server/db";
 import { playerResults, tournaments } from "./shared/schema";
 import { eq, and, isNotNull } from "drizzle-orm";
-import { calculateGrossPoints } from "./server/utils";
+import { getPointsFromConfig } from './server/migration-utils';
 import { storage } from "./server/storage-db";
 
 async function fixTourGrossPoints() {
@@ -51,7 +51,7 @@ async function fixTourGrossPoints() {
       let updatedCount = 0;
       for (const result of results) {
         // Calculate correct gross points using tour points table from database
-        const correctGrossPoints = calculateGrossPoints(result.grossPosition || 999, 'tour', pointsConfig);
+        const correctGrossPoints = getPointsFromConfig(result.grossPosition || 999, pointsConfig.tour);
         
         // Only update if the points are different
         if (result.grossPoints !== correctGrossPoints) {
