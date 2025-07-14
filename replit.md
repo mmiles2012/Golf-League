@@ -4,6 +4,14 @@
 A professional golf league management platform that provides comprehensive tournament tracking, advanced score processing, and detailed performance analytics with enhanced precision in scoring calculations.
 
 ## Recent Changes
+- **2025-07-14**: Enhanced authentication system and manual entry functionality
+  - **Created AuthRequiredPage component**: Replaced generic 404 errors with proper authentication/authorization messages
+  - **Added role-based access control**: Different error messages for unauthenticated users vs insufficient privileges
+  - **Enhanced manual entry system**: Complete rewrite to support all tournament types (Major, Tour, League, SUPR) with spreadsheet-style bulk input
+  - **Implemented direct points assignment**: Manual entry now accepts direct points values for flexible scoring (e.g., team events where multiple players get full points)
+  - **Added free text scoring type field**: Allows custom event descriptions and flexible tournament naming
+  - **Improved user experience**: Sign-in buttons for unauthenticated users, clear error states, and proper loading indicators
+  - **Maintained admin-only access**: Manual entry remains restricted to admin users with proper error handling
 - **2025-07-03**: Fixed critical hardcoded points calculation issue across all tournament types
   - **Eliminated hardcoded values in tournament uploads**: Replaced `calculatePoints` function calls with database points configuration in `server/storage-db.ts`
   - **Corrected 259 tournament results**: Updated 128 net points and 131 gross points to use proper database values instead of hardcoded calculations
