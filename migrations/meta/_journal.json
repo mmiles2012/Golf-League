@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1752530459692,
+      "tag": "0000_material_firelord",
+      "breakpoints": true
+    }
+  ]
+}
