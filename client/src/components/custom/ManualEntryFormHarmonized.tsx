@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Trash2, Plus, Eye, CheckCircle, AlertCircle, Save, FileSpreadsheet, PenSquare } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { TOURNAMENT_TYPES } from "@/lib/constants";
+import { TOURNAMENT_TYPES, SCORING_MODES, SCORING_TYPES } from "@/lib/constants";
 import { useQueryClient } from "@tanstack/react-query";
 import PlayerSearchInput from "./PlayerSearchInput";
 
@@ -64,7 +65,8 @@ export default function ManualEntryFormHarmonized() {
   const [tournamentName, setTournamentName] = useState("");
   const [tournamentDate, setTournamentDate] = useState("");
   const [tournamentType, setTournamentType] = useState("");
-  const [scoringType, setScoringType] = useState("");
+  const [scoringMode, setScoringMode] = useState<'calculated' | 'manual'>('manual');
+  const [scoringType, setScoringType] = useState<'net' | 'gross' | 'both'>('both');
   const [inputMode, setInputMode] = useState<"individual" | "spreadsheet">("individual");
   const [spreadsheetData, setSpreadsheetData] = useState("");
   const [playerEntries, setPlayerEntries] = useState<ManualPlayerEntry[]>([
@@ -89,7 +91,8 @@ export default function ManualEntryFormHarmonized() {
     setTournamentName("");
     setTournamentDate("");
     setTournamentType("");
-    setScoringType("");
+    setScoringMode('manual');
+    setScoringType('both');
     setSpreadsheetData("");
     setPlayerEntries([{ id: 1, playerName: "", position: 1, points: 0 }]);
     setTournamentPreview(null);
@@ -390,43 +393,75 @@ export default function ManualEntryFormHarmonized() {
                   value={tournamentDate}
                   onChange={(e) => setTournamentDate(e.target.value)}
                   disabled={isProcessing}
-                />
-              </div>
+                />              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label htmlFor="tournament-type">Tournament Type</Label>
-                <Select 
-                  value={tournamentType} 
-                  onValueChange={setTournamentType}
-                  disabled={isProcessing}
-                >
-                  <SelectTrigger id="tournament-type">
-                    <SelectValue placeholder="Select tournament type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TOURNAMENT_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-sm text-neutral-500 mt-1">Manual entry allows direct points assignment</p>
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="scoring-type">Scoring Type</Label>
-                <Input 
-                  id="scoring-type" 
-                  type="text" 
-                  placeholder="e.g., Team Event, Match Play, etc." 
-                  value={scoringType}
-                  onChange={(e) => setScoringType(e.target.value)}
-                  disabled={isProcessing}
-                />
-                <p className="text-sm text-neutral-500 mt-1">Optional: Describe the scoring format</p>
-              </div>
+            <div className="grid grid-cols-1 gap-4">
+            <div className="space-y-1">
+              <Label htmlFor="tournament-type">Tournament Type</Label>
+              <Select 
+                value={tournamentType} 
+                onValueChange={setTournamentType}
+                disabled={isProcessing}
+              >
+                <SelectTrigger id="tournament-type">
+                  <SelectValue placeholder="Select tournament type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TOURNAMENT_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-neutral-500 mt-1">Choose the tournament category for point calculation</p>
+            </div>
+
+            {/* Scoring Mode Selection */}
+            <div className="space-y-3 md:col-span-2">
+              <Label>Scoring Mode</Label>
+              <RadioGroup 
+                value={scoringMode} 
+                onValueChange={(value: 'calculated' | 'manual') => setScoringMode(value)}
+                disabled={isProcessing}
+                className="space-y-2"
+              >
+                {SCORING_MODES.map((mode) => (
+                  <div key={mode.value} className="flex items-start space-x-2">
+                    <RadioGroupItem value={mode.value} id={mode.value} className="mt-0.5" />
+                    <div className="flex-1">
+                      <Label htmlFor={mode.value} className="font-medium">{mode.label}</Label>
+                      <p className="text-sm text-neutral-500">{mode.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+
+            {/* Scoring Type Selection */}
+            <div className="space-y-1 md:col-span-2">
+              <Label htmlFor="scoring-type">Scoring Type</Label>
+              <Select 
+                value={scoringType} 
+                onValueChange={(value: 'net' | 'gross' | 'both') => setScoringType(value)}
+                disabled={isProcessing}
+              >
+                <SelectTrigger id="scoring-type">
+                  <SelectValue placeholder="Select scoring type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SCORING_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-neutral-500 mt-1">
+                Determines what score fields are available for each player entry
+              </p>
+            </div>
             </div>
 
             {/* Input Mode Selection */}

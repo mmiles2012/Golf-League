@@ -1,17 +1,24 @@
 // Define tournament types with labels for UI components
 export const TOURNAMENT_TYPES = [
-  { value: 'major', label: 'Major Event', calculated: true },
-  { value: 'tour', label: 'Tour Event', calculated: true },
-  { value: 'league', label: 'League Event', calculated: true },
-  { value: 'supr', label: 'SUPR Club Event', calculated: true },
-  { value: 'manual', label: 'Manually Scored', calculated: false }
+  { value: 'major', label: 'Major Event' },
+  { value: 'tour', label: 'Tour Event' },
+  { value: 'league', label: 'League Event' },
+  { value: 'supr', label: 'SUPR Club Event' },
+  { value: 'manual', label: 'Manual Tournament' }
 ];
 
-// Get calculated tournament types (system assigns points)
-export const CALCULATED_TOURNAMENT_TYPES = TOURNAMENT_TYPES.filter(t => t.calculated);
+// Define scoring modes
+export const SCORING_MODES = [
+  { value: 'calculated', label: 'Calculated Points', description: 'System calculates points based on positions and scores' },
+  { value: 'manual', label: 'Manual Points', description: 'Admin directly assigns points to players' }
+];
 
-// Get manual tournament types (admin assigns points)
-export const MANUAL_TOURNAMENT_TYPES = TOURNAMENT_TYPES.filter(t => !t.calculated);
+// Define scoring types for calculated tournaments
+export const SCORING_TYPES = [
+  { value: 'net', label: 'Net Scoring Only', fields: ['position', 'netScore', 'handicap'] },
+  { value: 'gross', label: 'Gross Scoring Only', fields: ['position', 'grossScore'] },
+  { value: 'both', label: 'Both Net and Gross', fields: ['position', 'netScore', 'grossScore', 'handicap'] }
+];
 
 // Define tournament status options
 export const TOURNAMENT_STATUS = [
