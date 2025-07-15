@@ -66,7 +66,9 @@ Navigation is handled via a sidebar and top navigation menu, with routes protect
   - `id`: number
   - `name`: string
   - `date`: Date
-  - `type`: 'major' | 'tour' | 'league' | 'supr'
+  - `type`: 'major' | 'tour' | 'league' | 'supr' | 'manual'
+  - `scoringMode`: 'calculated' | 'manual'
+  - `scoringType`: 'net' | 'gross' | 'both'
   - `status`: string
   - `leagueId`: number | null
   - `createdAt`: Date
@@ -91,8 +93,10 @@ Navigation is handled via a sidebar and top navigation menu, with routes protect
 
 ### Data Flow
 - Tournament results are uploaded (Excel/JSON) or entered manually by admins.
+- Admins select Tournament Type, Scoring Mode, and Scoring Type for each event.
+- The system displays the required spreadsheet columns and allows downloading a sample template for the selected configuration.
 - Player results are stored and associated with tournaments.
-- Points are calculated based on finishing position and the current points configuration for the tournament type.
+- Points are calculated based on finishing position and the current points configuration for the tournament type (or assigned manually).
 - Leaderboards aggregate player points across tournaments, supporting both net and gross scoring.
 - Points configuration can be updated by admins and is versioned for recalculation.
 
@@ -146,9 +150,9 @@ League (1) ───< (N) Tournament (1) ───< (N) PlayerResult >(N) ──
 - `PUT /api/settings` — Update app settings
 
 ### File Upload & Processing
-- `POST /api/upload` — Upload tournament results (Excel)
-- `POST /api/tournaments/process` — Process uploaded tournament data
-- `POST /api/tournaments/manual-entry` — Manual entry of tournament results
+- `POST /api/upload` — Upload tournament results (Excel/CSV)
+- `POST /api/tournaments/process` — Process uploaded tournament data (calculated mode)
+- `POST /api/tournaments/manual-entry` — Manual entry of tournament results (manual mode)
 
 #### Example: Upload Tournament Results
 ```bash
@@ -185,7 +189,7 @@ PUT /api/points-config
 ---
 
 ## Admin Actions
-- **Tournament Management:** Create, edit, delete tournaments; upload or manually enter scores.
+- **Tournament Management:** Create, edit, delete tournaments; upload or manually enter scores. For each event, select Tournament Type, Scoring Mode, and Scoring Type. The system will display the required fields and allow downloading a sample spreadsheet.
 - **Player Management:** Add, edit, delete players (with checks for existing results).
 - **Points Configuration:** Edit points for each position and tournament type; changes apply to future and recalculated tournaments.
 - **App Setup:** Configure branding, scoring type, and other settings.
@@ -276,67 +280,43 @@ This project is for internal league use. Contact the maintainer for permissions 
 ## Spreadsheet Upload Requirements (Admin)
 
 ### Endpoint: `POST /api/upload`
-Uploads an Excel (.xlsx) file containing tournament results. The file is parsed and validated before processing.
+Uploads an Excel (.xlsx) or CSV file containing tournament results. The file is parsed and validated before processing.
 
 #### **Required Columns**
-- `Email` (or `email`): Player's email address (used for matching/creating players, case-insensitive)
-- `Total`: Net score (numeric, required)
-- `Course Handicap`: Player's course handicap (numeric, required)
-- `Player`, `Name`, or `Display Name`: Player's display name (optional, used if creating a new player)
-- `Pos`, `Position`, or `position`: Player's finishing position (optional; defaults to row order if missing)
+The required columns for spreadsheet upload depend on the selected scoring mode and scoring type:
+
+- **Calculated Mode:**
+  - **Net Only:** `Player Name`, `Position`, `Net Score`, `Course Handicap`
+  - **Gross Only:** `Player Name`, `Position`, `Gross Score`
+  - **Both:** `Player Name`, `Position`, `Net Score`, `Gross Score`, `Course Handicap`
+- **Manual Mode:**
+  - `Player Name`, `Position`, `Points` (plus optional `Gross Score`, `Net Score`, `Course Handicap`)
+
+The UI will display the exact required columns before upload, and you can download a sample spreadsheet template for your configuration.
+
+#### **Sample Spreadsheet Download**
+- On the upload and manual entry pages, admins can download a sample spreadsheet template with the correct headers for the current tournament configuration (type, scoring mode, scoring type).
+- This ensures that uploaded files always match the required format.
 
 #### **Processing Logic**
-- **Player Matching:**
-  - Players are matched by email (case-insensitive).
-  - If no player is found for the email, a new player is created using the display name (or the email prefix if no name is provided).
-- **Score Calculation:**
-  - **Net Score:** Taken from the `Total` column.
-  - **Gross Score:** Calculated as `Net Score + Course Handicap`.
-- **Validation:**
-  - Each row must have a valid email, net score (`Total`), and course handicap.
+**Player Matching:**
+  - Players are matched by name (and/or email if provided).
+  - If no player is found, a new player is created using the display name.
+**Score Calculation:**
+  - **Net Score:** Taken from the `Net Score` column.
+  - **Gross Score:** Taken from the `Gross Score` column (if present) or calculated if possible.
+**Validation:**
+  - Each row must have all required fields for the selected scoring mode and type.
   - If any required field is missing or invalid, the upload is rejected with a clear error message indicating the row and issue.
 
 #### **Error Handling**
-- Missing or invalid `Email`, `Total`, or `Course Handicap` will cause the upload to fail.
-- The response will include a message describing the error and the row number.
-
-#### **Example Upload File**
-| Email              | Player      | Total | Course Handicap | Pos |
-|--------------------|-------------|-------|----------------|-----|
-| alice@email.com    | Alice Smith | 72    | 10             | 1   |
-| bob@email.com      | Bob Jones   | 75    | 12             | 2   |
-
-#### **Example Response**
-```json
-{
-  "message": "File uploaded successfully",
-  "rows": 2,
-  "preview": [
-    {
-      "Player": "Alice Smith",
-      "Email": "alice@email.com",
-      "Position": 1,
-      "Gross Score": 82,
-      "Net Score": 72,
-      "Course Handicap": 10
-    },
-    ...
-  ]
-}
-```
-
-#### **Example Error Response**
-```json
-{
-  "message": "Invalid or missing 'Total' (net score) for row 2"
-}
-```
+Missing or invalid required fields will cause the upload to fail.
+  - The response will include a message describing the error and the row number.
 
 #### **Notes**
-- The upload endpoint only accepts Excel files (`.xlsx`).
-- All emails are normalized to lowercase for matching.
-- New players are created automatically if the email does not exist in the system.
-- The preview in the response shows how the data was parsed and calculated.
+The upload endpoint accepts Excel (`.xlsx`) and CSV files.
+New players are created automatically if the name does not exist in the system.
+The preview in the response shows how the data was parsed and calculated.
 
 ---
 
