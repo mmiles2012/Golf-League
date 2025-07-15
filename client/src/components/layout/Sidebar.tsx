@@ -124,17 +124,6 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
                 </Link>
               </li>
               <li>
-                <Link href="/manual-entry">
-                  <div 
-                    className={`sidebar-link ${isActive("/manual-entry") ? "active" : ""}`}
-                    onClick={onNavigation}
-                  >
-                    <PenSquare className="sidebar-icon mr-2" />
-                    <span>Manual Entry</span>
-                  </div>
-                </Link>
-              </li>
-              <li>
                 <Link href="/points-config">
                   <div 
                     className={`sidebar-link ${isActive("/points-config") ? "active" : ""}`}

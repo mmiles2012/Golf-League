@@ -1,13 +1,13 @@
 # Hideout Golf League
 
 ## Overview
-Hideout Golf League is a web application for managing, tracking, and displaying golf tournament results, player statistics, and league leaderboards. The platform supports both public and admin views, allowing for tournament management, score uploads, manual entry, and dynamic points configuration. The system is designed for flexibility, supporting multiple tournament types and custom points distributions.
+Hideout Golf League is a web application for managing, tracking, and displaying golf tournament results, player statistics, and league leaderboards. The platform supports both public and admin views, allowing for tournament management, score uploads, and dynamic points configuration. The system is designed for flexibility, supporting multiple tournament types and custom points distributions.
 
 ---
 
 ## Key Features
 - **Dynamic Leaderboards:** Real-time leaderboards for net and gross scoring, with sortable player histories.
-- **Tournament Management:** Admins can create, edit, and delete tournaments, upload scores, and manually enter results.
+- **Tournament Management:** Admins can create, edit, and delete tournaments, and enter results via a unified tournament entry screen (file upload or manual entry).
 - **Points Configuration:** Fully customizable points distribution for each tournament type (Major, Tour, League, SUPR Club).
 - **Player Management:** Add, search, and manage players, with detailed player histories and statistics.
 - **Authentication:** Admin login/logout for secure access to management features; public users can view leaderboards and results.
@@ -26,7 +26,7 @@ Hideout Golf League is a web application for managing, tracking, and displaying 
 ### Admin Users
 - All public capabilities, plus:
   - Create/edit/delete tournaments and players
-  - Upload tournament scores (file or manual entry)
+  - Enter tournament scores (file upload or manual entry, unified in one screen)
   - Configure points for each tournament type
   - Manage app settings (branding, scoring type, etc.)
 
@@ -38,8 +38,7 @@ Hideout Golf League is a web application for managing, tracking, and displaying 
 - **Players:** Directory of all players with search and profile views
 - **Admin Functions:**
   - Tournament Manager
-  - Upload Scores
-  - Manual Entry
+  - Tournament Entry (Upload Scores & Manual Entry unified)
   - Points Config
   - App Setup
 
@@ -150,9 +149,8 @@ League (1) ───< (N) Tournament (1) ───< (N) PlayerResult >(N) ──
 - `PUT /api/settings` — Update app settings
 
 ### File Upload & Processing
-- `POST /api/upload` — Upload tournament results (Excel/CSV)
-- `POST /api/tournaments/process` — Process uploaded tournament data (calculated mode)
-- `POST /api/tournaments/manual-entry` — Manual entry of tournament results (manual mode)
+- `POST /api/upload` — Upload tournament results (Excel/CSV) or enter manually in the unified UI
+- `POST /api/tournaments/process` — Process uploaded or manually entered tournament data
 
 #### Example: Upload Tournament Results
 ```bash
@@ -189,7 +187,7 @@ PUT /api/points-config
 ---
 
 ## Admin Actions
-- **Tournament Management:** Create, edit, delete tournaments; upload or manually enter scores. For each event, select Tournament Type, Scoring Mode, and Scoring Type. The system will display the required fields and allow downloading a sample spreadsheet.
+- **Tournament Management:** Create, edit, delete tournaments; enter scores via the unified tournament entry screen. For each event, select Tournament Type, Scoring Mode, and Scoring Type. The system will display the required fields and allow downloading a sample spreadsheet.
 - **Player Management:** Add, edit, delete players (with checks for existing results).
 - **Points Configuration:** Edit points for each position and tournament type; changes apply to future and recalculated tournaments.
 - **App Setup:** Configure branding, scoring type, and other settings.
@@ -295,26 +293,11 @@ The required columns for spreadsheet upload depend on the selected scoring mode 
 The UI will display the exact required columns before upload, and you can download a sample spreadsheet template for your configuration.
 
 #### **Sample Spreadsheet Download**
-- On the upload and manual entry pages, admins can download a sample spreadsheet template with the correct headers for the current tournament configuration (type, scoring mode, scoring type).
+- On the unified tournament entry page, admins can download a sample spreadsheet template with the correct headers for the current tournament configuration (type, scoring mode, scoring type).
 - This ensures that uploaded files always match the required format.
 
-#### **Processing Logic**
-**Player Matching:**
-  - Players are matched by name (and/or email if provided).
-  - If no player is found, a new player is created using the display name.
-**Score Calculation:**
-  - **Net Score:** Taken from the `Net Score` column.
-  - **Gross Score:** Taken from the `Gross Score` column (if present) or calculated if possible.
-**Validation:**
-  - Each row must have all required fields for the selected scoring mode and type.
-  - If any required field is missing or invalid, the upload is rejected with a clear error message indicating the row and issue.
-
-#### **Error Handling**
-Missing or invalid required fields will cause the upload to fail.
-  - The response will include a message describing the error and the row number.
-
 #### **Notes**
-The upload endpoint accepts Excel (`.xlsx`) and CSV files.
+The tournament entry endpoint accepts Excel (`.xlsx`) and CSV files, or manual entry via the UI.
 New players are created automatically if the name does not exist in the system.
 The preview in the response shows how the data was parsed and calculated.
 
@@ -334,9 +317,9 @@ If you are developing or testing, ensure that any changes to points, positions, 
 
 ---
 
-## Deprecated: Frontend Points/Tie Calculation
+## Deprecated: Frontend Points/Tie Calculation & Manual Entry Components
 
-Previous versions of this project included frontend logic for calculating points, positions, and tie-breaking. This logic has been fully removed. All related helpers and tests have been deprecated or deleted. If you find references to frontend calculation, they are no longer in use.
+Previous versions of this project included frontend logic for calculating points, positions, and tie-breaking, and separate manual entry components. This logic and these components have been fully removed. All related helpers, tests, and manual entry forms have been deprecated or deleted. If you find references to frontend calculation or manual entry forms, they are no longer in use.
 
 ## UI Table Layouts & Responsiveness
 
