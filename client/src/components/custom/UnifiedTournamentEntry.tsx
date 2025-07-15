@@ -381,9 +381,18 @@ export default function UnifiedTournamentEntry() {
       let requestData: any;
 
       if (entryMode === 'file') {
+        if (!selectedFile) {
+          toast({
+            title: "Missing file",
+            description: "Please select a file to upload before generating a preview.",
+            variant: "destructive"
+          });
+          setIsProcessing(false);
+          return;
+        }
         // Step 1: Upload file and get preview
         const formData = new FormData();
-        formData.append("file", selectedFile!);
+        formData.append("file", selectedFile);
         formData.append("name", tournamentName);
         formData.append("date", tournamentDate);
         formData.append("type", tournamentType);
