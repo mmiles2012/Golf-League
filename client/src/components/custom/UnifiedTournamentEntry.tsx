@@ -399,6 +399,12 @@ export default function UnifiedTournamentEntry() {
         formData.append("scoringMode", scoringMode);
         formData.append("scoringType", scoringType);
 
+        // Debug: log selectedFile and formData keys
+        console.log("[DEBUG] selectedFile:", selectedFile);
+        for (let pair of formData.entries()) {
+          console.log(`[DEBUG] formData: ${pair[0]} =`, pair[1]);
+        }
+
         setUploadStatus("Uploading and parsing file...");
         const uploadResponse = await apiRequest("POST", "/api/upload", formData);
         if (!uploadResponse || !uploadResponse.ok) {
