@@ -358,6 +358,18 @@ export default function UnifiedTournamentEntry() {
     await processPreview();
   };
 
+  // Map upload preview row to results array format
+  function mapUploadPreviewToResults(previewRow: any) {
+    return {
+      player: previewRow.Player || previewRow["Player"] || previewRow.player || "",
+      position: previewRow.Position || previewRow["Position"] || previewRow.position || 0,
+      grossScore: previewRow["Gross Score"] ?? previewRow.grossScore ?? null,
+      netScore: previewRow["Net Score"] ?? previewRow["Total"] ?? previewRow.netScore ?? null,
+      handicap: previewRow["Handicap"] ?? previewRow["Course Handicap"] ?? previewRow.handicap ?? null
+    };
+  }
+
+  // New: Two-step process for file upload preview
   const processPreview = async () => {
     setIsProcessing(true);
     setUploadProgress(25);
@@ -369,7 +381,7 @@ export default function UnifiedTournamentEntry() {
       let requestData: any;
 
       if (entryMode === 'file') {
-        // File upload preview
+        // Step 1: Upload file and get preview
         const formData = new FormData();
         formData.append("file", selectedFile!);
         formData.append("name", tournamentName);
@@ -378,10 +390,30 @@ export default function UnifiedTournamentEntry() {
         formData.append("scoringMode", scoringMode);
         formData.append("scoringType", scoringType);
 
-        endpoint = scoringMode === 'manual' ? "/api/tournaments/manual-preview" : "/api/tournaments/preview";
-        requestData = formData;
+        setUploadStatus("Uploading and parsing file...");
+        const uploadResponse = await apiRequest("POST", "/api/upload", formData);
+        if (!uploadResponse || !uploadResponse.ok) {
+          throw new Error("Failed to upload and parse file");
+        }
+        const uploadData = await uploadResponse.json();
+        if (!uploadData.preview || !Array.isArray(uploadData.preview)) {
+          throw new Error("Invalid preview data from upload");
+        }
+
+        // Step 2: Map preview to results array
+        const results = uploadData.preview.map(mapUploadPreviewToResults);
+
+        endpoint = "/api/tournaments/preview";
+        requestData = {
+          name: tournamentName,
+          date: tournamentDate,
+          type: tournamentType,
+          scoringMode,
+          scoringType,
+          results
+        };
       } else {
-        // Manual entry preview
+        // Manual entry preview (unchanged)
         const processedResults = playerEntries.map(entry => ({
           player: entry.playerName,
           position: entry.position,
@@ -416,7 +448,6 @@ export default function UnifiedTournamentEntry() {
       } else {
         throw new Error("Failed to generate preview");
       }
-      
     } catch (error) {
       console.error("Preview error:", error);
       setUploadErrors([{
