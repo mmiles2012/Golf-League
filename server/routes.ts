@@ -746,11 +746,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("File uploaded:", req.file.originalname);
 
-      // Parse Excel file
-      const workbook = XLSX.read(req.file.buffer);
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(worksheet);
+      let data: any[];
+      const fileExtension = req.file.originalname.split('.').pop()?.toLowerCase();
+
+      // Parse file based on type
+      if (fileExtension === 'csv') {
+        // Parse CSV file
+        const csvContent = req.file.buffer.toString('utf-8');
+        const workbook = XLSX.read(csvContent, { type: 'string' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        data = XLSX.utils.sheet_to_json(worksheet);
+      } else {
+        // Parse Excel file (.xlsx, .xls)
+        const workbook = XLSX.read(req.file.buffer);
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        data = XLSX.utils.sheet_to_json(worksheet);
+      }
+
+      console.log(`Parsed ${data.length} rows from ${fileExtension} file`);
 
       // Fetch all players for email matching
       let allPlayers = await storage.getPlayers();
@@ -1111,19 +1126,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Processed ${processedTieResults.length} results with tie handling`);
 
       // Calculate gross positions and points with proper tie handling using tournament-specific points
-      const grossTieHandler = new TieHandler({
-        ...pointsConfig,
-        [validData.type]: pointsConfig[validData.type].map(entry => ({ 
-          position: entry.position, 
-          points: calculateGrossPoints(entry.position, validData.type, pointsConfig) 
-        }))
-      });
+      // Skip gross calculations for manual tournaments since they don't use calculated points
+      let processedGrossResults = processedTieResults;
       
-      const processedGrossResults = grossTieHandler.processResultsWithTies(
-        playerData,
-        validData.type, // Use tournament-specific points for gross scoring
-        'gross'
-      );
+      if (validData.type !== 'manual' && pointsConfig[validData.type as keyof typeof pointsConfig]) {
+        const grossTieHandler = new TieHandler({
+          ...pointsConfig,
+          [validData.type]: pointsConfig[validData.type as keyof typeof pointsConfig].map(entry => ({ 
+            position: entry.position, 
+            points: calculateGrossPoints(entry.position, validData.type, pointsConfig) 
+          }))
+        });
+        
+        processedGrossResults = grossTieHandler.processResultsWithTies(
+          playerData,
+          validData.type, // Use tournament-specific points for gross scoring
+          'gross'
+        );
+      }
       
       // Create a map of playerId to gross position and points
       const grossPositionMap = new Map<number, { position: number, points: number }>();
@@ -1170,6 +1190,159 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error processing tournament:", error);
       res.status(500).json({ message: "Failed to process tournament" });
+    }
+  });
+  
+  // Manual tournament preview endpoint - for tournaments where admin assigns points directly
+  app.post("/api/tournaments/manual-preview", async (req: Request, res: Response) => {
+    try {
+      const { name, date, type, scoringType, results } = req.body;
+      
+      console.log(`Generating manual tournament preview for: ${name}, date: ${date}, type: ${type}, with ${results.length} player results`);
+      
+      // Validate the input data structure for manual tournaments
+      const formattedData = {
+        name,
+        date,
+        type,
+        scoringType: scoringType || "Manual Entry",
+        results: results.map((result: any) => ({
+          playerName: String(result.player || ""),
+          position: Number(result.position),
+          points: Number(result.points), // Direct points assignment for manual tournaments
+          grossScore: result.grossScore !== null && result.grossScore !== undefined ? Number(result.grossScore) : null,
+          netScore: result.netScore !== null && result.netScore !== undefined ? Number(result.netScore) : null,
+          handicap: result.handicap !== null && result.handicap !== undefined ? Number(result.handicap) : null
+        }))
+      };
+      
+      // Find existing players (don't create new ones for preview)
+      const previewResults = [];
+      const newPlayerResults = [];
+      
+      for (const result of formattedData.results) {
+        let player = await storage.findPlayerByName(result.playerName);
+        
+        const previewResult = {
+          playerName: result.playerName,
+          playerId: player?.id || null,
+          position: result.position,
+          displayPosition: result.position.toString(), // Manual tournaments don't handle ties automatically
+          tiedPosition: false, // Manual tournaments assume positions are set correctly
+          grossScore: result.grossScore,
+          netScore: result.netScore,
+          handicap: result.handicap,
+          points: result.points, // Use direct points assignment
+          isNewPlayer: !player
+        };
+        
+        if (player) {
+          previewResults.push(previewResult);
+        } else {
+          newPlayerResults.push(previewResult);
+        }
+      }
+
+      const allPreviewResults = [...previewResults, ...newPlayerResults]
+        .sort((a, b) => a.position - b.position);
+      
+      res.json({
+        tournament: {
+          name: formattedData.name,
+          date: formattedData.date,
+          type: formattedData.type,
+          scoringType: formattedData.scoringType,
+          isManual: true
+        },
+        results: allPreviewResults,
+        summary: {
+          totalPlayers: allPreviewResults.length,
+          newPlayers: newPlayerResults.length,
+          existingPlayers: previewResults.length,
+          totalPoints: allPreviewResults.reduce((sum, r) => sum + r.points, 0),
+          tiesDetected: false // Manual tournaments don't auto-detect ties
+        }
+      });
+      
+    } catch (error) {
+      console.error("Error generating manual tournament preview:", error);
+      res.status(500).json({ message: "Failed to generate manual tournament preview" });
+    }
+  });
+  
+  // Manual entry preview endpoint - shows what will be processed without saving
+  app.post("/api/tournaments/manual-entry-preview", async (req: Request, res: Response) => {
+    try {
+      const { name, date, type, scoringType, results } = req.body;
+      
+      console.log(`Generating manual entry preview for tournament: ${name}, date: ${date}, type: ${type}, with ${results.length} player results`);
+      
+      // Validate the input data structure for manual entry
+      const formattedData = {
+        name,
+        date,
+        type,
+        scoringType: scoringType || "Manual Entry",
+        results: results.map((result: any) => ({
+          playerName: String(result.player || ""),
+          position: Number(result.position),
+          points: Number(result.points), // Direct points assignment for manual entry
+          grossScore: result.grossScore !== null && result.grossScore !== undefined ? Number(result.grossScore) : null,
+          netScore: result.netScore !== null && result.netScore !== undefined ? Number(result.netScore) : null,
+          handicap: result.handicap !== null && result.handicap !== undefined ? Number(result.handicap) : null
+        }))
+      };
+      
+      // Find existing players (don't create new ones for preview)
+      const previewResults = [];
+      const newPlayerResults = [];
+      
+      for (const result of formattedData.results) {
+        let player = await storage.findPlayerByName(result.playerName);
+        
+        const previewResult = {
+          playerName: result.playerName,
+          playerId: player?.id || null,
+          position: result.position,
+          displayPosition: result.position.toString(), // Manual entry doesn't handle ties automatically
+          tiedPosition: false, // Manual entry assumes positions are set correctly
+          grossScore: result.grossScore,
+          netScore: result.netScore,
+          handicap: result.handicap,
+          points: result.points, // Use direct points assignment
+          isNewPlayer: !player
+        };
+        
+        if (player) {
+          previewResults.push(previewResult);
+        } else {
+          newPlayerResults.push(previewResult);
+        }
+      }
+
+      const allPreviewResults = [...previewResults, ...newPlayerResults]
+        .sort((a, b) => a.position - b.position);
+      
+      res.json({
+        tournament: {
+          name: formattedData.name,
+          date: formattedData.date,
+          type: formattedData.type,
+          scoringType: formattedData.scoringType
+        },
+        results: allPreviewResults,
+        summary: {
+          totalPlayers: allPreviewResults.length,
+          newPlayers: newPlayerResults.length,
+          existingPlayers: previewResults.length,
+          totalPoints: allPreviewResults.reduce((sum, r) => sum + r.points, 0),
+          tiesDetected: false // Manual entry doesn't auto-detect ties
+        }
+      });
+      
+    } catch (error) {
+      console.error("Error generating manual entry preview:", error);
+      res.status(500).json({ message: "Failed to generate manual entry preview" });
     }
   });
   

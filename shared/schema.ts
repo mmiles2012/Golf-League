@@ -2,7 +2,7 @@ import { pgTable, text, serial, integer, boolean, timestamp, real, date, unique,
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const tournamentTypes = ['major', 'tour', 'league', 'supr'] as const;
+export const tournamentTypes = ['major', 'tour', 'league', 'supr', 'manual'] as const;
 export type TournamentType = typeof tournamentTypes[number];
 
 // Session storage table for Replit Auth
