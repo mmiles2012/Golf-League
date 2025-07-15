@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Trash2, Plus, Eye, CheckCircle, AlertCircle, Save, AlertTriangle, PenSquare } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { TOURNAMENT_TYPES } from "@/lib/constants";
+import { TOURNAMENT_TYPES, SCORING_MODES, SCORING_TYPES } from "@/lib/constants";
 import { useQueryClient } from "@tanstack/react-query";
 import PlayerSearchInput from "./PlayerSearchInput";
 
@@ -65,6 +65,8 @@ export default function ManualEntryForm() {
   const [tournamentName, setTournamentName] = useState("");
   const [tournamentDate, setTournamentDate] = useState("");
   const [tournamentType, setTournamentType] = useState("");
+  const [scoringMode, setScoringMode] = useState<'calculated' | 'manual'>('manual');
+  const [scoringType, setScoringType] = useState<'net' | 'gross' | 'both'>('both');
   const [playerEntries, setPlayerEntries] = useState<ManualPlayerEntry[]>([
     { id: 1, playerName: "", position: 1, points: 0 }
   ]);
@@ -84,14 +86,16 @@ export default function ManualEntryForm() {
   const [currentPlayerEntryId, setCurrentPlayerEntryId] = useState<number | null>(null);
 
   // Get tournament type info
-  const selectedTournamentTypeInfo = TOURNAMENT_TYPES.find(t => t.value === tournamentType);
-  const isManualTournament = selectedTournamentTypeInfo && !selectedTournamentTypeInfo.calculated;
+  // Removed unused isManualTournament logic; use isManualMode instead
+  const isManualMode = scoringMode === 'manual';
 
   // Reset the form
   const resetForm = () => {
     setTournamentName("");
     setTournamentDate("");
     setTournamentType("");
+    setScoringMode('manual');
+    setScoringType('both');
     setPlayerEntries([{ id: 1, playerName: "", position: 1, points: 0 }]);
     setTournamentPreview(null);
     setShowPreview(false);
@@ -188,7 +192,7 @@ export default function ManualEntryForm() {
     }
 
     // Show warning for manual tournaments
-    if (isManualTournament) {
+    if (isManualMode) {
       setShowManualWarning(true);
       return;
     }
@@ -207,7 +211,7 @@ export default function ManualEntryForm() {
       const processedResults = playerEntries.map(entry => ({
         player: entry.playerName,
         position: entry.position,
-        points: isManualTournament ? entry.points : undefined, // Only include points for manual tournaments
+        points: isManualMode ? entry.points : undefined, // Only include points for manual mode
         grossScore: entry.grossScore,
         netScore: entry.netScore,
         handicap: entry.handicap
@@ -217,13 +221,14 @@ export default function ManualEntryForm() {
       setUploadStatus("Validating data and calculating points...");
 
       // Choose the appropriate preview endpoint
-      const endpoint = isManualTournament ? "/api/tournaments/manual-preview" : "/api/tournaments/preview";
+      const endpoint = isManualMode ? "/api/tournaments/manual-preview" : "/api/tournaments/preview";
       
       const previewResponse = await apiRequest("POST", endpoint, {
         name: tournamentName,
         date: tournamentDate,
         type: tournamentType,
-        scoringType: isManualTournament ? "Manual Entry" : "Auto-calculated",
+        scoringMode,
+        scoringType,
         results: processedResults
       });
 
@@ -258,14 +263,15 @@ export default function ManualEntryForm() {
 
     try {
       // Choose the appropriate processing endpoint
-      const endpoint = isManualTournament ? "/api/tournaments/manual-entry" : "/api/tournaments/process";
+      const endpoint = isManualMode ? "/api/tournaments/manual-entry" : "/api/tournaments/process";
       
       const processResponse = await apiRequest("POST", endpoint, {
         name: tournamentPreview.tournament.name,
         date: tournamentPreview.tournament.date,
         type: tournamentPreview.tournament.type,
-        scoringType: tournamentPreview.tournament.scoringType,
-        isManualEntry: isManualTournament,
+        scoringMode,
+        scoringType,
+        isManualEntry: isManualMode,
         results: tournamentPreview.results.map(r => ({
           playerId: r.playerId,
           playerName: r.playerName,
@@ -366,28 +372,61 @@ export default function ManualEntryForm() {
                   {TOURNAMENT_TYPES.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
                       {type.label}
-                      {!type.calculated && <Badge variant="secondary" className="ml-2">Manual Scoring</Badge>}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {isManualTournament && (
-                <Alert className="mt-2">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    Manual tournaments require you to enter points directly. Points will not be recalculated.
-                  </AlertDescription>
-                </Alert>
-              )}
-              {!isManualTournament && tournamentType && (
-                <Alert className="mt-2">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    Points will be automatically calculated based on position and tournament type.
-                  </AlertDescription>
-                </Alert>
-              )}
             </div>
+
+            {/* Scoring Mode Selection */}
+            <div className="space-y-3">
+              <Label>Scoring Mode</Label>
+              <div className="flex flex-col gap-2">
+                {SCORING_MODES.map((mode) => (
+                  <label key={mode.value} className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="scoringMode"
+                      value={mode.value}
+                      checked={scoringMode === mode.value}
+                      onChange={() => setScoringMode(mode.value as 'calculated' | 'manual')}
+                      disabled={isProcessing}
+                      className="mt-1"
+                    />
+                    <span>
+                      <span className="font-medium">{mode.label}</span>
+                      <span className="block text-sm text-neutral-500">{mode.description}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Scoring Type Selection (for calculated mode) */}
+            {scoringMode === 'calculated' && (
+              <div className="space-y-1">
+                <Label htmlFor="scoring-type">Scoring Type</Label>
+                <Select 
+                  value={scoringType} 
+                  onValueChange={(value: 'net' | 'gross' | 'both') => setScoringType(value)}
+                  disabled={isProcessing}
+                >
+                  <SelectTrigger id="scoring-type">
+                    <SelectValue placeholder="Select scoring type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SCORING_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-neutral-500 mt-1">
+                  Determines what score fields are required for each player
+                </p>
+              </div>
+            )}
 
             {/* Player Entries */}
             <div className="space-y-4">
@@ -435,7 +474,7 @@ export default function ManualEntryForm() {
                         disabled={isProcessing}
                       />
                     </div>
-                    {isManualTournament && (
+                    {isManualMode && (
                       <div>
                         <Label className="text-xs">Points *</Label>
                         <Input
@@ -539,7 +578,7 @@ export default function ManualEntryForm() {
               <span>Tournament Preview</span>
             </CardTitle>
             <CardDescription>
-              Review the tournament details and {isManualTournament ? 'manual points' : 'calculated points'} before processing
+              Review the tournament details and {isManualMode ? 'manual points' : 'calculated points'} before processing
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -550,7 +589,7 @@ export default function ManualEntryForm() {
                 <p className="text-lg font-semibold">{tournamentPreview.tournament.name}</p>
                 <div className="flex items-center gap-2">
                   <p className="text-sm text-gray-600">{getTournamentTypeLabel(tournamentPreview.tournament.type)}</p>
-                  {isManualTournament && <Badge variant="secondary">Manual</Badge>}
+                  {isManualMode && <Badge variant="secondary">Manual</Badge>}
                 </div>
               </div>
               <div>
@@ -561,7 +600,7 @@ export default function ManualEntryForm() {
               <div>
                 <p className="text-sm font-medium text-gray-500">Total Points</p>
                 <p className="text-lg font-semibold">{tournamentPreview.summary.totalPoints}</p>
-                <p className="text-sm text-gray-600">{isManualTournament ? 'Assigned' : 'Calculated'}</p>
+                <p className="text-sm text-gray-600">{isManualMode ? 'Assigned' : 'Calculated'}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">New Players</p>
@@ -595,7 +634,7 @@ export default function ManualEntryForm() {
                       </TableCell>
                       <TableCell className="font-medium">{result.playerName}</TableCell>
                       <TableCell>
-                        <Badge variant={isManualTournament ? "secondary" : "default"}>
+                        <Badge variant={isManualMode ? "secondary" : "default"}>
                           {result.points}
                         </Badge>
                       </TableCell>
