@@ -482,15 +482,47 @@ export default function Leaderboards() {
           </div>
         </div>
         {/* Pagination controls */}
-        <div className="flex justify-between items-center mt-4 px-4">
+        <div className="flex justify-between items-center mt-4 px-4 z-10 relative">
           <span className="text-sm text-neutral-600">
             Page {currentPage + 1} of {Math.ceil(totalRows / rowsPerPage)} ({totalRows} players)
           </span>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" aria-label="First page" onClick={() => setCurrentPage(0)} disabled={currentPage === 0}>First</Button>
-            <Button size="sm" variant="outline" aria-label="Previous page" onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0}>Prev</Button>
-            <Button size="sm" variant="outline" aria-label="Next page" onClick={() => setCurrentPage(p => Math.min(Math.ceil(totalRows / rowsPerPage) - 1, p + 1))} disabled={currentPage >= Math.ceil(totalRows / rowsPerPage) - 1}>Next</Button>
-            <Button size="sm" variant="outline" aria-label="Last page" onClick={() => setCurrentPage(Math.ceil(totalRows / rowsPerPage) - 1)} disabled={currentPage >= Math.ceil(totalRows / rowsPerPage) - 1}>Last</Button>
+            <button
+              type="button"
+              className={`px-3 py-1 rounded border text-sm font-medium transition-colors ${currentPage === 0 ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:text-primary'}`}
+              aria-label="First page"
+              onClick={() => setCurrentPage(0)}
+              disabled={currentPage === 0}
+            >
+              First
+            </button>
+            <button
+              type="button"
+              className={`px-3 py-1 rounded border text-sm font-medium transition-colors ${currentPage === 0 ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:text-primary'}`}
+              aria-label="Previous page"
+              onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+              disabled={currentPage === 0}
+            >
+              Prev
+            </button>
+            <button
+              type="button"
+              className={`px-3 py-1 rounded border text-sm font-medium transition-colors ${currentPage >= Math.ceil(totalRows / rowsPerPage) - 1 ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:text-primary'}`}
+              aria-label="Next page"
+              onClick={() => setCurrentPage(p => Math.min(Math.ceil(totalRows / rowsPerPage) - 1, p + 1))}
+              disabled={currentPage >= Math.ceil(totalRows / rowsPerPage) - 1}
+            >
+              Next
+            </button>
+            <button
+              type="button"
+              className={`px-3 py-1 rounded border text-sm font-medium transition-colors ${currentPage >= Math.ceil(totalRows / rowsPerPage) - 1 ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:text-primary'}`}
+              aria-label="Last page"
+              onClick={() => setCurrentPage(Math.ceil(totalRows / rowsPerPage) - 1)}
+              disabled={currentPage >= Math.ceil(totalRows / rowsPerPage) - 1}
+            >
+              Last
+            </button>
           </div>
         </div>
       </Card>
