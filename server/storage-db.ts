@@ -24,7 +24,8 @@ import {
   playerResults,
   users,
   playerProfiles,
-  playerLinkRequests
+  playerLinkRequests,
+  homeClubOptionsTable
 } from "@shared/schema";
 import { db } from "./db";
 import { IStorage } from "./storage";
@@ -659,6 +660,39 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return updatedRequest;
+  }
+
+  // Home club options management
+  async getHomeClubOptions(): Promise<string[]> {
+    try {
+      const options = await db
+        .select()
+        .from(homeClubOptionsTable)
+        .orderBy(homeClubOptionsTable.name);
+      
+      return options.map(option => option.name);
+    } catch (error) {
+      console.error("Error fetching home club options:", error);
+      throw error;
+    }
+  }
+
+  async updateHomeClubOptions(options: string[]): Promise<string[]> {
+    try {
+      // Clear existing options
+      await db.delete(homeClubOptionsTable);
+      
+      // Insert new options
+      if (options.length > 0) {
+        await db.insert(homeClubOptionsTable)
+          .values(options.map(name => ({ name })));
+      }
+      
+      return options;
+    } catch (error) {
+      console.error("Error updating home club options:", error);
+      throw error;
+    }
   }
 }
 

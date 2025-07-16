@@ -218,6 +218,7 @@ export const playerWithHistorySchema = z.object({
     name: z.string(),
     email: z.string().optional().nullable(),
     defaultHandicap: z.number().optional().nullable(),
+    homeClub: z.string().optional().nullable(),
   }),
   tournaments: z.array(z.object({
     id: z.number(),

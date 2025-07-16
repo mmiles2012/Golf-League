@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import type { PlayerWithHistory, AppSettings } from "@shared/schema";
 import PlayerDetailsModal from "@/components/custom/PlayerDetailsModal";
@@ -17,11 +18,17 @@ export default function Leaderboards() {
   const [sortingDesc, setSortingDesc] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('net');
   const [currentPage, setCurrentPage] = useState(0);
+  const [homeClubFilter, setHomeClubFilter] = useState<string>('');
   const rowsPerPage = 25;
 
   // Fetch app settings to get custom page title
   const { data: appSettings } = useQuery<AppSettings>({
     queryKey: ["/api/settings"],
+  });
+
+  // Fetch home club options for filtering
+  const { data: homeClubOptions = [] } = useQuery<string[]>({
+    queryKey: ["/api/home-club-options"],
   });
 
   // Fetch leaderboard data with server-side pagination
@@ -30,12 +37,15 @@ export default function Leaderboards() {
     isLoading: isNetLoading,
     error: netError
   } = useQuery<{ data: PlayerWithHistory[]; total: number }>({
-    queryKey: ["/api/leaderboard/net", { page: currentPage, limit: rowsPerPage }],
+    queryKey: ["/api/leaderboard/net", { page: currentPage, limit: rowsPerPage, homeClub: homeClubFilter }],
     staleTime: 5 * 60 * 1000,
     enabled: activeTab === "net",
     // Add queryFn for clarity and debugging
     queryFn: async () => {
-      const url = `/api/leaderboard/net?page=${currentPage}&limit=${rowsPerPage}`;
+      let url = `/api/leaderboard/net?page=${currentPage}&limit=${rowsPerPage}`;
+      if (homeClubFilter) {
+        url += `&homeClub=${encodeURIComponent(homeClubFilter)}`;
+      }
       const response = await fetch(url, { credentials: 'include' });
       if (!response.ok) throw new Error('Failed to fetch net leaderboard');
       return response.json();
@@ -46,11 +56,14 @@ export default function Leaderboards() {
     isLoading: isGrossLoading,
     error: grossError
   } = useQuery<{ data: PlayerWithHistory[]; total: number }>({
-    queryKey: ["/api/leaderboard/gross", { page: currentPage, limit: rowsPerPage }],
+    queryKey: ["/api/leaderboard/gross", { page: currentPage, limit: rowsPerPage, homeClub: homeClubFilter }],
     staleTime: 5 * 60 * 1000,
     enabled: activeTab === "gross",
     queryFn: async () => {
-      const url = `/api/leaderboard/gross?page=${currentPage}&limit=${rowsPerPage}`;
+      let url = `/api/leaderboard/gross?page=${currentPage}&limit=${rowsPerPage}`;
+      if (homeClubFilter) {
+        url += `&homeClub=${encodeURIComponent(homeClubFilter)}`;
+      }
       const response = await fetch(url, { credentials: 'include' });
       if (!response.ok) throw new Error('Failed to fetch gross leaderboard');
       return response.json();
@@ -392,6 +405,29 @@ export default function Leaderboards() {
           </TabsList>
         </Tabs>
       </div>
+      
+      {/* Home Club Filter */}
+      {homeClubOptions.length > 0 && (
+        <div className="flex items-center gap-2 mb-4">
+          <label htmlFor="homeClubFilter" className="text-sm font-medium text-neutral-700">
+            Filter by Home Club:
+          </label>
+          <Select value={homeClubFilter} onValueChange={setHomeClubFilter}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Overall (All Clubs)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Overall (All Clubs)</SelectItem>
+              {homeClubOptions.map((club) => (
+                <SelectItem key={club} value={club}>
+                  {club}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+      
       {/* Leaderboard info section */}
       <div className="flex items-center text-sm text-neutral-700 mb-4 bg-neutral-50 p-3 rounded-md">
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-primary" viewBox="0 0 20 20" fill="currentColor">

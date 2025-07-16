@@ -63,6 +63,12 @@ export default function PlayerDashboard() {
     enabled: isAuthenticated && user?.friendsList && user.friendsList.length > 0,
   });
 
+  // Get home club options
+  const { data: homeClubOptions = [] } = useQuery<string[]>({
+    queryKey: ["/api/home-club-options"],
+    enabled: isAuthenticated,
+  });
+
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -292,12 +298,21 @@ export default function PlayerDashboard() {
                 </div>
                 <div>
                   <Label htmlFor="homeClub">Home Club</Label>
-                  <Input
-                    id="homeClub"
+                  <Select
                     value={editForm.homeClub}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, homeClub: e.target.value }))}
-                    placeholder="Enter your home club"
-                  />
+                    onValueChange={(value) => setEditForm(prev => ({ ...prev, homeClub: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your home club" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {homeClubOptions.map((club) => (
+                        <SelectItem key={club} value={club}>
+                          {club}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="flex space-x-2">
                   <Button 

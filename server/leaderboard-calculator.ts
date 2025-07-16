@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { tournaments, players, playerResults } from "@shared/schema";
+import { tournaments, players, playerResults, users, playerProfiles } from "@shared/schema";
 import { eq, inArray } from "drizzle-orm";
 import type { 
   Player, 
@@ -134,7 +134,8 @@ export class LeaderboardCalculator {
         id: player.id,
         name: player.name,
         email: player.email,
-        defaultHandicap: player.defaultHandicap
+        defaultHandicap: player.defaultHandicap,
+        homeClub: (player as any).homeClub
       },
       tournaments: tournamentDetails,
       totalPoints,
@@ -339,16 +340,38 @@ export class LeaderboardCalculator {
   /**
    * Get a player by ID
    */
-  private async getPlayer(id: number): Promise<Player | undefined> {
-    const [player] = await db.select().from(players).where(eq(players.id, id));
+  private async getPlayer(id: number): Promise<(Player & { homeClub?: string | null }) | undefined> {
+    const [player] = await db.select({
+      id: players.id,
+      name: players.name,
+      email: players.email,
+      defaultHandicap: players.defaultHandicap,
+      createdAt: players.createdAt,
+      homeClub: users.homeClub,
+    })
+    .from(players)
+    .leftJoin(playerProfiles, eq(players.id, playerProfiles.playerId))
+    .leftJoin(users, eq(playerProfiles.userId, users.id))
+    .where(eq(players.id, id));
     return player;
   }
 
   /**
-   * Get all players
+   * Get all players with homeClub information
    */
-  private async getAllPlayers(): Promise<Player[]> {
-    return db.select().from(players).orderBy(players.name);
+  private async getAllPlayers(): Promise<(Player & { homeClub?: string | null })[]> {
+    return db.select({
+      id: players.id,
+      name: players.name,
+      email: players.email,
+      defaultHandicap: players.defaultHandicap,
+      createdAt: players.createdAt,
+      homeClub: users.homeClub,
+    })
+    .from(players)
+    .leftJoin(playerProfiles, eq(players.id, playerProfiles.playerId))
+    .leftJoin(users, eq(playerProfiles.userId, users.id))
+    .orderBy(players.name);
   }
 
   /**
@@ -473,7 +496,8 @@ export class LeaderboardCalculator {
         id: player.id,
         name: player.name,
         email: player.email,
-        defaultHandicap: player.defaultHandicap
+        defaultHandicap: player.defaultHandicap,
+        homeClub: (player as any).homeClub
       },
       tournaments: tournamentDetails,
       totalPoints,
