@@ -482,7 +482,7 @@ export default function Leaderboards() {
           </div>
         </div>
         {/* Pagination controls */}
-        <div className="flex justify-between items-center mt-4 px-4 z-10 relative">
+        <div className="flex justify-between items-center mt-4 px-4 z-10 relative pointer-events-auto">
           <span className="text-sm text-neutral-600">
             Page {currentPage + 1} of {Math.ceil(totalRows / rowsPerPage)} ({totalRows} players)
           </span>
