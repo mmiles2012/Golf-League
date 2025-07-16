@@ -407,7 +407,7 @@ export default function Leaderboards() {
         </div>
       )}
       {/* Fixed tab navigation at bottom of screen */}
-      <div className="fixed bottom-4 left-0 right-0 z-50 flex justify-center">
+      <div className="fixed bottom-4 left-0 right-0 z-10 flex justify-center pointer-events-none">
         <div className="bg-white rounded-full shadow-lg border px-4 py-3">
           <div className="flex space-x-2">
             <button
@@ -416,7 +416,7 @@ export default function Leaderboards() {
                 activeTab === "net" 
                   ? "bg-primary text-white" 
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+              } pointer-events-auto`}
               aria-current={activeTab === 'net'}
             >
               Net
@@ -427,7 +427,7 @@ export default function Leaderboards() {
                 activeTab === "gross" 
                   ? "bg-primary text-white" 
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+              } pointer-events-auto`}
               aria-current={activeTab === 'gross'}
             >
               Gross
