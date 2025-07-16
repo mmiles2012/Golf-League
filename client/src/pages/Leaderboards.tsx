@@ -33,6 +33,13 @@ export default function Leaderboards() {
     queryKey: ["/api/leaderboard/net", { page: currentPage, limit: rowsPerPage }],
     staleTime: 5 * 60 * 1000,
     enabled: activeTab === "net",
+    // Add queryFn for clarity and debugging
+    queryFn: async () => {
+      const url = `/api/leaderboard/net?page=${currentPage}&limit=${rowsPerPage}`;
+      const response = await fetch(url, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch net leaderboard');
+      return response.json();
+    },
   });
   const {
     data: pagedGrossLeaderboard,
@@ -42,6 +49,12 @@ export default function Leaderboards() {
     queryKey: ["/api/leaderboard/gross", { page: currentPage, limit: rowsPerPage }],
     staleTime: 5 * 60 * 1000,
     enabled: activeTab === "gross",
+    queryFn: async () => {
+      const url = `/api/leaderboard/gross?page=${currentPage}&limit=${rowsPerPage}`;
+      const response = await fetch(url, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch gross leaderboard');
+      return response.json();
+    },
   });
 
   // Use the appropriate data source based on active tab
@@ -358,6 +371,12 @@ export default function Leaderboards() {
     window.print();
   };
 
+  // --- Tab change handler: reset page to 0 when switching tabs ---
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setCurrentPage(0);
+  };
+
   return (
     <section className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -366,7 +385,7 @@ export default function Leaderboards() {
           <p className="text-neutral-600">Season standings and player performance</p>
         </div>
         {/* Tab selection buttons */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full md:w-auto">
           <TabsList className="grid grid-cols-2 w-full md:w-[300px]">
             <TabsTrigger value="net" aria-current={activeTab === 'net'}>Net Leaderboard</TabsTrigger>
             <TabsTrigger value="gross" aria-current={activeTab === 'gross'}>Gross Leaderboard</TabsTrigger>
@@ -392,7 +411,7 @@ export default function Leaderboards() {
         <div className="bg-white rounded-full shadow-lg border px-4 py-3">
           <div className="flex space-x-2">
             <button
-              onClick={() => setActiveTab("net")}
+              onClick={() => handleTabChange("net")}
               className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
                 activeTab === "net" 
                   ? "bg-primary text-white" 
@@ -403,7 +422,7 @@ export default function Leaderboards() {
               Net
             </button>
             <button
-              onClick={() => setActiveTab("gross")}
+              onClick={() => handleTabChange("gross")}
               className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
                 activeTab === "gross" 
                   ? "bg-primary text-white" 
