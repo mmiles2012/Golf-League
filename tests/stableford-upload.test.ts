@@ -13,13 +13,13 @@ describe('Stableford Score Upload Fix', () => {
   beforeAll(async () => {
     app = express();
     app.use(express.json());
-    
+
     // Setup multer for testing
     const upload = multer({
       storage: multer.memoryStorage(),
-      limits: { fileSize: 10 * 1024 * 1024 }
+      limits: { fileSize: 10 * 1024 * 1024 },
     });
-    
+
     server = await registerRoutes(app);
   });
 
@@ -32,20 +32,20 @@ describe('Stableford Score Upload Fix', () => {
   it('should process Stableford Points file format', async () => {
     // Create test data with Stableford Points column
     const stablefordData = [
-      { 
-        'Player Name': 'John Smith', 
-        'Pos': 1, 
-        'Stableford Points': 38, 
-        'Playing Handicap': 12, 
-        'Email': 'john@example.com' 
+      {
+        'Player Name': 'John Smith',
+        Pos: 1,
+        'Stableford Points': 38,
+        'Playing Handicap': 12,
+        Email: 'john@example.com',
       },
-      { 
-        'Player Name': 'Jane Doe', 
-        'Pos': 2, 
-        'Stableford Points': 35, 
-        'Playing Handicap': 8, 
-        'Email': 'jane@example.com' 
-      }
+      {
+        'Player Name': 'Jane Doe',
+        Pos: 2,
+        'Stableford Points': 35,
+        'Playing Handicap': 8,
+        Email: 'jane@example.com',
+      },
     ];
 
     // Create Excel file
@@ -54,9 +54,7 @@ describe('Stableford Score Upload Fix', () => {
     XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
     const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
 
-    const res = await request(app)
-      .post('/api/upload')
-      .attach('file', buffer, 'stableford.xlsx');
+    const res = await request(app).post('/api/upload').attach('file', buffer, 'stableford.xlsx');
 
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('File uploaded successfully');
@@ -69,13 +67,13 @@ describe('Stableford Score Upload Fix', () => {
   it('should still process traditional Total column format', async () => {
     // Create test data with traditional Total column
     const strokeData = [
-      { 
-        'Player Name': 'Bob Wilson', 
-        'Pos': 1, 
-        'Total': 72, 
-        'Course Handicap': 10, 
-        'Email': 'bob@example.com' 
-      }
+      {
+        'Player Name': 'Bob Wilson',
+        Pos: 1,
+        Total: 72,
+        'Course Handicap': 10,
+        Email: 'bob@example.com',
+      },
     ];
 
     // Create Excel file
@@ -84,9 +82,7 @@ describe('Stableford Score Upload Fix', () => {
     XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
     const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
 
-    const res = await request(app)
-      .post('/api/upload')
-      .attach('file', buffer, 'stroke.xlsx');
+    const res = await request(app).post('/api/upload').attach('file', buffer, 'stroke.xlsx');
 
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('File uploaded successfully');
@@ -97,13 +93,13 @@ describe('Stableford Score Upload Fix', () => {
   it('should handle Points column format', async () => {
     // Create test data with Points column
     const pointsData = [
-      { 
-        'Player Name': 'Alice Brown', 
-        'Pos': 1, 
-        'Points': 42, 
-        'Handicap': 15, 
-        'Email': 'alice@example.com' 
-      }
+      {
+        'Player Name': 'Alice Brown',
+        Pos: 1,
+        Points: 42,
+        Handicap: 15,
+        Email: 'alice@example.com',
+      },
     ];
 
     // Create Excel file
@@ -112,9 +108,7 @@ describe('Stableford Score Upload Fix', () => {
     XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
     const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
 
-    const res = await request(app)
-      .post('/api/upload')
-      .attach('file', buffer, 'points.xlsx');
+    const res = await request(app).post('/api/upload').attach('file', buffer, 'points.xlsx');
 
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('File uploaded successfully');
