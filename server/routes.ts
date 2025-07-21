@@ -816,18 +816,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           playerName = row["Player"] || row["Name"] || row["Display Name"] || row["Player Name"] || `Player ${index + 1}`;
         }
 
-        // Extract and validate net score (from 'Total')
-        const totalValue = row["Total"] || row["total"];
+        // Extract and validate net score (from various score columns)
+        const totalValue = row["Total"] || row["total"] || 
+                          row["Stableford Points"] || row["stableford points"] ||
+                          row["Points"] || row["points"] ||
+                          row["Score"] || row["score"];
         
         // Skip rows with DNF, N/A, or invalid scores
         if (!totalValue || totalValue === "N/A" || totalValue === "DNF" || totalValue === "-" || totalValue === "") {
-          console.log(`Skipping row ${index + 1} (${playerName}): Total = '${totalValue}'`);
+          console.log(`Skipping row ${index + 1} (${playerName}): Score = '${totalValue}'`);
           continue;
         }
         
         const netScore = Number(totalValue);
         if (isNaN(netScore)) {
-          throw new Error(`Invalid 'Total' score for row ${index + 1} (${playerName}): '${totalValue}'`);
+          throw new Error(`Invalid score for row ${index + 1} (${playerName}): '${totalValue}'`);
         }
 
         // Extract course handicap with robust handling
