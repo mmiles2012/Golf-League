@@ -1,12 +1,12 @@
-import { useLocation, Link } from "wouter";
-import { 
-  LayoutDashboard, 
-  Trophy, 
-  FileUp, 
-  PenSquare, 
-  Flag, 
-  Users, 
-  Code, 
+import { useLocation, Link } from 'wouter';
+import {
+  LayoutDashboard,
+  Trophy,
+  FileUp,
+  PenSquare,
+  Flag,
+  Users,
+  Code,
   LogOut,
   LogIn,
   User,
@@ -14,9 +14,9 @@ import {
   Award,
   ListOrdered,
   ServerCog,
-  List
-} from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+  List,
+} from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SidebarProps {
   onNavigation?: () => void;
@@ -25,22 +25,22 @@ interface SidebarProps {
 export default function Sidebar({ onNavigation }: SidebarProps) {
   const [location, navigate] = useLocation();
   const { user, isAuthenticated, isAdmin, isLoading, isSuperAdmin } = useAuth();
-  
+
   const isActive = (path: string) => {
-    if (path === "/") return location === "/";
+    if (path === '/') return location === '/';
     return location.startsWith(path);
   };
-  
+
   const handleLogout = () => {
     window.location.href = '/api/logout';
     if (onNavigation) onNavigation();
   };
-  
+
   const handleLogin = () => {
     window.location.href = '/api/login';
     if (onNavigation) onNavigation();
   };
-  
+
   return (
     <>
       <nav className="flex-grow py-4">
@@ -48,8 +48,8 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
           {/* Always Visible - Main Views */}
           <li>
             <Link href="/">
-              <div 
-                className={`sidebar-link ${isActive("/") ? "active" : ""}`}
+              <div
+                className={`sidebar-link ${isActive('/') ? 'active' : ''}`}
                 onClick={onNavigation}
               >
                 <Trophy className="sidebar-icon mr-2" />
@@ -59,8 +59,8 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
           </li>
           <li>
             <Link href="/tournament-results">
-              <div 
-                className={`sidebar-link ${isActive("/tournament-results") ? "active" : ""}`}
+              <div
+                className={`sidebar-link ${isActive('/tournament-results') ? 'active' : ''}`}
                 onClick={onNavigation}
               >
                 <ListOrdered className="sidebar-icon mr-2" />
@@ -70,8 +70,8 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
           </li>
           <li>
             <Link href="/players">
-              <div 
-                className={`sidebar-link ${isActive("/players") ? "active" : ""}`}
+              <div
+                className={`sidebar-link ${isActive('/players') ? 'active' : ''}`}
                 onClick={onNavigation}
               >
                 <Users className="sidebar-icon mr-2" />
@@ -79,16 +79,16 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
               </div>
             </Link>
           </li>
-          
+
           {/* Divider */}
           <li className="my-4 border-t border-primary-light/20"></li>
-          
+
           {/* Player Dashboard - Available to authenticated users */}
           {isAuthenticated && (
             <li>
               <Link href="/dashboard">
-                <div 
-                  className={`sidebar-link ${isActive("/dashboard") ? "active" : ""}`}
+                <div
+                  className={`sidebar-link ${isActive('/dashboard') ? 'active' : ''}`}
                   onClick={onNavigation}
                 >
                   <LayoutDashboard className="sidebar-icon mr-2" />
@@ -103,8 +103,8 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
             <>
               <li>
                 <Link href="/tournaments">
-                  <div 
-                    className={`sidebar-link ${isActive("/tournaments") ? "active" : ""}`}
+                  <div
+                    className={`sidebar-link ${isActive('/tournaments') ? 'active' : ''}`}
                     onClick={onNavigation}
                   >
                     <Flag className="sidebar-icon mr-2" />
@@ -114,8 +114,8 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
               </li>
               <li>
                 <Link href="/upload">
-                  <div 
-                    className={`sidebar-link ${isActive("/upload") ? "active" : ""}`}
+                  <div
+                    className={`sidebar-link ${isActive('/upload') ? 'active' : ''}`}
                     onClick={onNavigation}
                   >
                     <FileUp className="sidebar-icon mr-2" />
@@ -125,8 +125,8 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
               </li>
               <li>
                 <Link href="/points-config">
-                  <div 
-                    className={`sidebar-link ${isActive("/points-config") ? "active" : ""}`}
+                  <div
+                    className={`sidebar-link ${isActive('/points-config') ? 'active' : ''}`}
                     onClick={onNavigation}
                   >
                     <Settings className="sidebar-icon mr-2" />
@@ -136,8 +136,8 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
               </li>
               <li>
                 <Link href="/setup">
-                  <div 
-                    className={`sidebar-link ${isActive("/setup") ? "active" : ""}`}
+                  <div
+                    className={`sidebar-link ${isActive('/setup') ? 'active' : ''}`}
                     onClick={onNavigation}
                   >
                     <Settings className="sidebar-icon mr-2" />
@@ -147,8 +147,8 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
               </li>
               <li>
                 <Link href="/admin-recalculation">
-                  <div 
-                    className={`sidebar-link ${isActive("/admin-recalculation") ? "active" : ""}`}
+                  <div
+                    className={`sidebar-link ${isActive('/admin-recalculation') ? 'active' : ''}`}
                     onClick={onNavigation}
                   >
                     <ServerCog className="sidebar-icon mr-2" />
@@ -160,8 +160,8 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
               {isSuperAdmin && (
                 <li>
                   <Link href="/admin-recalculation-log">
-                    <div 
-                      className={`sidebar-link ${isActive("/admin-recalculation-log") ? "active" : ""}`}
+                    <div
+                      className={`sidebar-link ${isActive('/admin-recalculation-log') ? 'active' : ''}`}
                       onClick={onNavigation}
                     >
                       <List className="sidebar-icon mr-2" />
@@ -172,18 +172,16 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
               )}
             </>
           )}
-          
-
         </ul>
       </nav>
-      
+
       <div className="p-3 border-t border-primary-light">
         {isAuthenticated ? (
           <div className="flex items-center space-x-2">
             {user?.profileImageUrl ? (
-              <img 
-                src={user.profileImageUrl} 
-                alt="Profile" 
+              <img
+                src={user.profileImageUrl}
+                alt="Profile"
                 className="h-6 w-6 rounded-full object-cover"
               />
             ) : (
@@ -195,7 +193,7 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
               <p className="text-white font-medium text-sm truncate">
                 {user?.firstName || user?.email || 'User'}
               </p>
-              <button 
+              <button
                 type="button"
                 className="text-xs text-white opacity-75 hover:opacity-100 flex items-center cursor-pointer bg-transparent border-0"
                 onClick={handleLogout}
@@ -211,7 +209,7 @@ export default function Sidebar({ onNavigation }: SidebarProps) {
               <User size={12} />
             </div>
             <div className="flex-1">
-              <div 
+              <div
                 className="text-sm text-white opacity-75 hover:opacity-100 flex items-center cursor-pointer"
                 onClick={handleLogin}
               >

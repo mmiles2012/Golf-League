@@ -1,32 +1,32 @@
-import React, { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient, apiRequest } from '@/lib/queryClient';
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Upload } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, Save, Upload } from 'lucide-react';
 
 // Define the app settings interface
 interface AppSettings {
   appName: string;
   pageTitle: string;
-  scoringType: "net" | "gross" | "both";
+  scoringType: 'net' | 'gross' | 'both';
   sidebarColor: string;
   logoUrl: string;
 }
 
 // Default settings
 const DEFAULT_SETTINGS: AppSettings = {
-  appName: "Hideout Golf League",
-  pageTitle: "Leaderboards",
-  scoringType: "both",
-  sidebarColor: "#0f172a", // Default tailwind blue-900
-  logoUrl: "images/hideout-logo.png"
+  appName: 'Hideout Golf League',
+  pageTitle: 'Leaderboards',
+  scoringType: 'both',
+  sidebarColor: '#0f172a', // Default tailwind blue-900
+  logoUrl: 'images/hideout-logo.png',
 };
 
 export default function SetupPage() {
@@ -44,7 +44,7 @@ export default function SetupPage() {
 
   // Fetch home club options from backend
   const { data: homeClubOptions = [], refetch: refetchHomeClubs } = useQuery<string[]>({
-    queryKey: ["/api/home-club-options"],
+    queryKey: ['/api/home-club-options'],
   });
   const [editedHomeClubs, setEditedHomeClubs] = useState<string[]>([]);
   const [showHomeClubModal, setShowHomeClubModal] = useState(false);
@@ -56,19 +56,26 @@ export default function SetupPage() {
   }, [homeClubOptions]);
 
   const handleHomeClubChange = (idx: number, value: string) => {
-    setEditedHomeClubs(clubs => clubs.map((c, i) => (i === idx ? value : c)));
+    setEditedHomeClubs((clubs) => clubs.map((c, i) => (i === idx ? value : c)));
   };
-  const handleAddHomeClub = () => setEditedHomeClubs(clubs => [...clubs, ""]);
-  const handleRemoveHomeClub = (idx: number) => setEditedHomeClubs(clubs => clubs.filter((_, i) => i !== idx));
+  const handleAddHomeClub = () => setEditedHomeClubs((clubs) => [...clubs, '']);
+  const handleRemoveHomeClub = (idx: number) =>
+    setEditedHomeClubs((clubs) => clubs.filter((_, i) => i !== idx));
 
   const saveHomeClubsMutation = useMutation({
-    mutationFn: async (clubs: string[]) => apiRequest("PUT", "/api/home-club-options", { options: clubs }),
+    mutationFn: async (clubs: string[]) =>
+      apiRequest('PUT', '/api/home-club-options', { options: clubs }),
     onSuccess: () => {
-      toast({ title: "Home clubs updated", description: "Home club options have been updated." });
+      toast({ title: 'Home clubs updated', description: 'Home club options have been updated.' });
       refetchHomeClubs();
       setShowHomeClubModal(false);
     },
-    onError: () => toast({ title: "Error", description: "Failed to update home club options.", variant: "destructive" })
+    onError: () =>
+      toast({
+        title: 'Error',
+        description: 'Failed to update home club options.',
+        variant: 'destructive',
+      }),
   });
 
   const handleSaveHomeClubs = () => {
@@ -80,10 +87,14 @@ export default function SetupPage() {
   };
 
   // Fetch current settings
-  const { data: currentSettings, isLoading, isError } = useQuery<AppSettings>({
-    queryKey: ["/api/settings"]
+  const {
+    data: currentSettings,
+    isLoading,
+    isError,
+  } = useQuery<AppSettings>({
+    queryKey: ['/api/settings'],
   });
-  
+
   // If there's an error fetching settings, use defaults
   React.useEffect(() => {
     if (isError) {
@@ -106,7 +117,7 @@ export default function SetupPage() {
     const file = e.target.files?.[0];
     if (file) {
       setLogoFile(file);
-      
+
       // Create preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -118,9 +129,9 @@ export default function SetupPage() {
 
   // Handle form field changes
   const handleChange = (field: keyof AppSettings, value: string) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -129,41 +140,41 @@ export default function SetupPage() {
     mutationFn: async () => {
       // First, handle logo upload if there's a new logo
       let logoUrl = settings.logoUrl;
-      
+
       if (logoFile) {
         const formData = new FormData();
-        formData.append("logo", logoFile);
-        
+        formData.append('logo', logoFile);
+
         // Upload logo
-        const uploadResponse = await fetch("/api/upload/logo", {
-          method: "POST",
-          body: formData
+        const uploadResponse = await fetch('/api/upload/logo', {
+          method: 'POST',
+          body: formData,
         });
-        
+
         if (!uploadResponse.ok) {
-          throw new Error("Failed to upload logo");
+          throw new Error('Failed to upload logo');
         }
-        
+
         const uploadData = await uploadResponse.json();
         logoUrl = uploadData.url;
       }
-      
+
       // Save settings with updated logo URL
-      return apiRequest("PUT", "/api/settings", {
+      return apiRequest('PUT', '/api/settings', {
         ...settings,
-        logoUrl
+        logoUrl,
       });
     },
     onSuccess: () => {
       toast({
-        title: "Settings saved",
-        description: "Your application settings have been updated",
-        variant: "default"
+        title: 'Settings saved',
+        description: 'Your application settings have been updated',
+        variant: 'default',
       });
-      
+
       // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
-      
+      queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
+
       // Reload the page to apply new settings
       setTimeout(() => {
         window.location.reload();
@@ -171,12 +182,12 @@ export default function SetupPage() {
     },
     onError: (error) => {
       toast({
-        title: "Error saving settings",
-        description: "There was a problem saving your settings",
-        variant: "destructive"
+        title: 'Error saving settings',
+        description: 'There was a problem saving your settings',
+        variant: 'destructive',
       });
-      console.error("Settings save error:", error);
-    }
+      console.error('Settings save error:', error);
+    },
   });
 
   // Handle form submit with confirmation modal
@@ -191,10 +202,14 @@ export default function SetupPage() {
     setIsSaving(true);
     try {
       // Replace with your mutation or API call
-      await apiRequest("PUT", "/api/settings", settingsToSave);
-      toast({ title: "Settings updated", description: "App settings have been updated." });
+      await apiRequest('PUT', '/api/settings', settingsToSave);
+      toast({ title: 'Settings updated', description: 'App settings have been updated.' });
     } catch (err) {
-      toast({ title: "Error", description: "Failed to update app settings.", variant: "destructive" });
+      toast({
+        title: 'Error',
+        description: 'Failed to update app settings.',
+        variant: 'destructive',
+      });
     } finally {
       setIsSaving(false);
       setShowSettingsModal(false);
@@ -238,13 +253,11 @@ export default function SetupPage() {
                 <Input
                   id="app-name"
                   value={settings.appName}
-                  onChange={(e) => handleChange("appName", e.target.value)}
+                  onChange={(e) => handleChange('appName', e.target.value)}
                   placeholder="Enter application name"
                   disabled={isSaving}
                 />
-                <p className="text-sm text-neutral-500">
-                  This will appear in the sidebar header
-                </p>
+                <p className="text-sm text-neutral-500">This will appear in the sidebar header</p>
               </div>
 
               <div className="space-y-2">
@@ -252,7 +265,7 @@ export default function SetupPage() {
                 <Input
                   id="page-title"
                   value={settings.pageTitle}
-                  onChange={(e) => handleChange("pageTitle", e.target.value)}
+                  onChange={(e) => handleChange('pageTitle', e.target.value)}
                   placeholder="Enter page title"
                   disabled={isSaving}
                 />
@@ -266,16 +279,16 @@ export default function SetupPage() {
                 <div className="flex items-center gap-4">
                   {logoPreview && (
                     <div className="h-16 w-16 bg-neutral-100 rounded-md flex items-center justify-center overflow-hidden">
-                      <img 
-                        src={logoPreview} 
-                        alt="Logo preview" 
+                      <img
+                        src={logoPreview}
+                        alt="Logo preview"
                         className="h-12 w-12 object-contain"
                       />
                     </div>
                   )}
                   <div className="flex-1">
-                    <Label 
-                      htmlFor="logo-upload" 
+                    <Label
+                      htmlFor="logo-upload"
                       className="cursor-pointer flex items-center gap-2 border border-input bg-transparent px-3 py-2 text-sm rounded-md hover:bg-accent hover:text-accent-foreground w-full"
                     >
                       <Upload className="h-4 w-4" />
@@ -291,9 +304,7 @@ export default function SetupPage() {
                     </Label>
                   </div>
                 </div>
-                <p className="text-sm text-neutral-500">
-                  Recommended size: 64x64 pixels
-                </p>
+                <p className="text-sm text-neutral-500">Recommended size: 64x64 pixels</p>
               </div>
             </CardContent>
           </Card>
@@ -309,7 +320,7 @@ export default function SetupPage() {
                 <Label>Scoring Type</Label>
                 <RadioGroup
                   value={settings.scoringType}
-                  onValueChange={(value) => handleChange("scoringType", value)}
+                  onValueChange={(value) => handleChange('scoringType', value)}
                   disabled={isSaving}
                   className="flex flex-col space-y-2"
                 >
@@ -335,14 +346,14 @@ export default function SetupPage() {
                     id="sidebar-color"
                     type="color"
                     value={settings.sidebarColor}
-                    onChange={(e) => handleChange("sidebarColor", e.target.value)}
+                    onChange={(e) => handleChange('sidebarColor', e.target.value)}
                     className="w-16 h-10 p-1"
                     disabled={isSaving}
                   />
                   <Input
                     type="text"
                     value={settings.sidebarColor}
-                    onChange={(e) => handleChange("sidebarColor", e.target.value)}
+                    onChange={(e) => handleChange('sidebarColor', e.target.value)}
                     className="flex-1"
                     placeholder="#000000"
                     disabled={isSaving}
@@ -357,34 +368,48 @@ export default function SetupPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Home Club Options</CardTitle>
-                <CardDescription>Manage the list of selectable home clubs for player profiles</CardDescription>
+                <CardDescription>
+                  Manage the list of selectable home clubs for player profiles
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {editedHomeClubs.map((club, idx) => (
                   <div key={idx} className="flex gap-2 items-center">
                     <Input
                       value={club}
-                      onChange={e => handleHomeClubChange(idx, e.target.value)}
+                      onChange={(e) => handleHomeClubChange(idx, e.target.value)}
                       placeholder="Enter club name"
                       className="flex-1"
                       disabled={isSaving}
                     />
-                    <Button type="button" variant="destructive" onClick={() => handleRemoveHomeClub(idx)} disabled={isSaving}>Remove</Button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => handleRemoveHomeClub(idx)}
+                      disabled={isSaving}
+                    >
+                      Remove
+                    </Button>
                   </div>
                 ))}
-                <Button type="button" onClick={handleAddHomeClub} disabled={isSaving}>Add Club</Button>
-                <Button type="button" onClick={handleSaveHomeClubs} disabled={isSaving || saveHomeClubsMutation.isLoading} className="ml-2">Save Home Clubs</Button>
+                <Button type="button" onClick={handleAddHomeClub} disabled={isSaving}>
+                  Add Club
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleSaveHomeClubs}
+                  disabled={isSaving || saveHomeClubsMutation.isLoading}
+                  className="ml-2"
+                >
+                  Save Home Clubs
+                </Button>
               </CardContent>
             </Card>
           )}
         </div>
 
         <div className="mt-6 flex justify-end">
-          <Button 
-            type="submit"
-            disabled={isSaving}
-            className="min-w-[120px]"
-          >
+          <Button type="submit" disabled={isSaving} className="min-w-[120px]">
             {isSaving ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -405,11 +430,16 @@ export default function SetupPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
             <h2 className="text-xl font-bold mb-4">Are you sure?</h2>
-            <p className="mb-4">Changing core application settings (branding, display, scoring) will affect all users. This action cannot be undone easily. Proceed?</p>
+            <p className="mb-4">
+              Changing core application settings (branding, display, scoring) will affect all users.
+              This action cannot be undone easily. Proceed?
+            </p>
             <div className="flex justify-end gap-2">
-              <Button variant="secondary" onClick={() => setShowSettingsModal(false)}>Cancel</Button>
+              <Button variant="secondary" onClick={() => setShowSettingsModal(false)}>
+                Cancel
+              </Button>
               <Button variant="destructive" onClick={confirmSaveSettings} disabled={isSaving}>
-                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Yes, Save"}
+                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Yes, Save'}
               </Button>
             </div>
           </div>
@@ -421,11 +451,24 @@ export default function SetupPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
             <h2 className="text-xl font-bold mb-4">Are you sure?</h2>
-            <p className="mb-4">Changing home club options will affect all player profiles. This action cannot be undone easily. Proceed?</p>
+            <p className="mb-4">
+              Changing home club options will affect all player profiles. This action cannot be
+              undone easily. Proceed?
+            </p>
             <div className="flex justify-end gap-2">
-              <Button variant="secondary" onClick={() => setShowHomeClubModal(false)}>Cancel</Button>
-              <Button variant="destructive" onClick={confirmSaveHomeClubs} disabled={saveHomeClubsMutation.isLoading}>
-                {saveHomeClubsMutation.isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Yes, Save"}
+              <Button variant="secondary" onClick={() => setShowHomeClubModal(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmSaveHomeClubs}
+                disabled={saveHomeClubsMutation.isLoading}
+              >
+                {saveHomeClubsMutation.isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  'Yes, Save'
+                )}
               </Button>
             </div>
           </div>

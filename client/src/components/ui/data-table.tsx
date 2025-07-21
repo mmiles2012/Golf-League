@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -6,7 +6,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 import {
   ColumnDef,
   flexRender,
@@ -17,10 +17,10 @@ import {
   SortingState,
   VisibilityState,
   getFilteredRowModel,
-} from "@tanstack/react-table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+} from '@tanstack/react-table';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -36,14 +36,14 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   searchKey,
-  searchPlaceholder = "Search...",
+  searchPlaceholder = 'Search...',
   rowClickHandler,
   pagination = true,
   pageSize = 10,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [globalFilter, setGlobalFilter] = useState("");
+  const [globalFilter, setGlobalFilter] = useState('');
 
   const table = useReactTable({
     data,
@@ -74,7 +74,7 @@ export function DataTable<TData, TValue>({
           <div className="relative max-w-sm">
             <Input
               placeholder={searchPlaceholder}
-              value={globalFilter ?? ""}
+              value={globalFilter ?? ''}
               onChange={(e) => setGlobalFilter(e.target.value)}
               className="pr-8"
             />
@@ -110,10 +110,7 @@ export function DataTable<TData, TValue>({
                     >
                       {header.isPlaceholder
                         ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                        : flexRender(header.column.columnDef.header, header.getContext())}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -124,26 +121,20 @@ export function DataTable<TData, TValue>({
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                    className={`hover:bg-neutral-50 ${rowClickHandler ? "cursor-pointer" : ""}`}
+                    data-state={row.getIsSelected() && 'selected'}
+                    className={`hover:bg-neutral-50 ${rowClickHandler ? 'cursor-pointer' : ''}`}
                     onClick={() => rowClickHandler && rowClickHandler(row.original)}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id} className="py-3 whitespace-nowrap text-sm">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
+                  <TableCell colSpan={columns.length} className="h-24 text-center">
                     No results found.
                   </TableCell>
                 </TableRow>
@@ -156,18 +147,28 @@ export function DataTable<TData, TValue>({
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-neutral-700">
-                  Showing <span className="font-medium">{table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}</span> to{" "}
+                  Showing{' '}
+                  <span className="font-medium">
+                    {table.getState().pagination.pageIndex * table.getState().pagination.pageSize +
+                      1}
+                  </span>{' '}
+                  to{' '}
                   <span className="font-medium">
                     {Math.min(
-                      (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-                      table.getFilteredRowModel().rows.length
+                      (table.getState().pagination.pageIndex + 1) *
+                        table.getState().pagination.pageSize,
+                      table.getFilteredRowModel().rows.length,
                     )}
-                  </span>{" "}
-                  of <span className="font-medium">{table.getFilteredRowModel().rows.length}</span> results
+                  </span>{' '}
+                  of <span className="font-medium">{table.getFilteredRowModel().rows.length}</span>{' '}
+                  results
                 </p>
               </div>
               <div>
-                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                <nav
+                  className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                  aria-label="Pagination"
+                >
                   <Button
                     variant="outline"
                     size="sm"

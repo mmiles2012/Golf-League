@@ -1,15 +1,15 @@
-import { db } from "./db";
-import { tournaments, players, playerResults, users, playerProfiles } from "@shared/schema";
-import { eq, inArray } from "drizzle-orm";
-import type { 
-  Player, 
-  Tournament, 
-  PlayerResult, 
+import { db } from './db';
+import { tournaments, players, playerResults, users, playerProfiles } from '@shared/schema';
+import { eq, inArray } from 'drizzle-orm';
+import type {
+  Player,
+  Tournament,
+  PlayerResult,
   PlayerWithHistory,
-  PointsConfig 
-} from "@shared/schema";
+  PointsConfig,
+} from '@shared/schema';
 import { setTimeout as setTimeoutPromise } from 'timers/promises';
-import { calculatePoints } from "./points-utils";
+import { calculatePoints } from './points-utils';
 
 /**
  * Enum for supported tournament types
@@ -18,7 +18,7 @@ enum TournamentType {
   Major = 'major',
   Tour = 'tour',
   League = 'league',
-  Supr = 'supr'
+  Supr = 'supr',
 }
 
 // Simple in-memory cache for leaderboard results
@@ -26,7 +26,7 @@ const leaderboardCache: {
   net?: { data: PlayerWithHistory[]; expires: number };
   gross?: { data: PlayerWithHistory[]; expires: number };
 } = {};
-const LEADERBOARD_CACHE_TTL_MS = 5* 60 * 1000; // 5 minutes
+const LEADERBOARD_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 export class LeaderboardCalculator {
   private pointsConfig: PointsConfig;
@@ -41,7 +41,10 @@ export class LeaderboardCalculator {
    * @param scoreType 'net' or 'gross'
    * @returns PlayerWithHistory or undefined if no results
    */
-  async calculatePlayerHistory(playerId: number, scoreType: 'net' | 'gross'): Promise<PlayerWithHistory | undefined> {
+  async calculatePlayerHistory(
+    playerId: number,
+    scoreType: 'net' | 'gross',
+  ): Promise<PlayerWithHistory | undefined> {
     const player = await this.getPlayer(playerId);
     if (!player) return undefined;
 
@@ -49,11 +52,12 @@ export class LeaderboardCalculator {
     if (!results.length) return undefined;
 
     // Get tournaments for these results
-    const tournamentIds = results.map(r => r.tournamentId);
-    const tournamentList = await db.select()
+    const tournamentIds = results.map((r) => r.tournamentId);
+    const tournamentList = await db
+      .select()
       .from(tournaments)
       .where(inArray(tournaments.id, tournamentIds));
-    
+
     const tournamentMap = new Map<number, Tournament>();
     tournamentList.forEach((t: Tournament) => tournamentMap.set(t.id, t));
 
@@ -77,7 +81,10 @@ export class LeaderboardCalculator {
       // Net Score = result.netScore (this is the "total" from the file)
       // Gross Score = Net Score + Course Handicap
       const netScore = result.netScore;
-      const grossScore = result.netScore !== null && result.handicap !== null ? result.netScore + result.handicap : null;
+      const grossScore =
+        result.netScore !== null && result.handicap !== null
+          ? result.netScore + result.handicap
+          : null;
 
       if (netScore !== null) {
         totalNetScores += netScore;
@@ -88,7 +95,7 @@ export class LeaderboardCalculator {
       }
 
       // Use appropriate points based on score type
-      const pointsToUse = scoreType === 'gross' ? (result.grossPoints || 0) : (result.points || 0);
+      const pointsToUse = scoreType === 'gross' ? result.grossPoints || 0 : result.points || 0;
 
       const tournamentDetail = {
         id: result.id,
@@ -103,7 +110,7 @@ export class LeaderboardCalculator {
         handicap: result.handicap,
         points: pointsToUse,
         grossPoints: result.grossPoints || 0,
-        netPoints: result.points || 0
+        netPoints: result.points || 0,
       };
 
       tournamentDetails.push(tournamentDetail);
@@ -135,7 +142,7 @@ export class LeaderboardCalculator {
         name: player.name,
         email: player.email,
         defaultHandicap: player.defaultHandicap,
-        homeClub: (player as any).homeClub
+        homeClub: (player as any).homeClub,
       },
       tournaments: tournamentDetails,
       totalPoints,
@@ -147,7 +154,7 @@ export class LeaderboardCalculator {
       rank: 0, // Will be set in leaderboard sorting
       averageNetScore,
       averageGrossScore,
-      averageScore: scoreType === 'net' ? averageNetScore : averageGrossScore
+      averageScore: scoreType === 'net' ? averageNetScore : averageGrossScore,
     };
 
     // Calculate top 8 events points
@@ -161,7 +168,7 @@ export class LeaderboardCalculator {
         grossTourPoints: tourPoints,
         grossTop8TotalPoints: top8Results.totalPoints,
         grossTop8TourPoints: top8Results.tourPoints,
-        grossTop8MajorPoints: top8Results.majorPoints
+        grossTop8MajorPoints: top8Results.majorPoints,
       };
     }
 
@@ -170,7 +177,7 @@ export class LeaderboardCalculator {
       ...result,
       top8TotalPoints: top8Results.totalPoints,
       top8TourPoints: top8Results.tourPoints,
-      top8MajorPoints: top8Results.majorPoints
+      top8MajorPoints: top8Results.majorPoints,
     };
   }
 
@@ -187,7 +194,7 @@ export class LeaderboardCalculator {
     const [allPlayers, allResults, allTournaments] = await Promise.all([
       this.getAllPlayers(),
       this.getAllPlayerResults(),
-      this.getAllTournaments()
+      this.getAllTournaments(),
     ]);
     const tournamentMap = new Map<number, Tournament>();
     allTournaments.forEach((t: Tournament) => tournamentMap.set(t.id, t));
@@ -201,7 +208,12 @@ export class LeaderboardCalculator {
     for (const player of allPlayers) {
       const results = resultsByPlayer.get(player.id) || [];
       if (!results.length) continue;
-      const playerHistory = await this.calculatePlayerHistoryBatch(player, results, tournamentMap, 'net');
+      const playerHistory = await this.calculatePlayerHistoryBatch(
+        player,
+        results,
+        tournamentMap,
+        'net',
+      );
       if (playerHistory && (playerHistory.top8TotalPoints || 0) > 0) {
         leaderboard.push(playerHistory);
       }
@@ -214,7 +226,9 @@ export class LeaderboardCalculator {
       const handicapB = b.player.defaultHandicap || 999;
       return handicapA - handicapB;
     });
-    leaderboard.forEach((player, index) => { player.rank = index + 1; });
+    leaderboard.forEach((player, index) => {
+      player.rank = index + 1;
+    });
     leaderboardCache.net = { data: leaderboard, expires: Date.now() + LEADERBOARD_CACHE_TTL_MS };
     return leaderboard;
   }
@@ -232,7 +246,7 @@ export class LeaderboardCalculator {
     const [allPlayers, allResults, allTournaments] = await Promise.all([
       this.getAllPlayers(),
       this.getAllPlayerResults(),
-      this.getAllTournaments()
+      this.getAllTournaments(),
     ]);
     const tournamentMap = new Map<number, Tournament>();
     allTournaments.forEach((t: Tournament) => tournamentMap.set(t.id, t));
@@ -246,7 +260,12 @@ export class LeaderboardCalculator {
     for (const player of allPlayers) {
       const results = resultsByPlayer.get(player.id) || [];
       if (!results.length) continue;
-      const playerHistory = await this.calculatePlayerHistoryBatch(player, results, tournamentMap, 'gross');
+      const playerHistory = await this.calculatePlayerHistoryBatch(
+        player,
+        results,
+        tournamentMap,
+        'gross',
+      );
       if (playerHistory && (playerHistory.grossTop8TotalPoints || 0) > 0) {
         leaderboard.push(playerHistory);
       }
@@ -259,7 +278,9 @@ export class LeaderboardCalculator {
       const handicapB = b.player.defaultHandicap || 999;
       return handicapA - handicapB;
     });
-    leaderboard.forEach((player, index) => { player.rank = index + 1; });
+    leaderboard.forEach((player, index) => {
+      player.rank = index + 1;
+    });
     leaderboardCache.gross = { data: leaderboard, expires: Date.now() + LEADERBOARD_CACHE_TTL_MS };
     return leaderboard;
   }
@@ -277,7 +298,7 @@ export class LeaderboardCalculator {
       grossPoints: number;
       tournamentType: string;
     }>,
-    scoreType: 'net' | 'gross'
+    scoreType: 'net' | 'gross',
   ): {
     totalPoints: number;
     majorPoints: number;
@@ -286,7 +307,7 @@ export class LeaderboardCalculator {
     // Sort tournaments by points (descending) to get the highest scoring events
     const pointsField = scoreType === 'gross' ? 'grossPoints' : 'points';
     const sortedTournaments = [...tournamentDetails]
-      .filter(t => t[pointsField] > 0) // Only include events with points
+      .filter((t) => t[pointsField] > 0) // Only include events with points
       .sort((a, b) => b[pointsField] - a[pointsField]);
 
     // Take top 8 events
@@ -315,7 +336,7 @@ export class LeaderboardCalculator {
     return {
       totalPoints,
       majorPoints,
-      tourPoints
+      tourPoints,
     };
   }
 
@@ -332,7 +353,7 @@ export class LeaderboardCalculator {
     return calculatePoints(
       Number(position),
       tournamentType as TournamentType,
-      this.pointsConfig[tournamentType as keyof PointsConfig]
+      this.pointsConfig[tournamentType as keyof PointsConfig],
     );
   }
 
@@ -340,19 +361,22 @@ export class LeaderboardCalculator {
   /**
    * Get a player by ID
    */
-  private async getPlayer(id: number): Promise<(Player & { homeClub?: string | null }) | undefined> {
-    const [player] = await db.select({
-      id: players.id,
-      name: players.name,
-      email: players.email,
-      defaultHandicap: players.defaultHandicap,
-      createdAt: players.createdAt,
-      homeClub: users.homeClub,
-    })
-    .from(players)
-    .leftJoin(playerProfiles, eq(players.id, playerProfiles.playerId))
-    .leftJoin(users, eq(playerProfiles.userId, users.id))
-    .where(eq(players.id, id));
+  private async getPlayer(
+    id: number,
+  ): Promise<(Player & { homeClub?: string | null }) | undefined> {
+    const [player] = await db
+      .select({
+        id: players.id,
+        name: players.name,
+        email: players.email,
+        defaultHandicap: players.defaultHandicap,
+        createdAt: players.createdAt,
+        homeClub: users.homeClub,
+      })
+      .from(players)
+      .leftJoin(playerProfiles, eq(players.id, playerProfiles.playerId))
+      .leftJoin(users, eq(playerProfiles.userId, users.id))
+      .where(eq(players.id, id));
     return player;
   }
 
@@ -360,37 +384,39 @@ export class LeaderboardCalculator {
    * Get all players with homeClub information
    */
   private async getAllPlayers(): Promise<(Player & { homeClub?: string | null })[]> {
-    return db.select({
-      id: players.id,
-      name: players.name,
-      email: players.email,
-      defaultHandicap: players.defaultHandicap,
-      createdAt: players.createdAt,
-      homeClub: users.homeClub,
-    })
-    .from(players)
-    .leftJoin(playerProfiles, eq(players.id, playerProfiles.playerId))
-    .leftJoin(users, eq(playerProfiles.userId, users.id))
-    .orderBy(players.name);
+    return db
+      .select({
+        id: players.id,
+        name: players.name,
+        email: players.email,
+        defaultHandicap: players.defaultHandicap,
+        createdAt: players.createdAt,
+        homeClub: users.homeClub,
+      })
+      .from(players)
+      .leftJoin(playerProfiles, eq(players.id, playerProfiles.playerId))
+      .leftJoin(users, eq(playerProfiles.userId, users.id))
+      .orderBy(players.name);
   }
 
   /**
    * Get all results for a player
    */
   private async getPlayerResults(playerId: number): Promise<PlayerResult[]> {
-    return db.select({
-      id: playerResults.id,
-      playerId: playerResults.playerId,
-      tournamentId: playerResults.tournamentId,
-      position: playerResults.position,
-      grossPosition: playerResults.grossPosition,
-      grossScore: playerResults.grossScore,
-      netScore: playerResults.netScore,
-      handicap: playerResults.handicap,
-      points: playerResults.points,
-      grossPoints: playerResults.grossPoints,
-      createdAt: playerResults.createdAt,
-    })
+    return db
+      .select({
+        id: playerResults.id,
+        playerId: playerResults.playerId,
+        tournamentId: playerResults.tournamentId,
+        position: playerResults.position,
+        grossPosition: playerResults.grossPosition,
+        grossScore: playerResults.grossScore,
+        netScore: playerResults.netScore,
+        handicap: playerResults.handicap,
+        points: playerResults.points,
+        grossPoints: playerResults.grossPoints,
+        createdAt: playerResults.createdAt,
+      })
       .from(playerResults)
       .where(eq(playerResults.playerId, playerId));
   }
@@ -399,19 +425,21 @@ export class LeaderboardCalculator {
    * Get all player results
    */
   private async getAllPlayerResults(): Promise<PlayerResult[]> {
-    return db.select({
-      id: playerResults.id,
-      playerId: playerResults.playerId,
-      tournamentId: playerResults.tournamentId,
-      position: playerResults.position,
-      grossPosition: playerResults.grossPosition,
-      grossScore: playerResults.grossScore,
-      netScore: playerResults.netScore,
-      handicap: playerResults.handicap,
-      points: playerResults.points,
-      grossPoints: playerResults.grossPoints,
-      createdAt: playerResults.createdAt,
-    }).from(playerResults);
+    return db
+      .select({
+        id: playerResults.id,
+        playerId: playerResults.playerId,
+        tournamentId: playerResults.tournamentId,
+        position: playerResults.position,
+        grossPosition: playerResults.grossPosition,
+        grossScore: playerResults.grossScore,
+        netScore: playerResults.netScore,
+        handicap: playerResults.handicap,
+        points: playerResults.points,
+        grossPoints: playerResults.grossPoints,
+        createdAt: playerResults.createdAt,
+      })
+      .from(playerResults);
   }
   /**
    * Get all tournaments
@@ -432,7 +460,7 @@ export class LeaderboardCalculator {
     player: Player,
     results: PlayerResult[],
     tournamentMap: Map<number, Tournament>,
-    scoreType: 'net' | 'gross'
+    scoreType: 'net' | 'gross',
   ): Promise<PlayerWithHistory | undefined> {
     if (!results.length) return undefined;
 
@@ -451,7 +479,10 @@ export class LeaderboardCalculator {
       if (!tournament) continue;
 
       const netScore = result.netScore;
-      const grossScore = result.netScore !== null && result.handicap !== null ? result.netScore + result.handicap : null;
+      const grossScore =
+        result.netScore !== null && result.handicap !== null
+          ? result.netScore + result.handicap
+          : null;
 
       if (netScore !== null) {
         totalNetScores += netScore;
@@ -459,7 +490,7 @@ export class LeaderboardCalculator {
         scoreCount++;
       }
 
-      const pointsToUse = scoreType === 'gross' ? (result.grossPoints || 0) : (result.points || 0);
+      const pointsToUse = scoreType === 'gross' ? result.grossPoints || 0 : result.points || 0;
 
       const tournamentDetail = {
         id: result.id,
@@ -474,17 +505,25 @@ export class LeaderboardCalculator {
         handicap: result.handicap,
         points: pointsToUse,
         grossPoints: result.grossPoints || 0,
-        netPoints: result.points || 0
+        netPoints: result.points || 0,
       };
 
       tournamentDetails.push(tournamentDetail);
       totalPoints += pointsToUse;
 
       switch (tournament.type) {
-        case 'major': majorPoints += pointsToUse; break;
-        case 'tour': tourPoints += pointsToUse; break;
-        case 'league': leaguePoints += pointsToUse; break;
-        case 'supr': suprPoints += pointsToUse; break;
+        case 'major':
+          majorPoints += pointsToUse;
+          break;
+        case 'tour':
+          tourPoints += pointsToUse;
+          break;
+        case 'league':
+          leaguePoints += pointsToUse;
+          break;
+        case 'supr':
+          suprPoints += pointsToUse;
+          break;
       }
     }
 
@@ -497,7 +536,7 @@ export class LeaderboardCalculator {
         name: player.name,
         email: player.email,
         defaultHandicap: player.defaultHandicap,
-        homeClub: (player as any).homeClub
+        homeClub: (player as any).homeClub,
       },
       tournaments: tournamentDetails,
       totalPoints,
@@ -509,7 +548,7 @@ export class LeaderboardCalculator {
       rank: 0,
       averageNetScore,
       averageGrossScore,
-      averageScore: scoreType === 'net' ? averageNetScore : averageGrossScore
+      averageScore: scoreType === 'net' ? averageNetScore : averageGrossScore,
     };
 
     const top8Results = this.calculateTop8Points(tournamentDetails, scoreType);
@@ -521,7 +560,7 @@ export class LeaderboardCalculator {
         grossTourPoints: tourPoints,
         grossTop8TotalPoints: top8Results.totalPoints,
         grossTop8TourPoints: top8Results.tourPoints,
-        grossTop8MajorPoints: top8Results.majorPoints
+        grossTop8MajorPoints: top8Results.majorPoints,
       };
     }
 
@@ -529,7 +568,7 @@ export class LeaderboardCalculator {
       ...resultObj,
       top8TotalPoints: top8Results.totalPoints,
       top8TourPoints: top8Results.tourPoints,
-      top8MajorPoints: top8Results.majorPoints
+      top8MajorPoints: top8Results.majorPoints,
     };
   }
 }

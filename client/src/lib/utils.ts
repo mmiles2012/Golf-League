@@ -1,6 +1,6 @@
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-import { useState, useEffect } from "react";
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+import { useState, useEffect } from 'react';
 
 /**
  * Combines class names using clsx and tailwind-merge
@@ -37,23 +37,23 @@ export function useDebounce<T>(value: T, delay: number): T {
  * @returns Formatted date string
  */
 export function formatDate(dateString: string): string {
-  if (!dateString) return "";
-  
+  if (!dateString) return '';
+
   // Parse the date
   const date = new Date(dateString);
-  
+
   // Check if date is valid
   if (isNaN(date.getTime())) {
-    return "Invalid date";
+    return 'Invalid date';
   }
-  
+
   // Options for date formatting
   const options: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
   };
-  
+
   // Return formatted date
   return date.toLocaleDateString(undefined, options);
 }
@@ -74,9 +74,9 @@ export function formatNumber(num: number): string {
  * @returns Truncated text
  */
 export function truncateText(text: string, maxLength: number): string {
-  if (!text) return "";
+  if (!text) return '';
   if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength) + "...";
+  return text.slice(0, maxLength) + '...';
 }
 
 /**
@@ -86,13 +86,13 @@ export function truncateText(text: string, maxLength: number): string {
  * @returns Initials
  */
 export function getInitials(name: string, limit = 2): string {
-  if (!name) return "";
-  
+  if (!name) return '';
+
   return name
-    .split(" ")
+    .split(' ')
     .map((part) => part.charAt(0))
     .slice(0, limit)
-    .join("")
+    .join('')
     .toUpperCase();
 }
 
@@ -104,17 +104,17 @@ export function getInitials(name: string, limit = 2): string {
 export function getOrdinalSuffix(num: number): string {
   const j = num % 10;
   const k = num % 100;
-  
+
   if (j === 1 && k !== 11) {
-    return "st";
+    return 'st';
   }
   if (j === 2 && k !== 12) {
-    return "nd";
+    return 'nd';
   }
   if (j === 3 && k !== 13) {
-    return "rd";
+    return 'rd';
   }
-  return "th";
+  return 'th';
 }
 
 /**
@@ -191,19 +191,19 @@ export function downloadBlob(blob: Blob, fileName: string): void {
  */
 export function useIsMobile(): boolean {
   const [isMobile, setIsMobile] = useState(false);
-  
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    
+
     return () => {
       window.removeEventListener('resize', checkMobile);
     };
   }, []);
-  
+
   return isMobile;
 }

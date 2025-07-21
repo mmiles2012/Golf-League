@@ -37,10 +37,11 @@ export class RecalculationService {
     console.log(`[RECALC] ${action}:`, details);
   }
 
-  async recalculateAllTournaments({ type, mode }: { type?: RecalcType, mode: RecalcMode }) {
-    const where = type && type !== 'all' ? 
-      and(eq(tournaments.type, type), eq(tournaments.isManualEntry, false)) : 
-      eq(tournaments.isManualEntry, false);
+  async recalculateAllTournaments({ type, mode }: { type?: RecalcType; mode: RecalcMode }) {
+    const where =
+      type && type !== 'all'
+        ? and(eq(tournaments.type, type), eq(tournaments.isManualEntry, false))
+        : eq(tournaments.isManualEntry, false);
     const allTournaments = await db.select().from(tournaments).where(where);
     for (const t of allTournaments) {
       await this.recalculateTournament({ tournamentId: t.id, mode });
@@ -48,17 +49,22 @@ export class RecalculationService {
     this.log('recalculateAllTournaments', { type, mode, count: allTournaments.length });
   }
 
-  async recalculateTournament({ tournamentId, mode }: { tournamentId: number, mode: RecalcMode }) {
-    const tournament = (await db.select().from(tournaments).where(eq(tournaments.id, tournamentId)))[0];
+  async recalculateTournament({ tournamentId, mode }: { tournamentId: number; mode: RecalcMode }) {
+    const tournament = (
+      await db.select().from(tournaments).where(eq(tournaments.id, tournamentId))
+    )[0];
     if (!tournament) throw new Error('Tournament not found');
-    
+
     // Skip manual entry tournaments
     if (tournament.isManualEntry) {
       this.log('skippedManualEntryTournament', { tournamentId, name: tournament.name });
       return;
     }
-    
-    const results = await db.select().from(playerResults).where(eq(playerResults.tournamentId, tournamentId));
+
+    const results = await db
+      .select()
+      .from(playerResults)
+      .where(eq(playerResults.tournamentId, tournamentId));
     if (mode === 'gross' || mode === 'both') {
       await this.recalculateResults(results, tournament, 'gross');
     }
@@ -68,18 +74,27 @@ export class RecalculationService {
     this.log('recalculateTournament', { tournamentId, mode });
   }
 
-  async recalculatePlayer({ playerId, mode }: { playerId: number, mode: RecalcMode }) {
-    const results = await db.select().from(playerResults).where(eq(playerResults.playerId, playerId));
+  async recalculatePlayer({ playerId, mode }: { playerId: number; mode: RecalcMode }) {
+    const results = await db
+      .select()
+      .from(playerResults)
+      .where(eq(playerResults.playerId, playerId));
     for (const result of results) {
-      const tournament = (await db.select().from(tournaments).where(eq(tournaments.id, result.tournamentId)))[0];
+      const tournament = (
+        await db.select().from(tournaments).where(eq(tournaments.id, result.tournamentId))
+      )[0];
       if (!tournament) continue;
-      
+
       // Skip manual entry tournaments
       if (tournament.isManualEntry) {
-        this.log('skippedManualEntryTournamentForPlayer', { tournamentId: tournament.id, name: tournament.name, playerId });
+        this.log('skippedManualEntryTournamentForPlayer', {
+          tournamentId: tournament.id,
+          name: tournament.name,
+          playerId,
+        });
         continue;
       }
-      
+
       if (mode === 'gross' || mode === 'both') {
         await this.recalculateResults([result], tournament, 'gross');
       }
@@ -95,43 +110,56 @@ export class RecalculationService {
     const scoreField = mode === 'gross' ? 'grossScore' : 'netScore';
     const pointsField = mode === 'gross' ? 'grossPoints' : 'points';
     const positionField = mode === 'gross' ? 'grossPosition' : 'position';
-    const validResults = results.filter(r => r[scoreField] !== null && r[scoreField] !== undefined);
+    const validResults = results.filter(
+      (r) => r[scoreField] !== null && r[scoreField] !== undefined,
+    );
     validResults.sort((a, b) => a[scoreField] - b[scoreField]);
     let currentPosition = 1;
     for (let i = 0; i < validResults.length; i++) {
       const currentScore = validResults[i][scoreField];
-      const tiedPlayers = validResults.filter(r => r[scoreField] === currentScore);
+      const tiedPlayers = validResults.filter((r) => r[scoreField] === currentScore);
       const numTied = tiedPlayers.length;
       // Average points for ties
       let points = 0;
       if (mode === 'gross') {
-        points = numTied === 1
-          ? calculateGrossPoints(currentPosition, tournament.type, this.pointsConfig)
-          : (() => {
-              let total = 0;
-              for (let j = 0; j < numTied; j++) {
-                total += calculateGrossPoints(currentPosition + j, tournament.type, this.pointsConfig);
-              }
-              return total / numTied;
-            })();
+        points =
+          numTied === 1
+            ? calculateGrossPoints(currentPosition, tournament.type, this.pointsConfig)
+            : (() => {
+                let total = 0;
+                for (let j = 0; j < numTied; j++) {
+                  total += calculateGrossPoints(
+                    currentPosition + j,
+                    tournament.type,
+                    this.pointsConfig,
+                  );
+                }
+                return total / numTied;
+              })();
       } else {
         const netPointsTable = this.pointsConfig[tournament.type as keyof PointsConfig];
-        points = numTied === 1
-          ? getPointsFromConfig(currentPosition, netPointsTable)
-          : (() => {
-              let total = 0;
-              for (let j = 0; j < numTied; j++) {
-                total += getPointsFromConfig(currentPosition + j, netPointsTable);
-              }
-              return total / numTied;
-            })();
+        points =
+          numTied === 1
+            ? getPointsFromConfig(currentPosition, netPointsTable)
+            : (() => {
+                let total = 0;
+                for (let j = 0; j < numTied; j++) {
+                  total += getPointsFromConfig(currentPosition + j, netPointsTable);
+                }
+                return total / numTied;
+              })();
       }
       // Update all tied players
       for (const player of tiedPlayers) {
-        await db.update(playerResults)
+        await db
+          .update(playerResults)
           .set({ [positionField]: currentPosition, [pointsField]: points })
           .where(eq(playerResults.id, player.id));
-        this.log('updateResult', { id: player.id, [positionField]: currentPosition, [pointsField]: points });
+        this.log('updateResult', {
+          id: player.id,
+          [positionField]: currentPosition,
+          [pointsField]: points,
+        });
       }
       currentPosition += numTied;
       while (i + 1 < validResults.length && validResults[i + 1][scoreField] === currentScore) {

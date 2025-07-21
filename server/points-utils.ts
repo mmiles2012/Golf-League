@@ -1,4 +1,4 @@
-import { TournamentType, PointsConfig } from "@shared/schema";
+import { TournamentType, PointsConfig } from '@shared/schema';
 
 /**
  * Shared points and tie calculation utilities for backend (server)
@@ -15,11 +15,11 @@ import { TournamentType, PointsConfig } from "@shared/schema";
 export function calculatePoints(
   position: number,
   tournamentType: TournamentType,
-  pointsConfig?: { position: number; points: number }[]
+  pointsConfig?: { position: number; points: number }[],
 ): number {
   if (position <= 0) return 0;
   if (pointsConfig && Array.isArray(pointsConfig)) {
-    const entry = pointsConfig.find(p => p.position === position);
+    const entry = pointsConfig.find((p) => p.position === position);
     return entry ? entry.points : 0;
   }
   // Fallback logic (legacy)
@@ -76,7 +76,7 @@ export function calculateTiePoints(
   startPosition: number,
   numTiedPlayers: number,
   tournamentType: TournamentType,
-  pointsConfig?: { position: number; points: number }[]
+  pointsConfig?: { position: number; points: number }[],
 ): number {
   let totalPoints = 0;
   for (let i = 0; i < numTiedPlayers; i++) {

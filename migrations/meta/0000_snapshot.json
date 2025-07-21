@@ -42,9 +42,7 @@
         "home_club_options_name_unique": {
           "name": "home_club_options_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       },
       "policies": {},
@@ -169,12 +167,8 @@
           "name": "player_link_requests_user_id_users_id_fk",
           "tableFrom": "player_link_requests",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -182,12 +176,8 @@
           "name": "player_link_requests_player_id_players_id_fk",
           "tableFrom": "player_link_requests",
           "tableTo": "players",
-          "columnsFrom": [
-            "player_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["player_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -195,12 +185,8 @@
           "name": "player_link_requests_reviewed_by_users_id_fk",
           "tableFrom": "player_link_requests",
           "tableTo": "users",
-          "columnsFrom": [
-            "reviewed_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reviewed_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -210,10 +196,7 @@
         "player_link_requests_user_id_player_id_unique": {
           "name": "player_link_requests_user_id_player_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "player_id"
-          ]
+          "columns": ["user_id", "player_id"]
         }
       },
       "policies": {},
@@ -256,12 +239,8 @@
           "name": "player_profiles_user_id_users_id_fk",
           "tableFrom": "player_profiles",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -269,12 +248,8 @@
           "name": "player_profiles_player_id_players_id_fk",
           "tableFrom": "player_profiles",
           "tableTo": "players",
-          "columnsFrom": [
-            "player_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["player_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -284,10 +259,7 @@
         "player_profiles_user_id_player_id_unique": {
           "name": "player_profiles_user_id_player_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "player_id"
-          ]
+          "columns": ["user_id", "player_id"]
         }
       },
       "policies": {},
@@ -372,12 +344,8 @@
           "name": "player_results_player_id_players_id_fk",
           "tableFrom": "player_results",
           "tableTo": "players",
-          "columnsFrom": [
-            "player_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["player_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -385,12 +353,8 @@
           "name": "player_results_tournament_id_tournaments_id_fk",
           "tableFrom": "player_results",
           "tableTo": "tournaments",
-          "columnsFrom": [
-            "tournament_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tournament_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -400,10 +364,7 @@
         "player_results_player_id_tournament_id_unique": {
           "name": "player_results_player_id_tournament_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "player_id",
-            "tournament_id"
-          ]
+          "columns": ["player_id", "tournament_id"]
         }
       },
       "policies": {},
@@ -563,12 +524,8 @@
           "name": "tournaments_league_id_leagues_id_fk",
           "tableFrom": "tournaments",
           "tableTo": "leagues",
-          "columnsFrom": [
-            "league_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["league_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -662,9 +619,7 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},

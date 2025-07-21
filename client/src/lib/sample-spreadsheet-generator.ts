@@ -9,12 +9,11 @@ interface SampleRow {
  */
 export function generateSampleSpreadsheet(
   scoringMode: 'calculated' | 'manual',
-  scoringType: 'net' | 'gross' | 'both' = 'both'
+  scoringType: 'net' | 'gross' | 'both' = 'both',
 ): { headers: string[]; rows: SampleRow[] } {
-  
   const baseHeaders = ['Player Name', 'Position'];
   let headers: string[] = [...baseHeaders];
-  
+
   // Add scoring-specific headers
   if (scoringMode === 'calculated') {
     if (scoringType === 'net' || scoringType === 'both') {
@@ -36,15 +35,23 @@ export function generateSampleSpreadsheet(
 
   // Generate sample data
   const samplePlayers = [
-    'John Smith', 'Jane Doe', 'Mike Johnson', 'Sarah Wilson', 'David Brown',
-    'Lisa Davis', 'Chris Miller', 'Amanda Garcia', 'Tom Anderson', 'Emily Taylor'
+    'John Smith',
+    'Jane Doe',
+    'Mike Johnson',
+    'Sarah Wilson',
+    'David Brown',
+    'Lisa Davis',
+    'Chris Miller',
+    'Amanda Garcia',
+    'Tom Anderson',
+    'Emily Taylor',
   ];
 
   const rows: SampleRow[] = samplePlayers.map((player, index) => {
     const position = index + 1;
     const row: SampleRow = {
       'Player Name': player,
-      'Position': position
+      Position: position,
     };
 
     if (scoringMode === 'calculated') {
@@ -62,7 +69,7 @@ export function generateSampleSpreadsheet(
       // Manual mode with direct points
       const majorPoints = [750, 400, 350, 300, 250, 200, 175, 150, 125, 100];
       row['Points'] = majorPoints[index] || Math.max(0, 100 - index * 10);
-      
+
       // Optional scores for manual tournaments
       if (scoringType === 'net' || scoringType === 'both') {
         row['Net Score'] = 68 + index * 2;
@@ -86,15 +93,13 @@ export function generateSampleSpreadsheet(
  */
 export function generateSampleCSV(
   scoringMode: 'calculated' | 'manual',
-  scoringType: 'net' | 'gross' | 'both' = 'both'
+  scoringType: 'net' | 'gross' | 'both' = 'both',
 ): string {
   const { headers, rows } = generateSampleSpreadsheet(scoringMode, scoringType);
-  
+
   const csvHeaders = headers.join(',');
-  const csvRows = rows.map(row => 
-    headers.map(header => row[header] || '').join(',')
-  );
-  
+  const csvRows = rows.map((row) => headers.map((header) => row[header] || '').join(','));
+
   return [csvHeaders, ...csvRows].join('\n');
 }
 
@@ -104,14 +109,14 @@ export function generateSampleCSV(
 export function downloadSampleSpreadsheet(
   scoringMode: 'calculated' | 'manual',
   scoringType: 'net' | 'gross' | 'both' = 'both',
-  tournamentType: string = 'tour'
+  tournamentType: string = 'tour',
 ) {
   const csv = generateSampleCSV(scoringMode, scoringType);
   const filename = `sample_${tournamentType}_${scoringMode}_${scoringType}.csv`;
-  
+
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
-  
+
   if (link.download !== undefined) {
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
@@ -128,22 +133,22 @@ export function downloadSampleSpreadsheet(
  */
 export function getRequiredFields(
   scoringMode: 'calculated' | 'manual',
-  scoringType: 'net' | 'gross' | 'both' = 'both'
+  scoringType: 'net' | 'gross' | 'both' = 'both',
 ): string[] {
   const baseFields = ['Player Name', 'Position'];
-  
+
   if (scoringMode === 'manual') {
     baseFields.push('Points');
   }
-  
+
   if (scoringType === 'net' || scoringType === 'both') {
     baseFields.push('Net Score', 'Handicap');
   }
-  
+
   if (scoringType === 'gross' || scoringType === 'both') {
     baseFields.push('Gross Score');
   }
-  
+
   return baseFields;
 }
 
@@ -153,16 +158,16 @@ export function getRequiredFields(
 export function getFieldDescriptions(scoringMode: 'calculated' | 'manual'): Record<string, string> {
   const descriptions: Record<string, string> = {
     'Player Name': 'Full name of the player',
-    'Position': 'Final finishing position (1st, 2nd, etc.)',
+    Position: 'Final finishing position (1st, 2nd, etc.)',
   };
-  
+
   if (scoringMode === 'manual') {
     descriptions['Points'] = 'Points to award for this position';
   }
-  
+
   descriptions['Net Score'] = 'Net score (gross score minus handicap)';
   descriptions['Gross Score'] = 'Gross score (actual strokes played)';
   descriptions['Handicap'] = 'Player handicap for this tournament';
-  
+
   return descriptions;
 }

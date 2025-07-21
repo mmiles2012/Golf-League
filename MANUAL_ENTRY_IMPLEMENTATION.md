@@ -7,27 +7,32 @@ This implementation adds comprehensive support for manual tournament entry with 
 ## Changes Made
 
 ### 1. Database Schema Updates (`shared/schema.ts`)
+
 - Added `isManualEntry` boolean field to tournaments table (defaults to false)
 - Updated `insertTournamentSchema` to include the new field
 - Modified `manualEntrySchema` to mark tournaments as manual entry by default
 
 ### 2. Database Migration (`add-manual-entry-field.ts`)
+
 - Created migration script to add `isManualEntry` column to tournaments table
 - All existing tournaments default to `false` (non-manual entry)
 
 ### 3. Backend Updates
 
 #### Routes (`server/routes.ts`)
+
 - Updated manual entry endpoint to mark tournaments with `isManualEntry: true`
 - Updated other tournament creation endpoints to set `isManualEntry: false`
 - Manual entry tournaments are now tracked separately
 
 #### Recalculation Service (`server/recalculation-service.ts`)
+
 - Modified to exclude manual entry tournaments from all recalculation operations
 - Added logging when manual entry tournaments are skipped
 - Updated all recalculation methods (tournament, player, all tournaments)
 
 #### Migration Utils (`server/migration-utils.ts`)
+
 - Added `shouldSkipTournament()` utility function
 - Updated migration scripts to exclude manual entry tournaments
 - Example implementation in `fix-all-hardcoded-points.ts`
@@ -35,6 +40,7 @@ This implementation adds comprehensive support for manual tournament entry with 
 ### 4. Frontend Updates
 
 #### New Enhanced Manual Entry Form (`ManualEntryFormNew.tsx`)
+
 - Matches TournamentUploader style and functionality
 - Features:
   - Individual player entry mode
@@ -47,14 +53,17 @@ This implementation adds comprehensive support for manual tournament entry with 
   - Points preservation (no automatic calculation)
 
 #### Updated Manual Entry Page (`ManualEntry.tsx`)
+
 - Uses new enhanced form component
 - Updated description to clarify manual entry behavior
 
 #### Tournament Management (`TournamentManagement.tsx`)
+
 - Added "Manual Entry" badge for manual entry tournaments
 - Visual distinction in tournament list
 
 #### Edit Tournament (`EditTournament.tsx`)
+
 - Added Badge import
 - Prevents editing of manual entry tournaments
 - Shows read-only view with tournament details and results
@@ -64,11 +73,13 @@ This implementation adds comprehensive support for manual tournament entry with 
 ## Key Features
 
 ### Warning Modal
+
 - Alerts users that manual entry tournaments cannot be edited
 - Explains that results will not be subject to recalculation
 - Requires confirmation before saving
 
 ### Prevention of Recalculation
+
 - Manual entry tournaments are excluded from:
   - Admin recalculation tools
   - Migration scripts
@@ -76,12 +87,14 @@ This implementation adds comprehensive support for manual tournament entry with 
   - Tie handling updates
 
 ### Style Consistency
+
 - Manual entry form matches TournamentUploader design
 - Same progress indicators and status messages
 - Consistent card layouts and button styles
 - Preview functionality like spreadsheet upload
 
 ### Data Integrity
+
 - Points and positions preserved exactly as entered
 - No automatic tie handling or position adjustment
 - Clear visual indicators for manual entry tournaments
@@ -90,6 +103,7 @@ This implementation adds comprehensive support for manual tournament entry with 
 ## Usage
 
 ### For Admins
+
 1. Navigate to Manual Entry page
 2. Fill in tournament details
 3. Enter player results (individual or paste from spreadsheet)
@@ -98,6 +112,7 @@ This implementation adds comprehensive support for manual tournament entry with 
 6. Results are saved and protected from recalculation
 
 ### For Tournament Management
+
 - Manual entry tournaments show "Manual Entry" badge
 - Cannot be edited after creation
 - Display in read-only mode when accessed
@@ -106,6 +121,7 @@ This implementation adds comprehensive support for manual tournament entry with 
 ## Database Migration
 
 To apply the schema changes, run:
+
 ```bash
 npx tsx add-manual-entry-field.ts
 ```

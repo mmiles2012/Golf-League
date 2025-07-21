@@ -1,6 +1,6 @@
-import { ReactNode, useEffect } from "react";
-import { useLocation } from "wouter";
-import { useAuth } from "@/contexts/AuthContext";
+import { ReactNode, useEffect } from 'react';
+import { useLocation } from 'wouter';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -12,7 +12,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate("/login");
+      navigate('/login');
     }
   }, [isAuthenticated, navigate]);
 
