@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import Sidebar from "./Sidebar";
-import PublicNavbar from "./PublicNavbar";
-import { Menu, X } from "lucide-react";
-import { AppSettings } from "@shared/schema";
-import { useAuth } from "@/hooks/useAuth";
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import Sidebar from './Sidebar';
+import PublicNavbar from './PublicNavbar';
+import { Menu, X } from 'lucide-react';
+import { AppSettings } from '@shared/schema';
+import { useAuth } from '@/hooks/useAuth';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -13,17 +13,17 @@ interface AppShellProps {
 export default function AppShell({ children }: AppShellProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
-  
+
   // Fetch app settings
   const { data: settings } = useQuery<AppSettings>({
-    queryKey: ["/api/settings"],
+    queryKey: ['/api/settings'],
     // If there's an error fetching settings, the app will continue with default styles
   });
 
   // Default app settings if none are found
   const appName = settings?.appName || "Hideout Founders' Series 2025";
-  const logoUrl = settings?.logoUrl || "/images/hideout-logo.png";
-  const sidebarColor = settings?.sidebarColor || "#0f172a";
+  const logoUrl = settings?.logoUrl || '/images/hideout-logo.png';
+  const sidebarColor = settings?.sidebarColor || '#0f172a';
 
   // Close mobile menu on window resize
   useEffect(() => {
@@ -33,9 +33,9 @@ export default function AppShell({ children }: AppShellProps) {
       }
     };
 
-    window.addEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
     return () => {
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
@@ -46,10 +46,10 @@ export default function AppShell({ children }: AppShellProps) {
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Sidebar Navigation - Fixed on desktop, slides in/out on mobile */}
-      <aside 
+      <aside
         style={{ backgroundColor: sidebarColor }}
         className={`w-full md:w-64 md:flex-shrink-0 md:flex flex-col transition-transform duration-300 ease-in-out fixed top-0 left-0 h-full z-50 overflow-y-auto ${
-          isMobileMenuOpen ? "mobile-menu-open" : "mobile-menu-closed md:translate-x-0"
+          isMobileMenuOpen ? 'mobile-menu-open' : 'mobile-menu-closed md:translate-x-0'
         }`}
       >
         <div className="flex items-center justify-between p-4 border-b border-opacity-20 border-white">
@@ -57,19 +57,16 @@ export default function AppShell({ children }: AppShellProps) {
             <img src={logoUrl} alt="Logo" className="h-8 w-8 object-contain" />
             <h1 className="font-heading font-bold text-white text-xl">{appName}</h1>
           </div>
-          <button 
-            onClick={() => setIsMobileMenuOpen(false)} 
-            className="md:hidden text-white"
-          >
+          <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden text-white">
             <X size={24} />
           </button>
         </div>
-        
+
         <Sidebar onNavigation={() => setIsMobileMenuOpen(false)} />
       </aside>
-      
+
       {/* Mobile Header - Only visible on mobile */}
-      <div 
+      <div
         style={{ backgroundColor: sidebarColor }}
         className="md:hidden text-white p-4 flex justify-between items-center sticky top-0 z-30"
       >
@@ -77,14 +74,11 @@ export default function AppShell({ children }: AppShellProps) {
           <img src={logoUrl} alt="Logo" className="h-6 w-6 object-contain" />
           <h1 className="font-heading font-bold">{appName}</h1>
         </div>
-        <button 
-          onClick={() => setIsMobileMenuOpen(true)} 
-          className="text-white"
-        >
+        <button onClick={() => setIsMobileMenuOpen(true)} className="text-white">
           <Menu size={24} />
         </button>
       </div>
-      
+
       {/* Main Content - Takes full width on mobile, has margin on desktop */}
       <main className="flex-grow p-4 md:p-6 w-full overflow-auto md:ml-64 mt-14 md:mt-0">
         {children}

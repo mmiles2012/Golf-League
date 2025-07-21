@@ -11,11 +11,12 @@ export default [
   },
   jsConfig.configs.recommended,
   ...tseslint.configs.recommended,
-  ...react.configs.recommended,
-  ...reactHooks.configs.recommended,
-  ...prettier,
   {
     files: ['**/*.{ts,tsx,js,jsx}'],
+    plugins: {
+      react,
+      'react-hooks': reactHooks,
+    },
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
@@ -25,6 +26,11 @@ export default [
       },
     },
     rules: {
+      // React recommended rules
+      ...react.configs.flat.recommended.rules,
+      // React hooks recommended rules
+      ...reactHooks.configs.recommended.rules,
+      // Custom overrides
       'react/react-in-jsx-scope': 'off',
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/explicit-module-boundary-types': 'off',
@@ -33,4 +39,5 @@ export default [
       react: { version: 'detect' },
     },
   },
+  prettier,
 ];

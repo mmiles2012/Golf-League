@@ -1,5 +1,5 @@
-import { PointsConfig } from "../shared/schema";
-import { calculateTiePoints, formatPosition, calculatePoints } from "./points-utils";
+import { PointsConfig } from '../shared/schema';
+import { calculateTiePoints, formatPosition, calculatePoints } from './points-utils';
 
 export interface TieGroup {
   position: number;
@@ -47,10 +47,10 @@ export class TieHandler {
       handicap: number | null;
     }>,
     tournamentType: string,
-    scoreType: 'net' | 'gross' = 'net'
+    scoreType: 'net' | 'gross' = 'net',
   ): ProcessedResult[] {
     // Filter out players without scores
-    const validResults = results.filter(r => {
+    const validResults = results.filter((r) => {
       const score = scoreType === 'net' ? r.netScore : r.grossScore;
       return score !== null && score !== undefined;
     });
@@ -76,23 +76,23 @@ export class TieHandler {
         currentPosition,
         numPlayersInTie,
         tournamentType as any,
-        this.pointsConfig[tournamentType as keyof PointsConfig]
+        this.pointsConfig[tournamentType as keyof PointsConfig],
       );
 
       // Add each player in the tie group
       for (const player of tieGroup.players) {
         const displayPosition = formatPosition(currentPosition, numPlayersInTie > 1);
-        
+
         processedResults.push({
           playerId: player.playerId,
           playerName: player.playerName,
           position: currentPosition,
           tiedPosition: numPlayersInTie > 1,
           displayPosition,
-          grossScore: results.find(r => r.playerId === player.playerId)?.grossScore || null,
-          netScore: results.find(r => r.playerId === player.playerId)?.netScore || null,
+          grossScore: results.find((r) => r.playerId === player.playerId)?.grossScore || null,
+          netScore: results.find((r) => r.playerId === player.playerId)?.netScore || null,
           handicap: player.handicap,
-          points: pointsPerPlayer
+          points: pointsPerPlayer,
         });
       }
 
@@ -115,13 +115,13 @@ export class TieHandler {
       netScore: number | null;
       handicap: number | null;
     }>,
-    scoreType: 'net' | 'gross'
+    scoreType: 'net' | 'gross',
   ): TieGroup[] {
     const scoreGroups = new Map<number, TieGroup['players']>();
 
     for (const result of results) {
       const score = scoreType === 'net' ? result.netScore! : result.grossScore!;
-      
+
       if (!scoreGroups.has(score)) {
         scoreGroups.set(score, []);
       }
@@ -130,7 +130,7 @@ export class TieHandler {
         playerId: result.playerId,
         playerName: result.playerName,
         score,
-        handicap: result.handicap
+        handicap: result.handicap,
       });
     }
 
@@ -140,13 +140,13 @@ export class TieHandler {
 
     // Get sorted scores and iterate
     const sortedScores = Array.from(scoreGroups.keys()).sort((a, b) => a - b);
-    
+
     for (const score of sortedScores) {
       const players = scoreGroups.get(score)!;
       tieGroups.push({
         position,
         players,
-        pointsPerPlayer: 0 // Will be calculated later
+        pointsPerPlayer: 0, // Will be calculated later
       });
       position += players.length;
     }
@@ -158,14 +158,18 @@ export class TieHandler {
    * Get points for a specific position and tournament type (now uses shared utility)
    */
   public getPointsForPosition(position: number, tournamentType: string): number {
-    return calculatePoints(position, tournamentType as any, this.pointsConfig[tournamentType as keyof PointsConfig]);
+    return calculatePoints(
+      position,
+      tournamentType as any,
+      this.pointsConfig[tournamentType as keyof PointsConfig],
+    );
   }
 
   /**
    * Detect if uploaded data already has tie positions (e.g., multiple players with same position)
    */
   static detectExistingTies(results: Array<{ position: number }>): boolean {
-    const positions = results.map(r => r.position);
+    const positions = results.map((r) => r.position);
     const uniquePositions = new Set(positions);
     return positions.length !== uniquePositions.size;
   }
@@ -178,38 +182,46 @@ export class TieHandler {
     issues: string[];
   } {
     const issues: string[] = [];
-    
+
     // Sort by position
     const sortedResults = [...results].sort((a, b) => a.position - b.position);
-    
+
     let expectedPosition = 1;
     let previousScore: number | null = null;
-    
+
     for (let i = 0; i < sortedResults.length; i++) {
       const result = sortedResults[i];
-      
+
       // Check if position sequence makes sense
       if (result.position < expectedPosition) {
         issues.push(`Position ${result.position} appears after position ${expectedPosition - 1}`);
       }
-      
+
       // Check if tied players have same position
-      if (previousScore !== null && result.score === previousScore && result.position !== sortedResults[i - 1].position) {
+      if (
+        previousScore !== null &&
+        result.score === previousScore &&
+        result.position !== sortedResults[i - 1].position
+      ) {
         issues.push(`Players with same score (${result.score}) should have same position`);
       }
-      
+
       // Check if different scores have different positions when not tied
-      if (previousScore !== null && result.score !== previousScore && result.position === sortedResults[i - 1].position) {
+      if (
+        previousScore !== null &&
+        result.score !== previousScore &&
+        result.position === sortedResults[i - 1].position
+      ) {
         issues.push(`Players with different scores should not have same position`);
       }
-      
+
       previousScore = result.score;
       expectedPosition = result.position + 1;
     }
-    
+
     return {
       valid: issues.length === 0,
-      issues
+      issues,
     };
   }
 }

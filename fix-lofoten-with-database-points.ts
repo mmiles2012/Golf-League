@@ -1,7 +1,12 @@
 import { db } from './server/db.js';
 import { playerResults, tournaments } from './shared/schema.js';
 import { eq } from 'drizzle-orm';
-import { getPointsFromConfig, calculateTiePointsFromTable, assignPositionsWithTies, groupResultsByScore } from './server/migration-utils';
+import {
+  getPointsFromConfig,
+  calculateTiePointsFromTable,
+  assignPositionsWithTies,
+  groupResultsByScore,
+} from './server/migration-utils';
 import { storage } from './server/storage-db.js';
 
 async function fixLofotenWithDatabasePoints() {
@@ -36,9 +41,7 @@ async function fixLofotenWithDatabasePoints() {
       .from(playerResults)
       .where(eq(playerResults.tournamentId, tournamentId));
 
-    const validResults = results.filter(r => 
-      r.grossScore !== null && r.grossScore !== undefined
-    );
+    const validResults = results.filter((r) => r.grossScore !== null && r.grossScore !== undefined);
 
     console.log(`Processing ${validResults.length} results with gross scores`);
 
@@ -56,9 +59,10 @@ async function fixLofotenWithDatabasePoints() {
     let positionCursor = 1;
     for (const group of groups) {
       const numTied = group.players.length;
-      const points = numTied === 1
-        ? getPointsFromConfig(positionCursor, tourPointsTable)
-        : calculateTiePointsFromTable(positionCursor, numTied, tourPointsTable);
+      const points =
+        numTied === 1
+          ? getPointsFromConfig(positionCursor, tourPointsTable)
+          : calculateTiePointsFromTable(positionCursor, numTied, tourPointsTable);
       for (const player of group.players) {
         updates.push({ id: player.id, position: positionCursor, points });
       }
@@ -74,10 +78,14 @@ async function fixLofotenWithDatabasePoints() {
           grossPoints: update.points,
         })
         .where(eq(playerResults.id, update.id));
-      console.log(`Updated result ${update.id}: grossPosition=${update.position}, grossPoints=${update.points}`);
+      console.log(
+        `Updated result ${update.id}: grossPosition=${update.position}, grossPoints=${update.points}`,
+      );
     }
 
-    console.log('✅ Successfully updated all gross positions and points with correct database values');
+    console.log(
+      '✅ Successfully updated all gross positions and points with correct database values',
+    );
   } catch (error) {
     console.error('Error fixing gross points:', error);
     throw error;

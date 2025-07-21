@@ -1,7 +1,12 @@
 import { db } from './server/db.js';
 import { playerResults, tournaments } from './shared/schema.js';
 import { eq } from 'drizzle-orm';
-import { getPointsFromConfig, calculateTiePointsFromTable, assignPositionsWithTies, groupResultsByScore } from './server/migration-utils';
+import {
+  getPointsFromConfig,
+  calculateTiePointsFromTable,
+  assignPositionsWithTies,
+  groupResultsByScore,
+} from './server/migration-utils';
 import { storage } from './server/storage-db.js';
 
 interface PlayerResult {
@@ -47,9 +52,7 @@ async function fixLofotenGrossPositions() {
       .from(playerResults)
       .where(eq(playerResults.tournamentId, tournamentId));
 
-    const validResults = results.filter(r => 
-      r.grossScore !== null && r.grossScore !== undefined
-    );
+    const validResults = results.filter((r) => r.grossScore !== null && r.grossScore !== undefined);
 
     console.log(`Processing ${validResults.length} results with gross scores`);
 
@@ -67,9 +70,10 @@ async function fixLofotenGrossPositions() {
     let positionCursor = 1;
     for (const group of groups) {
       const numTied = group.players.length;
-      const points = numTied === 1
-        ? getPointsFromConfig(positionCursor, tourPointsTable)
-        : calculateTiePointsFromTable(positionCursor, numTied, tourPointsTable);
+      const points =
+        numTied === 1
+          ? getPointsFromConfig(positionCursor, tourPointsTable)
+          : calculateTiePointsFromTable(positionCursor, numTied, tourPointsTable);
       for (const player of group.players) {
         updates.push({ id: player.id, position: positionCursor, points });
       }
@@ -85,7 +89,9 @@ async function fixLofotenGrossPositions() {
           grossPoints: update.points,
         })
         .where(eq(playerResults.id, update.id));
-      console.log(`Updated result ${update.id}: grossPosition=${update.position}, grossPoints=${update.points}`);
+      console.log(
+        `Updated result ${update.id}: grossPosition=${update.position}, grossPoints=${update.points}`,
+      );
     }
 
     console.log('✅ Successfully updated all gross positions and points for Lofoten Links');
@@ -104,12 +110,13 @@ async function fixLofotenGrossPositions() {
 
     console.log('\nVerification - Updated results:');
     verification
-      .filter(r => r.grossScore !== null)
+      .filter((r) => r.grossScore !== null)
       .sort((a, b) => (a.grossScore as number) - (b.grossScore as number))
       .forEach((result, index) => {
-        console.log(`  Rank ${index + 1}: Player ${result.playerId}, Gross ${result.grossScore}, Position ${result.grossPosition}, Points ${result.grossPoints}`);
+        console.log(
+          `  Rank ${index + 1}: Player ${result.playerId}, Gross ${result.grossScore}, Position ${result.grossPosition}, Points ${result.grossPoints}`,
+        );
       });
-
   } catch (error) {
     console.error('Error fixing gross positions:', error);
     throw error;

@@ -1,5 +1,5 @@
-import { PointsConfig } from "../shared/schema";
-import type { Tournament } from "../shared/schema";
+import { PointsConfig } from '../shared/schema';
+import type { Tournament } from '../shared/schema';
 
 /**
  * Get points for a given position from a points table (array of {position, points})
@@ -7,9 +7,12 @@ import type { Tournament } from "../shared/schema";
  * @param pointsTable Array of { position, points }
  * @returns Points for the given position, or 0 if not found
  */
-export function getPointsFromConfig(position: number, pointsTable: { position: number; points: number }[]): number {
+export function getPointsFromConfig(
+  position: number,
+  pointsTable: { position: number; points: number }[],
+): number {
   if (!Array.isArray(pointsTable)) return 0;
-  const entry = pointsTable.find(p => p.position === position);
+  const entry = pointsTable.find((p) => p.position === position);
   return entry ? entry.points : 0;
 }
 
@@ -17,8 +20,14 @@ export function getPointsFromConfig(position: number, pointsTable: { position: n
  * Utility to log summary of points config for debugging
  */
 export function logPointsConfig(pointsConfig: PointsConfig) {
-  console.log('Tour points 1st-5th:', pointsConfig.tour.slice(0, 5).map(p => `${p.position}=${p.points}`));
-  console.log('Major points 1st-5th:', pointsConfig.major.slice(0, 5).map(p => `${p.position}=${p.points}`));
+  console.log(
+    'Tour points 1st-5th:',
+    pointsConfig.tour.slice(0, 5).map((p) => `${p.position}=${p.points}`),
+  );
+  console.log(
+    'Major points 1st-5th:',
+    pointsConfig.major.slice(0, 5).map((p) => `${p.position}=${p.points}`),
+  );
 }
 
 /**
@@ -31,7 +40,7 @@ export function logPointsConfig(pointsConfig: PointsConfig) {
 export function calculateTiePointsFromTable(
   startPosition: number,
   numTiedPlayers: number,
-  pointsTable: { position: number; points: number }[]
+  pointsTable: { position: number; points: number }[],
 ): number {
   let totalPoints = 0;
   for (let i = 0; i < numTiedPlayers; i++) {
@@ -52,7 +61,7 @@ export function calculateTiePointsFromConfig(
   startPosition: number,
   numTiedPlayers: number,
   tournamentType: keyof PointsConfig,
-  pointsConfig: PointsConfig
+  pointsConfig: PointsConfig,
 ): number {
   const table = pointsConfig[tournamentType];
   return calculateTiePointsFromTable(startPosition, numTiedPlayers, table);
@@ -66,7 +75,7 @@ export function calculateTiePointsFromConfig(
  */
 export function groupResultsByScore<T extends { [key: string]: any }>(
   results: T[],
-  scoreField: 'grossScore' | 'netScore'
+  scoreField: 'grossScore' | 'netScore',
 ): Array<{ score: number; players: T[] }> {
   const groups = new Map<number, T[]>();
   for (const result of results) {
@@ -86,9 +95,11 @@ export function groupResultsByScore<T extends { [key: string]: any }>(
  * @param scoreField 'grossScore' | 'netScore'
  * @returns Array of { id, playerId, position }
  */
-export function assignPositionsWithTies<T extends { id: number; playerId: number; [key: string]: any }>(
+export function assignPositionsWithTies<
+  T extends { id: number; playerId: number; [key: string]: any },
+>(
   sortedResults: T[],
-  scoreField: 'grossScore' | 'netScore'
+  scoreField: 'grossScore' | 'netScore',
 ): Array<{ id: number; playerId: number; position: number }> {
   const positions: Array<{ id: number; playerId: number; position: number }> = [];
   let currentPosition = 1;
@@ -99,7 +110,7 @@ export function assignPositionsWithTies<T extends { id: number; playerId: number
       positions.push({
         id: sortedResults[i].id,
         playerId: sortedResults[i].playerId,
-        position: positions[positions.length - 1].position
+        position: positions[positions.length - 1].position,
       });
     } else {
       // New position (skip positions if there were ties)
@@ -107,7 +118,7 @@ export function assignPositionsWithTies<T extends { id: number; playerId: number
       positions.push({
         id: sortedResults[i].id,
         playerId: sortedResults[i].playerId,
-        position: currentPosition
+        position: currentPosition,
       });
     }
   }
@@ -119,7 +130,9 @@ export function assignPositionsWithTies<T extends { id: number; playerId: number
  * @param tournament Tournament object
  * @returns true if tournament should be skipped
  */
-export function shouldSkipTournament(tournament: Pick<Tournament, 'isManualEntry' | 'name'>): boolean {
+export function shouldSkipTournament(
+  tournament: Pick<Tournament, 'isManualEntry' | 'name'>,
+): boolean {
   if (tournament.isManualEntry) {
     console.log(`   ⏭️  Skipping manual entry tournament: ${tournament.name}`);
     return true;

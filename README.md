@@ -1,11 +1,13 @@
 # Hideout Golf League
 
 ## Overview
+
 Hideout Golf League is a web application for managing, tracking, and displaying golf tournament results, player statistics, and league leaderboards. The platform supports both public and admin views, allowing for tournament management, score uploads, and dynamic points configuration. The system is designed for flexibility, supporting multiple tournament types and custom points distributions.
 
 ---
 
 ## Key Features
+
 - **Dynamic Leaderboards:** Real-time leaderboards for net and gross scoring, with sortable player histories.
 - **Tournament Management:** Admins can create, edit, and delete tournaments, and enter results via a unified tournament entry screen (file upload or manual entry).
 - **Points Configuration:** Fully customizable points distribution for each tournament type (Major, Tour, League, SUPR Club).
@@ -17,13 +19,16 @@ Hideout Golf League is a web application for managing, tracking, and displaying 
 ---
 
 ## User Roles & Workflows
+
 ### Public Users
+
 - View leaderboards (net/gross)
 - Browse tournament results
 - View player profiles and stats
 - See points distribution (read-only)
 
 ### Admin Users
+
 - All public capabilities, plus:
   - Create/edit/delete tournaments and players
   - Enter tournament scores (file upload or manual entry, unified in one screen)
@@ -33,6 +38,7 @@ Hideout Golf League is a web application for managing, tracking, and displaying 
 ---
 
 ## Site Navigation
+
 - **Leaderboards:** Main page showing ranked players by points (net/gross)
 - **Tournament Results:** List and details of past tournaments
 - **Players:** Directory of all players with search and profile views
@@ -47,7 +53,9 @@ Navigation is handled via a sidebar and top navigation menu, with routes protect
 ---
 
 ## Data Sources & Schemas
+
 ### Core Entities
+
 - **League**
   - `id`: number
   - `name`: string
@@ -91,6 +99,7 @@ Navigation is handled via a sidebar and top navigation menu, with routes protect
   - `logoUrl`: string
 
 ### Data Flow
+
 - Tournament results are uploaded (Excel/JSON) or entered manually by admins.
 - Admins select Tournament Type, Scoring Mode, and Scoring Type for each event.
 - The system displays the required spreadsheet columns and allows downloading a sample template for the selected configuration.
@@ -100,9 +109,11 @@ Navigation is handled via a sidebar and top navigation menu, with routes protect
 - Points configuration can be updated by admins and is versioned for recalculation.
 
 ### ER Diagram (Text Representation)
+
 ```
 League (1) ───< (N) Tournament (1) ───< (N) PlayerResult >(N) ─── (1) Player
 ```
+
 - **League** has many **Tournaments**
 - **Tournament** has many **PlayerResults**
 - **Player** has many **PlayerResults**
@@ -110,7 +121,9 @@ League (1) ───< (N) Tournament (1) ───< (N) PlayerResult >(N) ──
 ---
 
 ## API Routes & Example Usage
+
 ### Leagues
+
 - `GET /api/leagues` — List all leagues
 - `GET /api/leagues/:id` — Get league details
 - `POST /api/leagues` — Create league
@@ -118,6 +131,7 @@ League (1) ───< (N) Tournament (1) ───< (N) PlayerResult >(N) ──
 - `DELETE /api/leagues/:id` — Delete league
 
 ### Players
+
 - `GET /api/players` — List all players
 - `GET /api/players/:id` — Get player details
 - `POST /api/players` — Create player
@@ -125,6 +139,7 @@ League (1) ───< (N) Tournament (1) ───< (N) PlayerResult >(N) ──
 - `DELETE /api/players/:id` — Delete player
 
 ### Tournaments
+
 - `GET /api/tournaments` — List all tournaments
 - `GET /api/tournaments/:id` — Get tournament details (with results)
 - `POST /api/tournaments` — Create tournament
@@ -133,31 +148,38 @@ League (1) ───< (N) Tournament (1) ───< (N) PlayerResult >(N) ──
 - `GET /api/leagues/:id/tournaments` — List tournaments for a league
 
 ### Player Results
+
 - `GET /api/player-results` — List all player results
 - `GET /api/player-results/:id` — Get player result details
 
 ### Leaderboards
+
 - `GET /api/leaderboard/net` — Net leaderboard
 - `GET /api/leaderboard/gross` — Gross leaderboard
 
 ### Points Configuration
+
 - `GET /api/points-config` — Get points config
 - `PUT /api/points-config` — Update points config
 
 ### App Settings
+
 - `GET /api/settings` — Get app settings
 - `PUT /api/settings` — Update app settings
 
 ### File Upload & Processing
+
 - `POST /api/upload` — Upload tournament results (Excel/CSV) or enter manually in the unified UI
 - `POST /api/tournaments/process` — Process uploaded or manually entered tournament data
 
 #### Example: Upload Tournament Results
+
 ```bash
 curl -F "file=@results.xlsx" http://localhost:3000/api/upload
 ```
 
 #### Example: Update Points Config
+
 ```json
 PUT /api/points-config
 {
@@ -170,6 +192,7 @@ PUT /api/points-config
 ---
 
 ## Calculations & Logic
+
 - **Points Assignment:**
   - Each tournament type has a customizable points table (editable by admins).
   - When results are entered, points are assigned to players based on their finishing position and the current config.
@@ -187,6 +210,7 @@ PUT /api/points-config
 ---
 
 ## Admin Actions
+
 - **Tournament Management:** Create, edit, delete tournaments; enter scores via the unified tournament entry screen. For each event, select Tournament Type, Scoring Mode, and Scoring Type. The system will display the required fields and allow downloading a sample spreadsheet.
 - **Player Management:** Add, edit, delete players (with checks for existing results).
 - **Points Configuration:** Edit points for each position and tournament type; changes apply to future and recalculated tournaments.
@@ -197,26 +221,31 @@ PUT /api/points-config
 ## Authentication & User Roles
 
 ### Player Login (Replit OAuth)
+
 - All users authenticate via Replit's built-in OAuth-like authentication system (no custom password management).
 - Players can log in to access their personal dashboard and profile.
 - Players can only edit their own profile and friends list.
 
 ### Admin & Super-Admin
+
 - Only users with emails/accounts from the domain `@hideoutgolf.club` can be admins.
 - A super-admin role exists; only the super-admin can appoint or remove other admins.
 - Admins can upload/manage tournaments and data.
 - Domain enforcement is handled at login and when appointing new admins.
 
 ### Public View
+
 - Non-authenticated users can view leaderboards, tournament results, and player profiles, but cannot edit or upload data.
 
 ## Player Dashboard Features
+
 - Editable display name and home club (after login).
 - Sorted tournament/match history with scores, positions, and points.
 - Highlighted top 8 scores (used for standings) and dropped scores.
 - Friends selection and filtered leaderboard view.
 
 ## Backend-Driven Logic
+
 - All points, positions, and tie logic are calculated on the backend.
 - Frontend is display-only for these values.
 - Backend enforces all permissions and role-based access control.
@@ -224,6 +253,7 @@ PUT /api/points-config
 ---
 
 ## Formatting & Display
+
 - **Tables:** Used for points configuration, tournament results, and player stats.
 - **Charts:** Custom chart components for visualizing data (e.g., points trends, player performance).
 - **Responsive Design:** Layout adapts for desktop and mobile.
@@ -232,12 +262,14 @@ PUT /api/points-config
 ---
 
 ## Data Import/Export
+
 - **Score Upload:** Admins can upload scores via file (e.g., Excel, JSON) or manual entry.
 - **PDF/Spreadsheet Sources:** Default points tables are based on provided PDF and Excel files in `attached_assets/`.
 
 ---
 
 ## Technology Stack
+
 - **Frontend:** React, TypeScript, Vite, Tailwind CSS
 - **Backend:** Node.js, TypeScript, Drizzle ORM (with in-memory and DB storage options)
 - **Visualization:** Recharts (custom chart wrappers)
@@ -247,6 +279,7 @@ PUT /api/points-config
 ---
 
 ## Getting Started
+
 1. Install dependencies: `npm install`
 2. Start the development server: `npm run dev`
 3. Access the app at `http://localhost:3000`
@@ -255,6 +288,7 @@ PUT /api/points-config
 ---
 
 ## File Structure (Highlights)
+
 - `client/` — Frontend React app
 - `server/` — Backend logic and storage
 - `attached_assets/` — Reference PDFs, Excel, and JSON data
@@ -264,6 +298,7 @@ PUT /api/points-config
 ---
 
 ## Customization
+
 - **Points Tables:** Edit via the Points Config admin page
 - **Branding:** Update logo and colors in App Setup
 - **Tournament Types:** Add or modify types in the backend and config
@@ -271,6 +306,7 @@ PUT /api/points-config
 ---
 
 ## License
+
 This project is for internal league use. Contact the maintainer for permissions or contributions.
 
 ---
@@ -278,9 +314,11 @@ This project is for internal league use. Contact the maintainer for permissions 
 ## Spreadsheet Upload Requirements (Admin)
 
 ### Endpoint: `POST /api/upload`
+
 Uploads an Excel (.xlsx) or CSV file containing tournament results. The file is parsed and validated before processing.
 
 #### **Required Columns**
+
 The required columns for spreadsheet upload depend on the selected scoring mode and scoring type:
 
 - **Calculated Mode:**
@@ -293,10 +331,12 @@ The required columns for spreadsheet upload depend on the selected scoring mode 
 The UI will display the exact required columns before upload, and you can download a sample spreadsheet template for your configuration.
 
 #### **Sample Spreadsheet Download**
+
 - On the unified tournament entry page, admins can download a sample spreadsheet template with the correct headers for the current tournament configuration (type, scoring mode, scoring type).
 - This ensures that uploaded files always match the required format.
 
 #### **Notes**
+
 The tournament entry endpoint accepts Excel (`.xlsx`) and CSV files, or manual entry via the UI.
 New players are created automatically if the name does not exist in the system.
 The preview in the response shows how the data was parsed and calculated.

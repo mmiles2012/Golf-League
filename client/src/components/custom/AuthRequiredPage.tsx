@@ -1,13 +1,16 @@
-import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Lock, UserX, Shield } from "lucide-react";
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { Lock, UserX, Shield } from 'lucide-react';
 
 interface AuthRequiredPageProps {
   requiredRole?: 'authenticated' | 'admin' | 'super_admin';
   children: React.ReactNode;
 }
 
-export default function AuthRequiredPage({ requiredRole = 'authenticated', children }: AuthRequiredPageProps) {
+export default function AuthRequiredPage({
+  requiredRole = 'authenticated',
+  children,
+}: AuthRequiredPageProps) {
   const { isAuthenticated, isAdmin, isSuperAdmin, isLoading } = useAuth();
 
   // Show loading spinner while checking authentication
@@ -28,11 +31,9 @@ export default function AuthRequiredPage({ requiredRole = 'authenticated', child
         </div>
         <div>
           <h2 className="text-2xl font-bold text-neutral-800 mb-2">Authentication Required</h2>
-          <p className="text-neutral-600 mb-4">
-            You need to be logged in to access this page.
-          </p>
-          <Button 
-            onClick={() => window.location.href = '/api/login'}
+          <p className="text-neutral-600 mb-4">You need to be logged in to access this page.</p>
+          <Button
+            onClick={() => (window.location.href = '/api/login')}
             className="bg-primary hover:bg-primary/90"
           >
             Sign In
@@ -52,13 +53,10 @@ export default function AuthRequiredPage({ requiredRole = 'authenticated', child
         <div>
           <h2 className="text-2xl font-bold text-neutral-800 mb-2">Admin Access Required</h2>
           <p className="text-neutral-600 mb-4">
-            You don't have the necessary permissions to access this page. 
-            Contact an administrator if you believe this is an error.
+            You don't have the necessary permissions to access this page. Contact an administrator
+            if you believe this is an error.
           </p>
-          <Button 
-            variant="outline"
-            onClick={() => window.history.back()}
-          >
+          <Button variant="outline" onClick={() => window.history.back()}>
             Go Back
           </Button>
         </div>
@@ -78,10 +76,7 @@ export default function AuthRequiredPage({ requiredRole = 'authenticated', child
           <p className="text-neutral-600 mb-4">
             This page requires super administrator privileges.
           </p>
-          <Button 
-            variant="outline"
-            onClick={() => window.history.back()}
-          >
+          <Button variant="outline" onClick={() => window.history.back()}>
             Go Back
           </Button>
         </div>
