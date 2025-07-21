@@ -1,28 +1,23 @@
-import React, { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import React, { useState } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient, apiRequest } from '@/lib/queryClient';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { 
-  Table, 
-  TableBody, 
-  TableCaption, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Info } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, Save, Info } from 'lucide-react';
 
 // Default points structure for each tournament type
 const DEFAULT_POINTS = {
@@ -166,43 +161,47 @@ const DEFAULT_POINTS = {
     { position: 18, points: 16.8 },
     { position: 19, points: 16.2 },
     { position: 20, points: 15.6 },
-  ]
+  ],
 };
 
 export default function PointsConfiguration() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"major" | "tour" | "league" | "supr">("tour");
-  
+  const [activeTab, setActiveTab] = useState<'major' | 'tour' | 'league' | 'supr'>('tour');
+
   // Fetch current points configuration
   const { data: pointsData, isLoading } = useQuery({
-    queryKey: ["/api/points-config"],
+    queryKey: ['/api/points-config'],
     staleTime: 60 * 1000,
     placeholderData: DEFAULT_POINTS,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
   });
-  
+
   // State to track edited points
   const [editedPoints, setEditedPoints] = useState(DEFAULT_POINTS);
-  
+
   // Validate API data format
   const validateApiData = (apiData: any) => {
     if (!apiData) return DEFAULT_POINTS;
-    
+
     // Check if the data has the expected structure
-    const hasCorrectFormat = 
-      apiData.major && Array.isArray(apiData.major) &&
-      apiData.tour && Array.isArray(apiData.tour) &&
-      apiData.league && Array.isArray(apiData.league) &&
-      apiData.supr && Array.isArray(apiData.supr);
-    
+    const hasCorrectFormat =
+      apiData.major &&
+      Array.isArray(apiData.major) &&
+      apiData.tour &&
+      Array.isArray(apiData.tour) &&
+      apiData.league &&
+      Array.isArray(apiData.league) &&
+      apiData.supr &&
+      Array.isArray(apiData.supr);
+
     if (!hasCorrectFormat) {
-      console.error("Invalid points configuration format received from API");
+      console.error('Invalid points configuration format received from API');
       return DEFAULT_POINTS;
     }
-    
+
     return apiData;
   };
-  
+
   // Update local state when data is loaded
   React.useEffect(() => {
     if (pointsData) {
@@ -210,46 +209,50 @@ export default function PointsConfiguration() {
       setEditedPoints(validatedData);
     }
   }, [pointsData]);
-  
+
   // Handle point value change
-  const handlePointChange = (tournamentType: "major" | "tour" | "league" | "supr", position: number, newValue: string) => {
+  const handlePointChange = (
+    tournamentType: 'major' | 'tour' | 'league' | 'supr',
+    position: number,
+    newValue: string,
+  ) => {
     const numericValue = parseFloat(newValue);
     if (isNaN(numericValue)) return;
-    
-    setEditedPoints(prev => ({
+
+    setEditedPoints((prev) => ({
       ...prev,
-      [tournamentType]: prev[tournamentType].map(item => 
-        item.position === position ? { ...item, points: numericValue } : item
-      )
+      [tournamentType]: prev[tournamentType].map((item) =>
+        item.position === position ? { ...item, points: numericValue } : item,
+      ),
     }));
   };
-  
+
   // Save points configuration
   const saveMutation = useMutation({
     mutationFn: async (data: typeof editedPoints) => {
-      return apiRequest("PUT", "/api/points-config", data);
+      return apiRequest('PUT', '/api/points-config', data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/points-config"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/points-config'] });
       toast({
-        title: "Success",
-        description: "Points configuration saved successfully",
+        title: 'Success',
+        description: 'Points configuration saved successfully',
       });
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: "Failed to save points configuration",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to save points configuration',
+        variant: 'destructive',
       });
-      console.error("Failed to save points configuration:", error);
-    }
+      console.error('Failed to save points configuration:', error);
+    },
   });
-  
+
   const handleSave = () => {
     saveMutation.mutate(editedPoints);
   };
-  
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -259,8 +262,8 @@ export default function PointsConfiguration() {
             Configure points awarded for each position in different tournament types
           </p>
         </div>
-        <Button 
-          onClick={handleSave} 
+        <Button
+          onClick={handleSave}
           disabled={saveMutation.isPending}
           className="flex items-center gap-2"
         >
@@ -272,7 +275,7 @@ export default function PointsConfiguration() {
           Save Configuration
         </Button>
       </div>
-      
+
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
@@ -283,18 +286,21 @@ export default function PointsConfiguration() {
                   <Info className="h-4 w-4 text-muted-foreground" />
                 </TooltipTrigger>
                 <TooltipContent className="max-w-sm">
-                  <p>Configure how many points players receive based on their finishing position in each tournament type. 
-                  Changes will apply to future tournaments and any recalculation of existing tournaments.</p>
+                  <p>
+                    Configure how many points players receive based on their finishing position in
+                    each tournament type. Changes will apply to future tournaments and any
+                    recalculation of existing tournaments.
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs 
-            defaultValue="tour" 
-            value={activeTab} 
-            onValueChange={(value) => setActiveTab(value as "major" | "tour" | "league" | "supr")}
+          <Tabs
+            defaultValue="tour"
+            value={activeTab}
+            onValueChange={(value) => setActiveTab(value as 'major' | 'tour' | 'league' | 'supr')}
             className="w-full"
           >
             <TabsList className="grid grid-cols-4 mb-6">
@@ -303,16 +309,21 @@ export default function PointsConfiguration() {
               <TabsTrigger value="league">League</TabsTrigger>
               <TabsTrigger value="supr">SUPR Club</TabsTrigger>
             </TabsList>
-            
-            {["major", "tour", "league", "supr"].map(tabValue => (
+
+            {['major', 'tour', 'league', 'supr'].map((tabValue) => (
               <TabsContent key={tabValue} value={tabValue} className="space-y-4">
                 <div className="max-h-[600px] overflow-y-auto rounded border">
                   <Table>
                     <TableCaption>
-                      Points for {tabValue === "major" ? "Major" : 
-                                  tabValue === "tour" ? "Tour" : 
-                                  tabValue === "league" ? "League" : 
-                                  "SUPR Club"} Tournaments
+                      Points for{' '}
+                      {tabValue === 'major'
+                        ? 'Major'
+                        : tabValue === 'tour'
+                          ? 'Tour'
+                          : tabValue === 'league'
+                            ? 'League'
+                            : 'SUPR Club'}{' '}
+                      Tournaments
                     </TableCaption>
                     <TableHeader>
                       <TableRow>
@@ -324,17 +335,28 @@ export default function PointsConfiguration() {
                       {editedPoints[tabValue as keyof typeof editedPoints].map((item) => (
                         <TableRow key={item.position}>
                           <TableCell className="font-medium">
-                            {item.position}<sup>{item.position === 1 ? "st" : item.position === 2 ? "nd" : item.position === 3 ? "rd" : "th"}</sup>
+                            {item.position}
+                            <sup>
+                              {item.position === 1
+                                ? 'st'
+                                : item.position === 2
+                                  ? 'nd'
+                                  : item.position === 3
+                                    ? 'rd'
+                                    : 'th'}
+                            </sup>
                           </TableCell>
                           <TableCell>
                             <Input
                               type="number"
                               value={item.points}
-                              onChange={(e) => handlePointChange(
-                                tabValue as "major" | "tour" | "league" | "supr", 
-                                item.position, 
-                                e.target.value
-                              )}
+                              onChange={(e) =>
+                                handlePointChange(
+                                  tabValue as 'major' | 'tour' | 'league' | 'supr',
+                                  item.position,
+                                  e.target.value,
+                                )
+                              }
                               className="w-24"
                               step="0.5"
                               min="0"

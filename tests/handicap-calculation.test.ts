@@ -55,7 +55,7 @@ describe('Handicap and Score Calculations', () => {
       const handicap = 10;
       const netScore = calculateNetScore(grossScore, handicap);
       const backToGross = calculateGrossScore(netScore, handicap);
-      
+
       expect(netScore).toBe(80);
       expect(backToGross).toBe(grossScore);
     });
@@ -65,7 +65,7 @@ describe('Handicap and Score Calculations', () => {
       const handicap = -2;
       const grossScore = calculateGrossScore(netScore, handicap);
       const backToNet = calculateNetScore(grossScore, handicap);
-      
+
       expect(grossScore).toBe(70);
       expect(backToNet).toBe(netScore);
     });

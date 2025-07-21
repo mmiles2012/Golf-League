@@ -1,1 +1,686 @@
-[{"id":198,"playerId":9,"tournamentId":9,"position":1,"grossScore":89,"netScore":63,"handicap":26,"points":750,"createdAt":"2025-05-20T01:45:06.599Z","player":{"id":9,"name":"RussAiken","email":null,"defaultHandicap":13,"createdAt":"2025-05-19T05:44:50.150Z"}},{"id":199,"playerId":61,"tournamentId":9,"position":2,"grossScore":75,"netScore":65,"handicap":10,"points":400,"createdAt":"2025-05-20T01:45:06.719Z","player":{"id":61,"name":"Austin Arrowood","email":null,"defaultHandicap":19,"createdAt":"2025-05-19T20:13:18.799Z"}},{"id":200,"playerId":63,"tournamentId":9,"position":3,"grossScore":75,"netScore":67,"handicap":8,"points":350,"createdAt":"2025-05-20T01:45:06.823Z","player":{"id":63,"name":"WNathanG","email":null,"defaultHandicap":16,"createdAt":"2025-05-19T20:13:19.209Z"}},{"id":201,"playerId":83,"tournamentId":9,"position":4,"grossScore":75,"netScore":69,"handicap":6,"points":325,"createdAt":"2025-05-20T01:45:07.001Z","player":{"id":83,"name":"Dan Laughlin","email":null,"defaultHandicap":6,"createdAt":"2025-05-20T01:45:06.931Z"}},{"id":202,"playerId":11,"tournamentId":9,"position":4,"grossScore":79,"netScore":69,"handicap":10,"points":325,"createdAt":"2025-05-20T01:45:07.106Z","player":{"id":11,"name":"Michael Mendoza","email":null,"defaultHandicap":-2,"createdAt":"2025-05-19T05:44:50.413Z"}},{"id":203,"playerId":6,"tournamentId":9,"position":4,"grossScore":80,"netScore":69,"handicap":11,"points":325,"createdAt":"2025-05-20T01:45:07.217Z","player":{"id":6,"name":"Tony Niknejad","email":null,"defaultHandicap":0,"createdAt":"2025-05-19T05:44:49.746Z"}},{"id":204,"playerId":24,"tournamentId":9,"position":7,"grossScore":79,"netScore":70,"handicap":9,"points":225,"createdAt":"2025-05-20T01:45:07.318Z","player":{"id":24,"name":"Mark Mendoza","email":null,"defaultHandicap":1,"createdAt":"2025-05-19T05:44:52.164Z"}},{"id":205,"playerId":84,"tournamentId":9,"position":8,"grossScore":80,"netScore":71,"handicap":9,"points":200,"createdAt":"2025-05-20T01:45:07.474Z","player":{"id":84,"name":"Tyler Ricker","email":null,"defaultHandicap":9,"createdAt":"2025-05-20T01:45:07.424Z"}},{"id":206,"playerId":25,"tournamentId":9,"position":8,"grossScore":87,"netScore":71,"handicap":16,"points":200,"createdAt":"2025-05-20T01:45:07.573Z","player":{"id":25,"name":"Weller","email":null,"defaultHandicap":8,"createdAt":"2025-05-19T05:44:52.303Z"}},{"id":207,"playerId":27,"tournamentId":9,"position":10,"grossScore":71,"netScore":72,"handicap":-1,"points":150,"createdAt":"2025-05-20T01:45:07.674Z","player":{"id":27,"name":"Mark Dorris","email":null,"defaultHandicap":-8,"createdAt":"2025-05-19T05:44:52.569Z"}},{"id":208,"playerId":17,"tournamentId":9,"position":10,"grossScore":76,"netScore":72,"handicap":4,"points":150,"createdAt":"2025-05-20T01:45:07.785Z","player":{"id":17,"name":"Cody Larriviere","email":null,"defaultHandicap":-4,"createdAt":"2025-05-19T05:44:51.219Z"}},{"id":209,"playerId":85,"tournamentId":9,"position":10,"grossScore":77,"netScore":72,"handicap":5,"points":150,"createdAt":"2025-05-20T01:45:07.936Z","player":{"id":85,"name":"RSheps","email":null,"defaultHandicap":5,"createdAt":"2025-05-20T01:45:07.887Z"}},{"id":210,"playerId":76,"tournamentId":9,"position":10,"grossScore":77,"netScore":72,"handicap":5,"points":150,"createdAt":"2025-05-20T01:45:08.059Z","player":{"id":76,"name":"TJ Coffey","email":null,"defaultHandicap":8,"createdAt":"2025-05-19T21:14:31.299Z"}},{"id":211,"playerId":10,"tournamentId":9,"position":10,"grossScore":79,"netScore":72,"handicap":7,"points":150,"createdAt":"2025-05-20T01:45:08.163Z","player":{"id":10,"name":"Michael Shipman","email":null,"defaultHandicap":-3,"createdAt":"2025-05-19T05:44:50.282Z"}},{"id":212,"playerId":26,"tournamentId":9,"position":15,"grossScore":68,"netScore":73,"handicap":-5,"points":80,"createdAt":"2025-05-20T01:45:08.274Z","player":{"id":26,"name":"Jake Finn","email":null,"defaultHandicap":-11,"createdAt":"2025-05-19T05:44:52.436Z"}},{"id":213,"playerId":86,"tournamentId":9,"position":15,"grossScore":74,"netScore":73,"handicap":1,"points":80,"createdAt":"2025-05-20T01:45:08.425Z","player":{"id":86,"name":"Patrick Dailey","email":null,"defaultHandicap":1,"createdAt":"2025-05-20T01:45:08.375Z"}},{"id":214,"playerId":1,"tournamentId":9,"position":17,"grossScore":78,"netScore":74,"handicap":4,"points":65,"createdAt":"2025-05-20T01:45:08.524Z","player":{"id":1,"name":"steve","email":null,"defaultHandicap":-3,"createdAt":"2025-05-19T04:45:38.283Z"}},{"id":215,"playerId":87,"tournamentId":9,"position":17,"grossScore":85,"netScore":74,"handicap":11,"points":65,"createdAt":"2025-05-20T01:45:08.670Z","player":{"id":87,"name":"Patrick","email":null,"defaultHandicap":11,"createdAt":"2025-05-20T01:45:08.622Z"}},{"id":216,"playerId":88,"tournamentId":9,"position":19,"grossScore":74,"netScore":75,"handicap":-1,"points":55,"createdAt":"2025-05-20T01:45:08.842Z","player":{"id":88,"name":"Thomas Loflin","email":null,"defaultHandicap":-1,"createdAt":"2025-05-20T01:45:08.786Z"}},{"id":217,"playerId":8,"tournamentId":9,"position":19,"grossScore":89,"netScore":75,"handicap":14,"points":55,"createdAt":"2025-05-20T01:45:08.950Z","player":{"id":8,"name":"Tucker Cowden","email":null,"defaultHandicap":6,"createdAt":"2025-05-19T05:44:50.014Z"}},{"id":218,"playerId":89,"tournamentId":9,"position":21,"grossScore":75,"netScore":76,"handicap":-1,"points":48,"createdAt":"2025-05-20T01:45:09.120Z","player":{"id":89,"name":"Puzzo","email":null,"defaultHandicap":-1,"createdAt":"2025-05-20T01:45:09.051Z"}},{"id":219,"playerId":80,"tournamentId":9,"position":21,"grossScore":79,"netScore":76,"handicap":3,"points":48,"createdAt":"2025-05-20T01:45:09.219Z","player":{"id":80,"name":"Tucker Moore","email":null,"defaultHandicap":3,"createdAt":"2025-05-19T21:14:32.088Z"}},{"id":220,"playerId":3,"tournamentId":9,"position":23,"grossScore":101,"netScore":77,"handicap":24,"points":44,"createdAt":"2025-05-20T01:45:09.354Z","player":{"id":3,"name":"Mike Miles","email":null,"defaultHandicap":13,"createdAt":"2025-05-19T04:45:38.575Z"}},{"id":221,"playerId":90,"tournamentId":9,"position":24,"grossScore":88,"netScore":78,"handicap":10,"points":42,"createdAt":"2025-05-20T01:45:09.530Z","player":{"id":90,"name":"Rootae","email":null,"defaultHandicap":10,"createdAt":"2025-05-20T01:45:09.475Z"}},{"id":222,"playerId":73,"tournamentId":9,"position":25,"grossScore":81,"netScore":80,"handicap":1,"points":40,"createdAt":"2025-05-20T01:45:09.647Z","player":{"id":73,"name":"Jimmy Allen","email":null,"defaultHandicap":6,"createdAt":"2025-05-19T21:14:30.409Z"}},{"id":223,"playerId":91,"tournamentId":9,"position":25,"grossScore":92,"netScore":80,"handicap":12,"points":40,"createdAt":"2025-05-20T01:45:09.817Z","player":{"id":91,"name":"chriscc11","email":null,"defaultHandicap":12,"createdAt":"2025-05-20T01:45:09.763Z"}},{"id":224,"playerId":19,"tournamentId":9,"position":27,"grossScore":90,"netScore":83,"handicap":7,"points":36,"createdAt":"2025-05-20T01:45:09.915Z","player":{"id":19,"name":"Daniel Dorris","email":null,"defaultHandicap":-1,"createdAt":"2025-05-19T05:44:51.483Z"}},{"id":225,"playerId":30,"tournamentId":9,"position":28,"grossScore":110,"netScore":96,"handicap":14,"points":34,"createdAt":"2025-05-20T01:45:10.019Z","player":{"id":30,"name":"Three Putt Mcgee","email":null,"defaultHandicap":2,"createdAt":"2025-05-19T05:44:52.974Z"}},{"id":226,"playerId":28,"tournamentId":9,"position":29,"grossScore":null,"netScore":null,"handicap":null,"points":32.5,"createdAt":"2025-05-20T01:45:10.121Z","player":{"id":28,"name":"Andrew Johnson 5","email":null,"defaultHandicap":-5,"createdAt":"2025-05-19T05:44:52.703Z"}},{"id":227,"playerId":31,"tournamentId":9,"position":30,"grossScore":null,"netScore":null,"handicap":null,"points":31,"createdAt":"2025-05-20T01:45:10.230Z","player":{"id":31,"name":"Annie Hinkel","email":null,"defaultHandicap":null,"createdAt":"2025-05-19T05:44:53.110Z"}},{"id":228,"playerId":92,"tournamentId":9,"position":31,"grossScore":null,"netScore":null,"handicap":null,"points":29.5,"createdAt":"2025-05-20T01:45:10.383Z","player":{"id":92,"name":"BenReed","email":null,"defaultHandicap":null,"createdAt":"2025-05-20T01:45:10.333Z"}},{"id":229,"playerId":74,"tournamentId":9,"position":32,"grossScore":null,"netScore":null,"handicap":null,"points":28,"createdAt":"2025-05-20T01:45:10.478Z","player":{"id":74,"name":"Brett H Henderson","email":null,"defaultHandicap":7,"createdAt":"2025-05-19T21:14:30.628Z"}},{"id":230,"playerId":71,"tournamentId":9,"position":33,"grossScore":null,"netScore":null,"handicap":null,"points":26.5,"createdAt":"2025-05-20T01:45:10.601Z","player":{"id":71,"name":"Gregory Hill","email":null,"defaultHandicap":13,"createdAt":"2025-05-19T20:13:21.573Z"}},{"id":231,"playerId":69,"tournamentId":9,"position":34,"grossScore":null,"netScore":null,"handicap":null,"points":25,"createdAt":"2025-05-20T01:45:10.701Z","player":{"id":69,"name":"Hannaway","email":null,"defaultHandicap":13,"createdAt":"2025-05-19T20:13:20.913Z"}},{"id":232,"playerId":22,"tournamentId":9,"position":35,"grossScore":null,"netScore":null,"handicap":null,"points":24,"createdAt":"2025-05-20T01:45:10.797Z","player":{"id":22,"name":"Jack Wheeler","email":null,"defaultHandicap":-1,"createdAt":"2025-05-19T05:44:51.889Z"}},{"id":233,"playerId":93,"tournamentId":9,"position":36,"grossScore":null,"netScore":null,"handicap":null,"points":23,"createdAt":"2025-05-20T01:45:10.944Z","player":{"id":93,"name":"SamT08","email":null,"defaultHandicap":null,"createdAt":"2025-05-20T01:45:10.894Z"}},{"id":234,"playerId":94,"tournamentId":9,"position":37,"grossScore":null,"netScore":null,"handicap":null,"points":22,"createdAt":"2025-05-20T01:45:11.093Z","player":{"id":94,"name":"Stagner","email":null,"defaultHandicap":null,"createdAt":"2025-05-20T01:45:11.045Z"}},{"id":235,"playerId":95,"tournamentId":9,"position":38,"grossScore":null,"netScore":null,"handicap":null,"points":21,"createdAt":"2025-05-20T01:45:11.246Z","player":{"id":95,"name":"William-Moser","email":null,"defaultHandicap":null,"createdAt":"2025-05-20T01:45:11.196Z"}}]
+[
+  {
+    "id": 198,
+    "playerId": 9,
+    "tournamentId": 9,
+    "position": 1,
+    "grossScore": 89,
+    "netScore": 63,
+    "handicap": 26,
+    "points": 750,
+    "createdAt": "2025-05-20T01:45:06.599Z",
+    "player": {
+      "id": 9,
+      "name": "RussAiken",
+      "email": null,
+      "defaultHandicap": 13,
+      "createdAt": "2025-05-19T05:44:50.150Z"
+    }
+  },
+  {
+    "id": 199,
+    "playerId": 61,
+    "tournamentId": 9,
+    "position": 2,
+    "grossScore": 75,
+    "netScore": 65,
+    "handicap": 10,
+    "points": 400,
+    "createdAt": "2025-05-20T01:45:06.719Z",
+    "player": {
+      "id": 61,
+      "name": "Austin Arrowood",
+      "email": null,
+      "defaultHandicap": 19,
+      "createdAt": "2025-05-19T20:13:18.799Z"
+    }
+  },
+  {
+    "id": 200,
+    "playerId": 63,
+    "tournamentId": 9,
+    "position": 3,
+    "grossScore": 75,
+    "netScore": 67,
+    "handicap": 8,
+    "points": 350,
+    "createdAt": "2025-05-20T01:45:06.823Z",
+    "player": {
+      "id": 63,
+      "name": "WNathanG",
+      "email": null,
+      "defaultHandicap": 16,
+      "createdAt": "2025-05-19T20:13:19.209Z"
+    }
+  },
+  {
+    "id": 201,
+    "playerId": 83,
+    "tournamentId": 9,
+    "position": 4,
+    "grossScore": 75,
+    "netScore": 69,
+    "handicap": 6,
+    "points": 325,
+    "createdAt": "2025-05-20T01:45:07.001Z",
+    "player": {
+      "id": 83,
+      "name": "Dan Laughlin",
+      "email": null,
+      "defaultHandicap": 6,
+      "createdAt": "2025-05-20T01:45:06.931Z"
+    }
+  },
+  {
+    "id": 202,
+    "playerId": 11,
+    "tournamentId": 9,
+    "position": 4,
+    "grossScore": 79,
+    "netScore": 69,
+    "handicap": 10,
+    "points": 325,
+    "createdAt": "2025-05-20T01:45:07.106Z",
+    "player": {
+      "id": 11,
+      "name": "Michael Mendoza",
+      "email": null,
+      "defaultHandicap": -2,
+      "createdAt": "2025-05-19T05:44:50.413Z"
+    }
+  },
+  {
+    "id": 203,
+    "playerId": 6,
+    "tournamentId": 9,
+    "position": 4,
+    "grossScore": 80,
+    "netScore": 69,
+    "handicap": 11,
+    "points": 325,
+    "createdAt": "2025-05-20T01:45:07.217Z",
+    "player": {
+      "id": 6,
+      "name": "Tony Niknejad",
+      "email": null,
+      "defaultHandicap": 0,
+      "createdAt": "2025-05-19T05:44:49.746Z"
+    }
+  },
+  {
+    "id": 204,
+    "playerId": 24,
+    "tournamentId": 9,
+    "position": 7,
+    "grossScore": 79,
+    "netScore": 70,
+    "handicap": 9,
+    "points": 225,
+    "createdAt": "2025-05-20T01:45:07.318Z",
+    "player": {
+      "id": 24,
+      "name": "Mark Mendoza",
+      "email": null,
+      "defaultHandicap": 1,
+      "createdAt": "2025-05-19T05:44:52.164Z"
+    }
+  },
+  {
+    "id": 205,
+    "playerId": 84,
+    "tournamentId": 9,
+    "position": 8,
+    "grossScore": 80,
+    "netScore": 71,
+    "handicap": 9,
+    "points": 200,
+    "createdAt": "2025-05-20T01:45:07.474Z",
+    "player": {
+      "id": 84,
+      "name": "Tyler Ricker",
+      "email": null,
+      "defaultHandicap": 9,
+      "createdAt": "2025-05-20T01:45:07.424Z"
+    }
+  },
+  {
+    "id": 206,
+    "playerId": 25,
+    "tournamentId": 9,
+    "position": 8,
+    "grossScore": 87,
+    "netScore": 71,
+    "handicap": 16,
+    "points": 200,
+    "createdAt": "2025-05-20T01:45:07.573Z",
+    "player": {
+      "id": 25,
+      "name": "Weller",
+      "email": null,
+      "defaultHandicap": 8,
+      "createdAt": "2025-05-19T05:44:52.303Z"
+    }
+  },
+  {
+    "id": 207,
+    "playerId": 27,
+    "tournamentId": 9,
+    "position": 10,
+    "grossScore": 71,
+    "netScore": 72,
+    "handicap": -1,
+    "points": 150,
+    "createdAt": "2025-05-20T01:45:07.674Z",
+    "player": {
+      "id": 27,
+      "name": "Mark Dorris",
+      "email": null,
+      "defaultHandicap": -8,
+      "createdAt": "2025-05-19T05:44:52.569Z"
+    }
+  },
+  {
+    "id": 208,
+    "playerId": 17,
+    "tournamentId": 9,
+    "position": 10,
+    "grossScore": 76,
+    "netScore": 72,
+    "handicap": 4,
+    "points": 150,
+    "createdAt": "2025-05-20T01:45:07.785Z",
+    "player": {
+      "id": 17,
+      "name": "Cody Larriviere",
+      "email": null,
+      "defaultHandicap": -4,
+      "createdAt": "2025-05-19T05:44:51.219Z"
+    }
+  },
+  {
+    "id": 209,
+    "playerId": 85,
+    "tournamentId": 9,
+    "position": 10,
+    "grossScore": 77,
+    "netScore": 72,
+    "handicap": 5,
+    "points": 150,
+    "createdAt": "2025-05-20T01:45:07.936Z",
+    "player": {
+      "id": 85,
+      "name": "RSheps",
+      "email": null,
+      "defaultHandicap": 5,
+      "createdAt": "2025-05-20T01:45:07.887Z"
+    }
+  },
+  {
+    "id": 210,
+    "playerId": 76,
+    "tournamentId": 9,
+    "position": 10,
+    "grossScore": 77,
+    "netScore": 72,
+    "handicap": 5,
+    "points": 150,
+    "createdAt": "2025-05-20T01:45:08.059Z",
+    "player": {
+      "id": 76,
+      "name": "TJ Coffey",
+      "email": null,
+      "defaultHandicap": 8,
+      "createdAt": "2025-05-19T21:14:31.299Z"
+    }
+  },
+  {
+    "id": 211,
+    "playerId": 10,
+    "tournamentId": 9,
+    "position": 10,
+    "grossScore": 79,
+    "netScore": 72,
+    "handicap": 7,
+    "points": 150,
+    "createdAt": "2025-05-20T01:45:08.163Z",
+    "player": {
+      "id": 10,
+      "name": "Michael Shipman",
+      "email": null,
+      "defaultHandicap": -3,
+      "createdAt": "2025-05-19T05:44:50.282Z"
+    }
+  },
+  {
+    "id": 212,
+    "playerId": 26,
+    "tournamentId": 9,
+    "position": 15,
+    "grossScore": 68,
+    "netScore": 73,
+    "handicap": -5,
+    "points": 80,
+    "createdAt": "2025-05-20T01:45:08.274Z",
+    "player": {
+      "id": 26,
+      "name": "Jake Finn",
+      "email": null,
+      "defaultHandicap": -11,
+      "createdAt": "2025-05-19T05:44:52.436Z"
+    }
+  },
+  {
+    "id": 213,
+    "playerId": 86,
+    "tournamentId": 9,
+    "position": 15,
+    "grossScore": 74,
+    "netScore": 73,
+    "handicap": 1,
+    "points": 80,
+    "createdAt": "2025-05-20T01:45:08.425Z",
+    "player": {
+      "id": 86,
+      "name": "Patrick Dailey",
+      "email": null,
+      "defaultHandicap": 1,
+      "createdAt": "2025-05-20T01:45:08.375Z"
+    }
+  },
+  {
+    "id": 214,
+    "playerId": 1,
+    "tournamentId": 9,
+    "position": 17,
+    "grossScore": 78,
+    "netScore": 74,
+    "handicap": 4,
+    "points": 65,
+    "createdAt": "2025-05-20T01:45:08.524Z",
+    "player": {
+      "id": 1,
+      "name": "steve",
+      "email": null,
+      "defaultHandicap": -3,
+      "createdAt": "2025-05-19T04:45:38.283Z"
+    }
+  },
+  {
+    "id": 215,
+    "playerId": 87,
+    "tournamentId": 9,
+    "position": 17,
+    "grossScore": 85,
+    "netScore": 74,
+    "handicap": 11,
+    "points": 65,
+    "createdAt": "2025-05-20T01:45:08.670Z",
+    "player": {
+      "id": 87,
+      "name": "Patrick",
+      "email": null,
+      "defaultHandicap": 11,
+      "createdAt": "2025-05-20T01:45:08.622Z"
+    }
+  },
+  {
+    "id": 216,
+    "playerId": 88,
+    "tournamentId": 9,
+    "position": 19,
+    "grossScore": 74,
+    "netScore": 75,
+    "handicap": -1,
+    "points": 55,
+    "createdAt": "2025-05-20T01:45:08.842Z",
+    "player": {
+      "id": 88,
+      "name": "Thomas Loflin",
+      "email": null,
+      "defaultHandicap": -1,
+      "createdAt": "2025-05-20T01:45:08.786Z"
+    }
+  },
+  {
+    "id": 217,
+    "playerId": 8,
+    "tournamentId": 9,
+    "position": 19,
+    "grossScore": 89,
+    "netScore": 75,
+    "handicap": 14,
+    "points": 55,
+    "createdAt": "2025-05-20T01:45:08.950Z",
+    "player": {
+      "id": 8,
+      "name": "Tucker Cowden",
+      "email": null,
+      "defaultHandicap": 6,
+      "createdAt": "2025-05-19T05:44:50.014Z"
+    }
+  },
+  {
+    "id": 218,
+    "playerId": 89,
+    "tournamentId": 9,
+    "position": 21,
+    "grossScore": 75,
+    "netScore": 76,
+    "handicap": -1,
+    "points": 48,
+    "createdAt": "2025-05-20T01:45:09.120Z",
+    "player": {
+      "id": 89,
+      "name": "Puzzo",
+      "email": null,
+      "defaultHandicap": -1,
+      "createdAt": "2025-05-20T01:45:09.051Z"
+    }
+  },
+  {
+    "id": 219,
+    "playerId": 80,
+    "tournamentId": 9,
+    "position": 21,
+    "grossScore": 79,
+    "netScore": 76,
+    "handicap": 3,
+    "points": 48,
+    "createdAt": "2025-05-20T01:45:09.219Z",
+    "player": {
+      "id": 80,
+      "name": "Tucker Moore",
+      "email": null,
+      "defaultHandicap": 3,
+      "createdAt": "2025-05-19T21:14:32.088Z"
+    }
+  },
+  {
+    "id": 220,
+    "playerId": 3,
+    "tournamentId": 9,
+    "position": 23,
+    "grossScore": 101,
+    "netScore": 77,
+    "handicap": 24,
+    "points": 44,
+    "createdAt": "2025-05-20T01:45:09.354Z",
+    "player": {
+      "id": 3,
+      "name": "Mike Miles",
+      "email": null,
+      "defaultHandicap": 13,
+      "createdAt": "2025-05-19T04:45:38.575Z"
+    }
+  },
+  {
+    "id": 221,
+    "playerId": 90,
+    "tournamentId": 9,
+    "position": 24,
+    "grossScore": 88,
+    "netScore": 78,
+    "handicap": 10,
+    "points": 42,
+    "createdAt": "2025-05-20T01:45:09.530Z",
+    "player": {
+      "id": 90,
+      "name": "Rootae",
+      "email": null,
+      "defaultHandicap": 10,
+      "createdAt": "2025-05-20T01:45:09.475Z"
+    }
+  },
+  {
+    "id": 222,
+    "playerId": 73,
+    "tournamentId": 9,
+    "position": 25,
+    "grossScore": 81,
+    "netScore": 80,
+    "handicap": 1,
+    "points": 40,
+    "createdAt": "2025-05-20T01:45:09.647Z",
+    "player": {
+      "id": 73,
+      "name": "Jimmy Allen",
+      "email": null,
+      "defaultHandicap": 6,
+      "createdAt": "2025-05-19T21:14:30.409Z"
+    }
+  },
+  {
+    "id": 223,
+    "playerId": 91,
+    "tournamentId": 9,
+    "position": 25,
+    "grossScore": 92,
+    "netScore": 80,
+    "handicap": 12,
+    "points": 40,
+    "createdAt": "2025-05-20T01:45:09.817Z",
+    "player": {
+      "id": 91,
+      "name": "chriscc11",
+      "email": null,
+      "defaultHandicap": 12,
+      "createdAt": "2025-05-20T01:45:09.763Z"
+    }
+  },
+  {
+    "id": 224,
+    "playerId": 19,
+    "tournamentId": 9,
+    "position": 27,
+    "grossScore": 90,
+    "netScore": 83,
+    "handicap": 7,
+    "points": 36,
+    "createdAt": "2025-05-20T01:45:09.915Z",
+    "player": {
+      "id": 19,
+      "name": "Daniel Dorris",
+      "email": null,
+      "defaultHandicap": -1,
+      "createdAt": "2025-05-19T05:44:51.483Z"
+    }
+  },
+  {
+    "id": 225,
+    "playerId": 30,
+    "tournamentId": 9,
+    "position": 28,
+    "grossScore": 110,
+    "netScore": 96,
+    "handicap": 14,
+    "points": 34,
+    "createdAt": "2025-05-20T01:45:10.019Z",
+    "player": {
+      "id": 30,
+      "name": "Three Putt Mcgee",
+      "email": null,
+      "defaultHandicap": 2,
+      "createdAt": "2025-05-19T05:44:52.974Z"
+    }
+  },
+  {
+    "id": 226,
+    "playerId": 28,
+    "tournamentId": 9,
+    "position": 29,
+    "grossScore": null,
+    "netScore": null,
+    "handicap": null,
+    "points": 32.5,
+    "createdAt": "2025-05-20T01:45:10.121Z",
+    "player": {
+      "id": 28,
+      "name": "Andrew Johnson 5",
+      "email": null,
+      "defaultHandicap": -5,
+      "createdAt": "2025-05-19T05:44:52.703Z"
+    }
+  },
+  {
+    "id": 227,
+    "playerId": 31,
+    "tournamentId": 9,
+    "position": 30,
+    "grossScore": null,
+    "netScore": null,
+    "handicap": null,
+    "points": 31,
+    "createdAt": "2025-05-20T01:45:10.230Z",
+    "player": {
+      "id": 31,
+      "name": "Annie Hinkel",
+      "email": null,
+      "defaultHandicap": null,
+      "createdAt": "2025-05-19T05:44:53.110Z"
+    }
+  },
+  {
+    "id": 228,
+    "playerId": 92,
+    "tournamentId": 9,
+    "position": 31,
+    "grossScore": null,
+    "netScore": null,
+    "handicap": null,
+    "points": 29.5,
+    "createdAt": "2025-05-20T01:45:10.383Z",
+    "player": {
+      "id": 92,
+      "name": "BenReed",
+      "email": null,
+      "defaultHandicap": null,
+      "createdAt": "2025-05-20T01:45:10.333Z"
+    }
+  },
+  {
+    "id": 229,
+    "playerId": 74,
+    "tournamentId": 9,
+    "position": 32,
+    "grossScore": null,
+    "netScore": null,
+    "handicap": null,
+    "points": 28,
+    "createdAt": "2025-05-20T01:45:10.478Z",
+    "player": {
+      "id": 74,
+      "name": "Brett H Henderson",
+      "email": null,
+      "defaultHandicap": 7,
+      "createdAt": "2025-05-19T21:14:30.628Z"
+    }
+  },
+  {
+    "id": 230,
+    "playerId": 71,
+    "tournamentId": 9,
+    "position": 33,
+    "grossScore": null,
+    "netScore": null,
+    "handicap": null,
+    "points": 26.5,
+    "createdAt": "2025-05-20T01:45:10.601Z",
+    "player": {
+      "id": 71,
+      "name": "Gregory Hill",
+      "email": null,
+      "defaultHandicap": 13,
+      "createdAt": "2025-05-19T20:13:21.573Z"
+    }
+  },
+  {
+    "id": 231,
+    "playerId": 69,
+    "tournamentId": 9,
+    "position": 34,
+    "grossScore": null,
+    "netScore": null,
+    "handicap": null,
+    "points": 25,
+    "createdAt": "2025-05-20T01:45:10.701Z",
+    "player": {
+      "id": 69,
+      "name": "Hannaway",
+      "email": null,
+      "defaultHandicap": 13,
+      "createdAt": "2025-05-19T20:13:20.913Z"
+    }
+  },
+  {
+    "id": 232,
+    "playerId": 22,
+    "tournamentId": 9,
+    "position": 35,
+    "grossScore": null,
+    "netScore": null,
+    "handicap": null,
+    "points": 24,
+    "createdAt": "2025-05-20T01:45:10.797Z",
+    "player": {
+      "id": 22,
+      "name": "Jack Wheeler",
+      "email": null,
+      "defaultHandicap": -1,
+      "createdAt": "2025-05-19T05:44:51.889Z"
+    }
+  },
+  {
+    "id": 233,
+    "playerId": 93,
+    "tournamentId": 9,
+    "position": 36,
+    "grossScore": null,
+    "netScore": null,
+    "handicap": null,
+    "points": 23,
+    "createdAt": "2025-05-20T01:45:10.944Z",
+    "player": {
+      "id": 93,
+      "name": "SamT08",
+      "email": null,
+      "defaultHandicap": null,
+      "createdAt": "2025-05-20T01:45:10.894Z"
+    }
+  },
+  {
+    "id": 234,
+    "playerId": 94,
+    "tournamentId": 9,
+    "position": 37,
+    "grossScore": null,
+    "netScore": null,
+    "handicap": null,
+    "points": 22,
+    "createdAt": "2025-05-20T01:45:11.093Z",
+    "player": {
+      "id": 94,
+      "name": "Stagner",
+      "email": null,
+      "defaultHandicap": null,
+      "createdAt": "2025-05-20T01:45:11.045Z"
+    }
+  },
+  {
+    "id": 235,
+    "playerId": 95,
+    "tournamentId": 9,
+    "position": 38,
+    "grossScore": null,
+    "netScore": null,
+    "handicap": null,
+    "points": 21,
+    "createdAt": "2025-05-20T01:45:11.246Z",
+    "player": {
+      "id": 95,
+      "name": "William-Moser",
+      "email": null,
+      "defaultHandicap": null,
+      "createdAt": "2025-05-20T01:45:11.196Z"
+    }
+  }
+]

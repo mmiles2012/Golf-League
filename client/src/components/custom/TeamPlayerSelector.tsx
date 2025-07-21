@@ -1,9 +1,16 @@
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface TeamPlayerSelectorProps {
   isOpen: boolean;
@@ -23,16 +30,16 @@ export default function TeamPlayerSelector({
   // Initialize selections with the first player for each team
   useEffect(() => {
     const initialSelections: Record<string, string> = {};
-    teamPlayers.forEach(team => {
+    teamPlayers.forEach((team) => {
       initialSelections[team.original] = team.options[0];
     });
     setSelections(initialSelections);
   }, [teamPlayers]);
 
   const handleSelectionChange = (teamName: string, selectedPlayer: string) => {
-    setSelections(prev => ({
+    setSelections((prev) => ({
       ...prev,
-      [teamName]: selectedPlayer
+      [teamName]: selectedPlayer,
     }));
   };
 
@@ -41,7 +48,7 @@ export default function TeamPlayerSelector({
     onClose();
   };
 
-  const allSelected = teamPlayers.every(team => selections[team.original]);
+  const allSelected = teamPlayers.every((team) => selections[team.original]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -49,7 +56,8 @@ export default function TeamPlayerSelector({
         <DialogHeader>
           <DialogTitle>Select Players</DialogTitle>
           <DialogDescription>
-            Some entries are teams with multiple players. Select which player should receive the points.
+            Some entries are teams with multiple players. Select which player should receive the
+            points.
           </DialogDescription>
         </DialogHeader>
 
@@ -58,8 +66,8 @@ export default function TeamPlayerSelector({
             {teamPlayers.map((team) => (
               <div key={team.original} className="space-y-2">
                 <div className="font-medium text-sm">Team: {team.original}</div>
-                <RadioGroup 
-                  value={selections[team.original] || ""}
+                <RadioGroup
+                  value={selections[team.original] || ''}
                   onValueChange={(value) => handleSelectionChange(team.original, value)}
                   className="space-y-1"
                 >
@@ -80,8 +88,12 @@ export default function TeamPlayerSelector({
         </ScrollArea>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleConfirm} disabled={!allSelected}>Confirm</Button>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleConfirm} disabled={!allSelected}>
+            Confirm
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

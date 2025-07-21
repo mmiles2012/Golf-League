@@ -72,12 +72,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error('Error details:', error.message);
         console.error('Error stack:', error.stack);
       }
-      res
-        .status(500)
-        .json({
-          message: 'Failed to update profile',
-          error: error instanceof Error ? error.message : String(error),
-        });
+      res.status(500).json({
+        message: 'Failed to update profile',
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   });
 

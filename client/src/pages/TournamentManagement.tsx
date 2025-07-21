@@ -1,15 +1,15 @@
-import { useState } from "react";
-import { useLocation } from "wouter";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Search, Pencil, Trash2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { useDebounce } from "@/hooks/use-debounce";
-import { formatDate } from "@/lib/utils";
-import DeleteTournamentDialog from "@/components/custom/DeleteTournamentDialog";
+import { useState } from 'react';
+import { useLocation } from 'wouter';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Search, Pencil, Trash2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { useDebounce } from '@/hooks/use-debounce';
+import { formatDate } from '@/lib/utils';
+import DeleteTournamentDialog from '@/components/custom/DeleteTournamentDialog';
 
 interface Tournament {
   id: number;
@@ -23,57 +23,60 @@ interface Tournament {
 }
 
 export default function TournamentManagement() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [, navigate] = useLocation();
-  
+
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  
+
   // Fetch tournaments data
   const { data: tournaments, isLoading } = useQuery<Tournament[]>({
-    queryKey: ["/api/tournaments"],
+    queryKey: ['/api/tournaments'],
     staleTime: 30 * 1000, // 30 seconds
   });
-  
+
   // Filter tournaments based on search query
-  const filteredTournaments = tournaments ? 
-    tournaments.filter(tournament => 
-      tournament.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
-    ) : [];
-  
+  const filteredTournaments = tournaments
+    ? tournaments.filter((tournament) =>
+        tournament.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()),
+      )
+    : [];
+
   const handleEditClick = (tournament: Tournament) => {
     // Navigate to the edit tournament page
     navigate(`/tournament/edit/${tournament.id}`);
   };
-  
+
   const handleDeleteClick = (tournament: Tournament) => {
     setSelectedTournament(tournament);
     setIsDeleteDialogOpen(true);
   };
-  
+
   // Display player count from the tournament data
   const getPlayerCount = (tournament: Tournament) => {
     // Use the playerCount property returned from the API
     return tournament.playerCount || 0;
   };
-  
+
   return (
     <section className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-heading font-bold text-neutral-800">Tournament Manager</h1>
+          <h1 className="text-2xl md:text-3xl font-heading font-bold text-neutral-800">
+            Tournament Manager
+          </h1>
           <p className="text-neutral-600">View, edit and manage tournament data</p>
         </div>
       </div>
-      
+
       {/* Tournament Database Header */}
       <Card className="overflow-hidden shadow-lg">
         <CardContent className="p-5">
           <h2 className="text-xl font-heading font-bold">Tournament Database</h2>
         </CardContent>
       </Card>
-      
+
       {/* Tournament List */}
       <Card>
         <div className="px-5 py-4 border-b border-neutral-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -95,38 +98,46 @@ export default function TournamentManagement() {
           <table className="w-full">
             <thead>
               <tr className="bg-neutral-100">
-                <th className="py-2 pl-5 pr-2 text-left text-sm font-medium text-neutral-700">Name</th>
+                <th className="py-2 pl-5 pr-2 text-left text-sm font-medium text-neutral-700">
+                  Name
+                </th>
                 <th className="px-2 py-2 text-left text-sm font-medium text-neutral-700">Date</th>
                 <th className="px-2 py-2 text-left text-sm font-medium text-neutral-700">Type</th>
-                <th className="px-2 py-2 text-left text-sm font-medium text-neutral-700">Players</th>
+                <th className="px-2 py-2 text-left text-sm font-medium text-neutral-700">
+                  Players
+                </th>
                 <th className="px-2 py-2 text-left text-sm font-medium text-neutral-700">Status</th>
-                <th className="px-2 py-2 text-right text-sm font-medium text-neutral-700">Actions</th>
+                <th className="px-2 py-2 text-right text-sm font-medium text-neutral-700">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200">
               {isLoading ? (
-                Array(5).fill(0).map((_, index) => (
-                  <tr key={index}>
-                    <td className="py-3 pl-5 pr-2 whitespace-nowrap">
-                      <Skeleton className="h-5 w-40" />
-                    </td>
-                    <td className="px-2 py-3 whitespace-nowrap">
-                      <Skeleton className="h-5 w-24" />
-                    </td>
-                    <td className="px-2 py-3 whitespace-nowrap">
-                      <Skeleton className="h-5 w-16" />
-                    </td>
-                    <td className="px-2 py-3 whitespace-nowrap">
-                      <Skeleton className="h-5 w-8" />
-                    </td>
-                    <td className="px-2 py-3 whitespace-nowrap">
-                      <Skeleton className="h-5 w-20" />
-                    </td>
-                    <td className="px-2 py-3 whitespace-nowrap text-right">
-                      <Skeleton className="h-5 w-16 ml-auto" />
-                    </td>
-                  </tr>
-                ))
+                Array(5)
+                  .fill(0)
+                  .map((_, index) => (
+                    <tr key={index}>
+                      <td className="py-3 pl-5 pr-2 whitespace-nowrap">
+                        <Skeleton className="h-5 w-40" />
+                      </td>
+                      <td className="px-2 py-3 whitespace-nowrap">
+                        <Skeleton className="h-5 w-24" />
+                      </td>
+                      <td className="px-2 py-3 whitespace-nowrap">
+                        <Skeleton className="h-5 w-16" />
+                      </td>
+                      <td className="px-2 py-3 whitespace-nowrap">
+                        <Skeleton className="h-5 w-8" />
+                      </td>
+                      <td className="px-2 py-3 whitespace-nowrap">
+                        <Skeleton className="h-5 w-20" />
+                      </td>
+                      <td className="px-2 py-3 whitespace-nowrap text-right">
+                        <Skeleton className="h-5 w-16 ml-auto" />
+                      </td>
+                    </tr>
+                  ))
               ) : filteredTournaments.length > 0 ? (
                 filteredTournaments.map((tournament) => (
                   <tr key={tournament.id} className="hover:bg-neutral-50">
@@ -181,21 +192,21 @@ export default function TournamentManagement() {
               ) : (
                 <tr>
                   <td colSpan={6} className="py-6 text-center text-neutral-500">
-                    {searchQuery ? "No tournaments match your search" : "No tournaments found"}
+                    {searchQuery ? 'No tournaments match your search' : 'No tournaments found'}
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
-          
+
           {/* Pagination (simplified) */}
           {!isLoading && filteredTournaments.length > 0 && (
             <div className="px-5 py-3 flex items-center justify-between border-t border-neutral-200">
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm text-neutral-700">
-                    Showing <span className="font-medium">1</span> to{" "}
-                    <span className="font-medium">{filteredTournaments.length}</span> of{" "}
+                    Showing <span className="font-medium">1</span> to{' '}
+                    <span className="font-medium">{filteredTournaments.length}</span> of{' '}
                     <span className="font-medium">{filteredTournaments.length}</span> tournaments
                   </p>
                 </div>
@@ -204,7 +215,7 @@ export default function TournamentManagement() {
           )}
         </div>
       </Card>
-      
+
       {/* Modals */}
       <DeleteTournamentDialog
         tournament={selectedTournament}

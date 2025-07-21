@@ -35,11 +35,20 @@ export default function AdminRecalculation() {
   }
 
   return (
-    <div style={{ maxWidth: 600, margin: '2rem auto', padding: 24, background: '#fff', borderRadius: 8 }}>
+    <div
+      style={{
+        maxWidth: 600,
+        margin: '2rem auto',
+        padding: 24,
+        background: '#fff',
+        borderRadius: 8,
+      }}
+    >
       <h2>Admin: Tournament/Points Recalculation</h2>
       <div style={{ margin: '1rem 0' }}>
-        <label>Type:&nbsp;
-          <select value={type} onChange={e => setType(e.target.value)}>
+        <label>
+          Type:&nbsp;
+          <select value={type} onChange={(e) => setType(e.target.value)}>
             <option value="all">All</option>
             <option value="tour">Tour</option>
             <option value="major">Major</option>
@@ -48,8 +57,9 @@ export default function AdminRecalculation() {
           </select>
         </label>
         &nbsp;&nbsp;
-        <label>Mode:&nbsp;
-          <select value={mode} onChange={e => setMode(e.target.value)}>
+        <label>
+          Mode:&nbsp;
+          <select value={mode} onChange={(e) => setMode(e.target.value)}>
             <option value="both">Both</option>
             <option value="gross">Gross</option>
             <option value="net">Net</option>
@@ -57,21 +67,45 @@ export default function AdminRecalculation() {
         </label>
       </div>
       <div style={{ margin: '1rem 0' }}>
-        <label>Tournament ID:&nbsp;
-          <input type="number" value={tournamentId} onChange={e => setTournamentId(e.target.value)} placeholder="(optional)" />
+        <label>
+          Tournament ID:&nbsp;
+          <input
+            type="number"
+            value={tournamentId}
+            onChange={(e) => setTournamentId(e.target.value)}
+            placeholder="(optional)"
+          />
         </label>
         &nbsp;&nbsp;
-        <label>Player ID:&nbsp;
-          <input type="number" value={playerId} onChange={e => setPlayerId(e.target.value)} placeholder="(optional)" />
+        <label>
+          Player ID:&nbsp;
+          <input
+            type="number"
+            value={playerId}
+            onChange={(e) => setPlayerId(e.target.value)}
+            placeholder="(optional)"
+          />
         </label>
       </div>
-      <button onClick={handleRecalc} disabled={loading} style={{ padding: '0.5rem 1.5rem', fontWeight: 600 }}>
+      <button
+        onClick={handleRecalc}
+        disabled={loading}
+        style={{ padding: '0.5rem 1.5rem', fontWeight: 600 }}
+      >
         {loading ? 'Recalculating...' : 'Run Recalculation'}
       </button>
       {error && <div style={{ color: 'red', marginTop: 16 }}>{error}</div>}
       <div style={{ marginTop: 24 }}>
         <h4>Logs:</h4>
-        <pre style={{ background: '#f5f5f5', padding: 12, borderRadius: 4, maxHeight: 300, overflow: 'auto' }}>
+        <pre
+          style={{
+            background: '#f5f5f5',
+            padding: 12,
+            borderRadius: 4,
+            maxHeight: 300,
+            overflow: 'auto',
+          }}
+        >
           {logs.length ? JSON.stringify(logs, null, 2) : 'No logs yet.'}
         </pre>
       </div>
